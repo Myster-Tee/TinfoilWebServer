@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.ConsoleLogging;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Settings;
 
@@ -36,8 +37,9 @@ namespace TinfoilWebServer
                 .ConfigureLogging((hostingContext, loggingBuilder) =>
                 {
                     loggingBuilder
+                        .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(options => { })
                         .AddConfiguration(appSettings.LoggingConfig)
-                        .AddConsole();
+                        .AddConsole(options => options.FormatterName = nameof(CustomConsoleFormatter));
                 })
                 .ConfigureServices(services =>
                 {
@@ -57,6 +59,7 @@ namespace TinfoilWebServer
 
             webHostBuilder.Build().Run();
         }
+
 
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -10,11 +11,16 @@ namespace TinfoilWebServer
 {
     public class Startup
     {
+        private static readonly string Spacing = $"{Environment.NewLine}        ";
+
         public void Configure(IApplicationBuilder app, IRequestManager requestManager, ILogger<Startup> logger, IAppSettings appSettings)
         {
-            logger.LogInformation($"Served directory: {appSettings.ServedDirectory}");
 
-            logger.LogInformation($"Server Host/IP: " + string.Join(", ", GetCurrentComputerAddressesOrHosts()));
+
+            logger.LogInformation($"Served directory:{Spacing}{appSettings.ServedDirectory}");
+
+            logger.LogInformation(
+                $"Server Host/IP:{Spacing}{string.Join($"{Spacing}", GetCurrentComputerAddressesOrHosts())}");
 
             app.Run(requestManager.OnRequest);
         }
