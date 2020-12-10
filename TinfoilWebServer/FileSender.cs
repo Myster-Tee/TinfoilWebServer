@@ -7,7 +7,7 @@ using Range = ElMariachi.Http.Header.Managed.Range;
 
 namespace TinfoilWebServer
 {
-    public class FileSender
+    public class FileSender : IDisposable, IAsyncDisposable
     {
         private readonly HttpResponse _response;
         private readonly string _contentType;
@@ -79,7 +79,6 @@ namespace TinfoilWebServer
 
                 if (nbRemainingBytes > 0)
                     throw new Exception($"Unexpected error: the number of bytes to write could not be honored, {nbRemainingBytes} byte(s) missing.");
-
             }
         }
 
@@ -172,6 +171,11 @@ namespace TinfoilWebServer
         public void Dispose()
         {
             _fileStream.Dispose();
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            return _fileStream.DisposeAsync();
         }
     }
 }
