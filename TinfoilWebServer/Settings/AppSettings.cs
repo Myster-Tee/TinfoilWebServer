@@ -13,5 +13,7 @@ namespace TinfoilWebServer.Settings
         public IConfiguration LoggingConfig { get; set; }
 
         public string? MessageOfTheDay { get; set; }
+
+        public TinfoilIndexType IndexType { get; set; }
     }
 }

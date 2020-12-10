@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 
@@ -14,10 +15,21 @@ namespace TinfoilWebServer.Settings
                 ServedDirectory = GetServedDirectory(configRoot),
                 AllowedExt = GetAllowedExt(configRoot),
                 MessageOfTheDay = GetMessageOfTheDay(configRoot),
+                IndexType = GetIndexType(configRoot),
                 KestrelConfig = configRoot.GetSection("Kestrel"),
                 LoggingConfig = configRoot.GetSection("Logging")
             };
             return appSettings;
+        }
+
+        private static TinfoilIndexType GetIndexType(IConfiguration config)
+        {
+            var valueStr = config.GetValue<string>("IndexType");
+
+            if (Enum.TryParse(typeof(TinfoilIndexType), valueStr, true, out var value))
+                return (TinfoilIndexType)value;
+            else
+                return TinfoilIndexType.Flatten;
         }
 
         private static string? GetMessageOfTheDay(IConfiguration config)

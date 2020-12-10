@@ -16,11 +16,11 @@ namespace TinfoilWebServer
         public void Configure(IApplicationBuilder app, IRequestManager requestManager, ILogger<Startup> logger, IAppSettings appSettings)
         {
 
-
             logger.LogInformation($"Served directory:{Spacing}{appSettings.ServedDirectory}");
 
-            logger.LogInformation(
-                $"Server Host/IP:{Spacing}{string.Join($"{Spacing}", GetCurrentComputerAddressesOrHosts())}");
+            logger.LogInformation($"Server Host/IP:{Spacing}{string.Join($"{Spacing}", GetCurrentComputerAddressesOrHosts())}");
+
+            logger.LogInformation($"Tinfoil index type:{Spacing}{appSettings.IndexType}.");
 
             app.Run(requestManager.OnRequest);
         }

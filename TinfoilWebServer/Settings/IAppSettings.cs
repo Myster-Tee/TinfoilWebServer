@@ -13,5 +13,13 @@ namespace TinfoilWebServer.Settings
         IConfiguration LoggingConfig { get; }
 
         string? MessageOfTheDay { get; }
+
+        TinfoilIndexType IndexType { get; }
+    }
+
+    public enum TinfoilIndexType
+    {
+        Flatten,
+        Hierarchical,
     }
 }

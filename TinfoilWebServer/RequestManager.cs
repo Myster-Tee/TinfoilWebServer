@@ -18,14 +18,14 @@ namespace TinfoilWebServer
     {
         private readonly IAppSettings _appSettings;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly IIndexBuilder _indexBuilder;
+        private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
         private readonly IFileFilter _fileFilter;
 
-        public RequestManager(IAppSettings appSettings, IWebHostEnvironment webHostEnvironment, IIndexBuilder indexBuilder, IFileFilter fileFilter)
+        public RequestManager(IAppSettings appSettings, IWebHostEnvironment webHostEnvironment, ITinfoilIndexBuilder tinfoilIndexBuilder, IFileFilter fileFilter)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
-            _indexBuilder = indexBuilder ?? throw new ArgumentNullException(nameof(indexBuilder));
+            _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
             _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
         }
 
@@ -48,8 +48,8 @@ namespace TinfoilWebServer
                 var url = $"{request.Scheme}://{request.Host}{requestPath}";
                 var uri = new Uri(url);
 
-                var isRootPath = string.Equals(requestPath, "/");
-                var mainPayload = _indexBuilder.Build(physicalPath, uri, isRootPath ? _appSettings.MessageOfTheDay : null);
+                var isRootPath = string.Equals(requestPath, "/") || true;
+                var mainPayload = _tinfoilIndexBuilder.Build(physicalPath, uri, _appSettings.IndexType, isRootPath ? _appSettings.MessageOfTheDay : null);
 
                 var json = JsonSerializer.Serialize(mainPayload, new JsonSerializerOptions { WriteIndented = true });
 
