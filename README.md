@@ -12,7 +12,7 @@ To run the server you'll need to install the [ASP.NET Core Runtime 5.X.X or more
 
 ```jsonc 
 {
-  "ServedDirectory": "DirectoryPath",       // ex: "C:\SomeDirContainingPackages"
+  "ServedDirectory": "DirectoryPath",     // ex: "C:\SomeDirContainingPackages"
   "AllowedExt": ["ext1", "ext2", "ext3"], // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
   "MessageOfTheDay": "SomeText",          // The welcome message displayed when Tinfoil starts scanning files
   "IndexType": "enum",                    // The type of index file returned to Tinfoil, can be either "Flatten" or "Hierarchical".
