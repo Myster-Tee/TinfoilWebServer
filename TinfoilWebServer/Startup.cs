@@ -13,6 +13,13 @@ namespace TinfoilWebServer
     {
         private static readonly string Spacing = $"{Environment.NewLine}        ";
 
+        /// <summary>
+        /// Welcome to ASP.NET, this method is implicitly called «.UseStartup<Startup>()»
+        /// </summary>
+        /// <param name="app"></param>
+        /// <param name="requestManager"></param>
+        /// <param name="logger"></param>
+        /// <param name="appSettings"></param>
         public void Configure(IApplicationBuilder app, IRequestManager requestManager, ILogger<Startup> logger, IAppSettings appSettings)
         {
 
