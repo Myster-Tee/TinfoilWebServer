@@ -3,7 +3,12 @@ using System.Text.Json.Serialization;
 
 namespace TinfoilWebServer.Models
 {
-    public class FilesStructure
+    /// <summary>
+    /// Tinfoil HTTP documentation
+    /// https://blawar.github.io/tinfoil/network/
+    /// https://blawar.github.io/tinfoil/custom_index/
+    /// </summary>
+    public class TinfoilIndex
     {
 
         /// <summary>
@@ -19,10 +24,10 @@ namespace TinfoilWebServer.Models
         public List<string> Directories { get; set; } = new List<string>();
 
         /// <summary>
-        /// "success": "motd text here"
+        /// Message of the Day
         /// </summary>
         [JsonPropertyName("success")]
-        public string Success { get; set; }
+        public string? Success { get; set; }
     }
 
     public class FileNfo

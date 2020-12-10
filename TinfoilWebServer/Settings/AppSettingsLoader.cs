@@ -13,10 +13,16 @@ namespace TinfoilWebServer.Settings
             {
                 ServedDirectory = GetServedDirectory(configRoot),
                 AllowedExt = GetAllowedExt(configRoot),
+                MessageOfTheDay = GetMessageOfTheDay(configRoot),
                 KestrelConfig = configRoot.GetSection("Kestrel"),
                 LoggingConfig = configRoot.GetSection("Logging")
             };
             return appSettings;
+        }
+
+        private static string? GetMessageOfTheDay(IConfiguration config)
+        {
+            return config.GetValue<string>("MessageOfTheDay");
         }
 
         private static string[] GetAllowedExt(IConfiguration config)

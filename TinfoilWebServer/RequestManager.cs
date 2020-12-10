@@ -18,20 +18,21 @@ namespace TinfoilWebServer
     {
         private readonly IAppSettings _appSettings;
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly IFilesStructureBuilder _filesStructureBuilder;
+        private readonly IIndexBuilder _indexBuilder;
         private readonly IFileFilter _fileFilter;
 
-        public RequestManager(IAppSettings appSettings, IWebHostEnvironment webHostEnvironment, IFilesStructureBuilder filesStructureBuilder, IFileFilter fileFilter)
+        public RequestManager(IAppSettings appSettings, IWebHostEnvironment webHostEnvironment, IIndexBuilder indexBuilder, IFileFilter fileFilter)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
-            _filesStructureBuilder = filesStructureBuilder ?? throw new ArgumentNullException(nameof(filesStructureBuilder));
+            _indexBuilder = indexBuilder ?? throw new ArgumentNullException(nameof(indexBuilder));
             _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
         }
 
         public async Task OnRequest(HttpContext context)
         {
-            var requestPath = context.Request.Path;
+            var request = context.Request;
+            var requestPath = request.Path;
             if (string.Equals(requestPath, "/favicon.ico", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.StatusCode = 200;
@@ -40,15 +41,15 @@ namespace TinfoilWebServer
             }
 
             var decodedPath = HttpUtility.UrlDecode(requestPath);
-            var requestedPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
-            var request = context.Request;
+            var physicalPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
 
-            if (Directory.Exists(requestedPath) && request.Method == "GET" || request.Method == "HEAD")
+            if (Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
             {
-                var url = $"{context.Request.Scheme}://{context.Request.Host}{requestPath}";
+                var url = $"{request.Scheme}://{request.Host}{requestPath}";
                 var uri = new Uri(url);
 
-                var mainPayload = _filesStructureBuilder.Build(requestedPath, uri);
+                var isRootPath = string.Equals(requestPath, "/");
+                var mainPayload = _indexBuilder.Build(physicalPath, uri, isRootPath ? _appSettings.MessageOfTheDay : null);
 
                 var json = JsonSerializer.Serialize(mainPayload, new JsonSerializerOptions { WriteIndented = true });
 
@@ -57,17 +58,17 @@ namespace TinfoilWebServer
 
                 await context.Response.WriteAsync(json, Encoding.UTF8);
             }
-            else if (_fileFilter.IsFileAllowed(requestedPath) && File.Exists(requestedPath) && request.Method == "GET" || request.Method == "HEAD")
+            else if (_fileFilter.IsFileAllowed(physicalPath) && File.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
             {
                 var rangeHeader = new RangeHeader
                 {
-                    RawValue = context.Request.Headers["range"]
+                    RawValue = request.Headers["range"]
                 };
 
                 var ranges = rangeHeader.Ranges;
                 var range = ranges.Count == 1 ? ranges[0] : null;
 
-                await context.Response.WriteFile(requestedPath, range: range);
+                await context.Response.WriteFile(physicalPath, range: range);
             }
             else
             {

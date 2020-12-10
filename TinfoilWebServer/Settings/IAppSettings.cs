@@ -11,5 +11,7 @@ namespace TinfoilWebServer.Settings
         IConfiguration KestrelConfig { get; }
 
         IConfiguration LoggingConfig { get; }
+
+        string? MessageOfTheDay { get; }
     }
 }

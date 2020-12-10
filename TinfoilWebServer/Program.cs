@@ -46,7 +46,7 @@ namespace TinfoilWebServer
                     services
                         .AddSingleton(appSettings)
                         .AddSingleton<IRequestManager, RequestManager>()
-                        .AddSingleton<IFilesStructureBuilder, FilesStructureBuilder>()
+                        .AddSingleton<IIndexBuilder, IndexBuilder>()
                         .AddSingleton<IFileFilter, FileFilter>();
                 })
                 .UseConfiguration(configRoot)
