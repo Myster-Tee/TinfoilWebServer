@@ -22,7 +22,6 @@ namespace TinfoilWebServer
         {
             Console.WriteLine(CurrentDirectory);
 
-
             var configRoot = new ConfigurationBuilder()
                 .SetBasePath(CurrentDirectory)
                 .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true)
@@ -34,17 +33,19 @@ namespace TinfoilWebServer
 
             var webHostBuilder = new WebHostBuilder()
                 .SuppressStatusMessages(true)
-                .ConfigureLogging((hostingContext, logging) =>
+                .ConfigureLogging((hostingContext, loggingBuilder) =>
                 {
-                    logging.AddConfiguration(appSettings.LoggingConfig);
-                    logging.AddConsole();
+                    loggingBuilder
+                        .AddConfiguration(appSettings.LoggingConfig)
+                        .AddConsole();
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddSingleton(appSettings);
-                    services.AddSingleton<IRequestManager, RequestManager>();
-                    services.AddSingleton<IFilesStructureBuilder, FilesStructureBuilder>();
-                    services.AddSingleton<IFileFilter, FileFilter>();
+                    services
+                        .AddSingleton(appSettings)
+                        .AddSingleton<IRequestManager, RequestManager>()
+                        .AddSingleton<IFilesStructureBuilder, FilesStructureBuilder>()
+                        .AddSingleton<IFileFilter, FileFilter>();
                 })
                 .UseConfiguration(configRoot)
                 .UseKestrel((ctx, options) =>

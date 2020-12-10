@@ -43,7 +43,7 @@ namespace TinfoilWebServer
             var requestedPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
             var request = context.Request;
 
-            if (Directory.Exists(requestedPath) && request.Method == "GET")
+            if (Directory.Exists(requestedPath) && request.Method == "GET" || request.Method == "HEAD")
             {
                 var url = $"{context.Request.Scheme}://{context.Request.Host}{requestPath}";
                 var uri = new Uri(url);
@@ -57,7 +57,7 @@ namespace TinfoilWebServer
 
                 await context.Response.WriteAsync(json, Encoding.UTF8);
             }
-            else if (_fileFilter.IsFileAllowed(requestedPath) && File.Exists(requestedPath) && request.Method == "GET")
+            else if (_fileFilter.IsFileAllowed(requestedPath) && File.Exists(requestedPath) && request.Method == "GET" || request.Method == "HEAD")
             {
                 var rangeHeader = new RangeHeader
                 {
