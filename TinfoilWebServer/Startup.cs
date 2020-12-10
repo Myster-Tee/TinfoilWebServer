@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Settings;
@@ -22,6 +23,7 @@ namespace TinfoilWebServer
         /// <param name="appSettings"></param>
         public void Configure(IApplicationBuilder app, IRequestManager requestManager, ILogger<Startup> logger, IAppSettings appSettings)
         {
+            logger.LogInformation($"Welcome to Tinfoil Web Server v{Assembly.GetExecutingAssembly().GetName().Version}");
 
             logger.LogInformation($"Served directory:{Spacing}{appSettings.ServedDirectory}");
 

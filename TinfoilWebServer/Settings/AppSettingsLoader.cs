@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
+using TinfoilWebServer.Services;
 
 namespace TinfoilWebServer.Settings
 {

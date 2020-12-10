@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using TinfoilWebServer.Services;
 
 namespace TinfoilWebServer.Settings
 {
@@ -15,11 +16,5 @@ namespace TinfoilWebServer.Settings
         string? MessageOfTheDay { get; }
 
         TinfoilIndexType IndexType { get; }
-    }
-
-    public enum TinfoilIndexType
-    {
-        Flatten,
-        Hierarchical,
     }
 }
