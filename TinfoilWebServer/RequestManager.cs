@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using System.Web;
 using ElMariachi.Http.Header.Managed;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 using TinfoilWebServer.HttpExtensions;
 using TinfoilWebServer.Properties;
 using TinfoilWebServer.Services;
@@ -40,7 +42,11 @@ namespace TinfoilWebServer
                 return;
             }
 
+            //TODO
+            var currentUrl = new Uri(context.Request.GetDisplayUrl());
+
             var decodedPath = HttpUtility.UrlDecode(requestPath);
+
             var physicalPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
 
             if (Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")

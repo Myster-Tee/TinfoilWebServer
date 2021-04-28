@@ -2,7 +2,6 @@
 using System.IO;
 using System.Web;
 using TinfoilWebServer.Models;
-using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services
 {
