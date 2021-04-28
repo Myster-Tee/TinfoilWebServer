@@ -54,7 +54,7 @@ namespace TinfoilWebServer
                 {
                     options.Configure(appSettings.KestrelConfig);
                 })
-                .UseContentRoot(appSettings.ServedDirectory)
+                //.UseContentRoot(appSettings.ServedDirectories)
                 .UseStartup<Startup>();
 
             webHostBuilder.Build().Run();

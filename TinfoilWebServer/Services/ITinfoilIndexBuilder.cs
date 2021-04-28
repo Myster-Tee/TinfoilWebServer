@@ -1,6 +1,5 @@
 ﻿using System;
 using TinfoilWebServer.Models;
-using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services
 {

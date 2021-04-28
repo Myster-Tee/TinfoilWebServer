@@ -1,5 +1,6 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -15,7 +16,7 @@ namespace TinfoilWebServer
         private static readonly string Spacing = $"{Environment.NewLine}        ";
 
         /// <summary>
-        /// Welcome to ASP.NET, this method is implicitly called «.UseStartup<Startup>()»
+        /// Welcome to ASP.NET, this method is implicitly called Â«.UseStartup<Startup>()Â»
         /// </summary>
         /// <param name="app"></param>
         /// <param name="requestManager"></param>
@@ -25,7 +26,7 @@ namespace TinfoilWebServer
         {
             logger.LogInformation($"Welcome to Tinfoil Web Server v{Assembly.GetExecutingAssembly().GetName().Version}");
 
-            logger.LogInformation($"Served directory:{Spacing}{appSettings.ServedDirectory}");
+            logger.LogInformation($"Served directories:{string.Join("", appSettings.ServedDirectories.Select(s => $"{Spacing}-> {s}"))}");
 
             logger.LogInformation($"Server Host/IP:{Spacing}{string.Join($"{Spacing}", GetCurrentComputerAddressesOrHosts())}");
 

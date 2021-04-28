@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,7 @@ namespace TinfoilWebServer.Settings
         {
             var appSettings = new AppSettings
             {
-                ServedDirectory = GetServedDirectory(configRoot),
+                ServedDirectories = GetServedDirectories(configRoot).ToArray(),
                 AllowedExt = GetAllowedExt(configRoot),
                 MessageOfTheDay = GetMessageOfTheDay(configRoot),
                 IndexType = GetIndexType(configRoot),
@@ -48,17 +49,25 @@ namespace TinfoilWebServer.Settings
             return allowedExtensions;
         }
 
-        private static string GetServedDirectory(IConfiguration config)
+        private static IEnumerable<string> GetServedDirectories(IConfiguration config)
         {
-            var value = config.GetValue<string>("ServedDirectory");
+            var values = config.GetValue<string[]?>("ServedDirectory");
+            if (values != null)
+            {
+                foreach (var value in values)
+                {
+                    string rootedPath;
+                    if (Path.IsPathRooted(value))
+                        rootedPath = value;
+                    else
+                        rootedPath = Path.Combine(Program.CurrentDirectory, value.TrimStart('\\', '/'));
 
-            if (string.IsNullOrWhiteSpace(value))
-                return Program.CurrentDirectory;
+                    yield return rootedPath;
+                }
+                yield break;
+            }
 
-            if (Path.IsPathRooted(value))
-                return value;
-
-            return Path.Combine(Program.CurrentDirectory, value.TrimStart('\\', '/'));
+            yield return Program.CurrentDirectory;
         }
     }
 }
