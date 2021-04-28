@@ -7,6 +7,9 @@ namespace TinfoilWebServer.Settings
     {
         string[] AllowedExt { get; }
 
+        /// <summary>
+        /// The list of served directories rooted
+        /// </summary>
         string[] ServedDirectories { get; }
 
         IConfiguration KestrelConfig { get; }
