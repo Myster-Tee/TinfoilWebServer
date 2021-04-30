@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,19 +14,19 @@ namespace TinfoilWebServer
     public class Program
     {
         public static string CurrentDirectory { get; }
+        public static string ConfigFileName { get; }
 
         static Program()
         {
             CurrentDirectory = Directory.GetCurrentDirectory();
+            ConfigFileName = $"{Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location)}.config.json";
         }
 
         public static void Main(string[] args)
         {
-            Console.WriteLine(CurrentDirectory);
-
             var configRoot = new ConfigurationBuilder()
                 .SetBasePath(CurrentDirectory)
-                .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile(ConfigFileName, optional: true, reloadOnChange: true)
                 .Build();
 
             var appSettings = AppSettingsLoader.Load(configRoot);
