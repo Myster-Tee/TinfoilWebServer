@@ -1,6 +1,5 @@
-using System;
+using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,16 +18,21 @@ namespace TinfoilWebServer
         static Program()
         {
             CurrentDirectory = Directory.GetCurrentDirectory();
-            ConfigFileName = $"{Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location)}.config.json";
+            ConfigFileName = InitConfigFileName(); 
+        }
+
+        private static string InitConfigFileName()
+        {
+            var currentExeWithoutExt = Path.GetFileNameWithoutExtension(Process.GetCurrentProcess()?.MainModule?.FileName) ?? "TinfoilWebServer";
+            return $"{currentExeWithoutExt}.config.json";
         }
 
         public static void Main(string[] args)
         {
             var configRoot = new ConfigurationBuilder()
                 .SetBasePath(CurrentDirectory)
-                .AddJsonFile(ConfigFileName, optional: true, reloadOnChange: true)
+                .AddJsonFile("TinfoilWebServer.config.json", optional: true, reloadOnChange: true)
                 .Build();
-
             var appSettings = AppSettingsLoader.Load(configRoot);
 
             var webHostBuilder = new WebHostBuilder()
