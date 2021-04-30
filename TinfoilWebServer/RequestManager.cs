@@ -6,7 +6,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 using ElMariachi.Http.Header.Managed;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using TinfoilWebServer.HttpExtensions;
@@ -19,17 +18,14 @@ namespace TinfoilWebServer
     public class RequestManager : IRequestManager
     {
         private readonly IAppSettings _appSettings;
-        private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
         private readonly IFileFilter _fileFilter;
         private readonly IPhysicalPathConverter _physicalPathConverter;
         private readonly IServedDirAliasMap _servedDirAliasMap;
 
-        public RequestManager(IAppSettings appSettings, IWebHostEnvironment webHostEnvironment,
-            ITinfoilIndexBuilder tinfoilIndexBuilder, IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter, IServedDirAliasMap servedDirAliasMap)
+        public RequestManager(IAppSettings appSettings, ITinfoilIndexBuilder tinfoilIndexBuilder, IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter, IServedDirAliasMap servedDirAliasMap)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-            _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
             _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
             _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
             _physicalPathConverter = physicalPathConverter ?? throw new ArgumentNullException(nameof(physicalPathConverter));
@@ -39,7 +35,7 @@ namespace TinfoilWebServer
         public async Task OnRequest(HttpContext context)
         {
             var request = context.Request;
-            
+
             var encodedPath = request.Path;
             var decodedPath = HttpUtility.UrlDecode(encodedPath);
 
@@ -50,7 +46,6 @@ namespace TinfoilWebServer
                 return;
             }
 
-            //TODO
             var physicalPath = _physicalPathConverter.Convert(decodedPath, out var isRoot);
             if (isRoot)
             {
@@ -71,24 +66,20 @@ namespace TinfoilWebServer
 
                 await context.Response.WriteAsync(json, Encoding.UTF8);
             }
-            else if(Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
+            else if (Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
             {
+                var tinfoilIndex = _tinfoilIndexBuilder.Build(new[]{new Dir
+                {
+                    CorrespondingUrl = new Uri($"{request.Scheme}://{request.Host}{encodedPath}"),
+                    Path = physicalPath!,
+                }}, _appSettings.IndexType, null);
 
-                //TODO: à finir
-                //physicalPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
-               
-                //var url = $"{request.Scheme}://{request.Host}{encodedPath}";
-                //var uri = new Uri(context.Request.GetEncodedUrl());
+                var json = JsonSerializer.Serialize(tinfoilIndex, new JsonSerializerOptions { WriteIndented = true });
 
-                //var isRootPath = string.Equals(encodedPath, "/") || true;
-                //var mainPayload = _tinfoilIndexBuilder.Build(physicalPath, uri, _appSettings.IndexType, isRootPath ? _appSettings.MessageOfTheDay : null);
+                context.Response.StatusCode = 200;
+                context.Response.ContentType = "application/json";
 
-                //var json = JsonSerializer.Serialize(mainPayload, new JsonSerializerOptions { WriteIndented = true });
-
-                //context.Response.StatusCode = 200;
-                //context.Response.ContentType = "application/json";
-
-                //await context.Response.WriteAsync(json, Encoding.UTF8);
+                await context.Response.WriteAsync(json, Encoding.UTF8);
             }
             else if (_fileFilter.IsFileAllowed(physicalPath) && File.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
             {
@@ -100,14 +91,13 @@ namespace TinfoilWebServer
                 var ranges = rangeHeader.Ranges;
                 var range = ranges.Count == 1 ? ranges[0] : null;
 
-                await context.Response.WriteFile(physicalPath, range: range);
+                await context.Response.WriteFile(physicalPath!, range: range);
             }
             else
             {
                 context.Response.StatusCode = 404;
                 await context.Response.WriteAsync("<!DOCTYPE html><http><head><title>Oops!</title></head><body style='text-align:center'>404<br>Not found...</body></html>");
             }
-
         }
 
     }

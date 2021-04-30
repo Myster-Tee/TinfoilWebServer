@@ -14,14 +14,16 @@ namespace TinfoilWebServer.Services
 
         public string? Convert(string urlRelPathDecoded, out bool isRoot)
         {
-            var pathParts = SanitizeRelPath(urlRelPathDecoded).Split('/', 2);
-
-            isRoot = false;
-            if (pathParts.Length <= 1)
+            if (urlRelPathDecoded == "/")
             {
                 isRoot = true;
                 return null;
             }
+
+            var pathParts = SanitizeRelPath(urlRelPathDecoded).Split('/', 2);
+            isRoot = false;
+            if (pathParts.Length <= 1)
+                return null;
 
             var servedDirAlias = pathParts[0];
             var servedDir = _servedDirAliasMap.GetServedDir(servedDirAlias);
@@ -29,7 +31,7 @@ namespace TinfoilWebServer.Services
                 return null;
 
             var physicalPath = Path.GetFullPath(Path.Combine(servedDir, pathParts[1]));
-            
+
             return physicalPath;
         }
 

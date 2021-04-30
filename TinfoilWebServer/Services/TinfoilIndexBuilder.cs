@@ -46,15 +46,18 @@ namespace TinfoilWebServer.Services
         private void AppendFlatten(Dir dir, TinfoilIndex tinfoilIndex)
         {
             var rooDirUri = SanitizeDirUrl(dir.CorrespondingUrl);
-            var dirPath = SanitizeDir(dir.Path);
+            var sanitizedDir = SanitizeDir(dir.Path);
 
-            var filePaths = Directory.GetFiles(dirPath, "*.*", SearchOption.AllDirectories);
+            if (!Directory.Exists(sanitizedDir))
+                return;
+
+            var filePaths = Directory.GetFiles(sanitizedDir, "*.*", SearchOption.AllDirectories);
             foreach (var filePath in filePaths)
             {
                 if (!_fileFilter.IsFileAllowed(filePath))
                     continue;
 
-                var relFilePath = filePath[dirPath.Length..]; // SubString starting at dirPath.Length to the end
+                var relFilePath = filePath[(sanitizedDir.Length + 1)..]; // SubString starting at dirPath.Length+1 to the end
 
                 var encodedFileName = HttpUtility.UrlPathEncode(relFilePath);
                 var newUri = new Uri(rooDirUri, new Uri(encodedFileName, UriKind.Relative));
@@ -71,16 +74,21 @@ namespace TinfoilWebServer.Services
         {
             var rooDirUri = SanitizeDirUrl(dir.CorrespondingUrl);
 
-            var dirPaths = Directory.GetDirectories(dir.Path);
-            foreach (var dirPath in dirPaths)
+            var sanitizedDir = SanitizeDir(dir.Path);
+
+            if (!Directory.Exists(sanitizedDir))
+                return;
+
+            var dirPaths = Directory.GetDirectories(sanitizedDir);
+            foreach (var subDirPath in dirPaths)
             {
-                var dirName = HttpUtility.UrlPathEncode(Path.GetFileName(dirPath));
+                var dirName = HttpUtility.UrlPathEncode(Path.GetFileName(subDirPath));
 
                 var newUri = new Uri(rooDirUri, dirName);
                 tinfoilIndex.Directories.Add(newUri.AbsoluteUri);
             }
 
-            foreach (var filePath in Directory.GetFiles(dir.Path))
+            foreach (var filePath in Directory.GetFiles(sanitizedDir))
             {
                 if (!_fileFilter.IsFileAllowed(filePath))
                     continue;
@@ -98,9 +106,8 @@ namespace TinfoilWebServer.Services
 
         private static string SanitizeDir(string dirPath)
         {
-            if (dirPath.EndsWith(Path.DirectorySeparatorChar))
-                return dirPath;
-            return dirPath + Path.DirectorySeparatorChar;
+            var sanitizedDir = dirPath.TrimEnd(Path.DirectorySeparatorChar, '/');
+            return sanitizedDir;
         }
 
         private static Uri SanitizeDirUrl(Uri url)

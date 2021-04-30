@@ -21,7 +21,6 @@ namespace TinfoilWebServer.Services
                 var alias = dirNameBase;
                 while (_servedDirPerAlias.ContainsKey(alias))
                 {
-                    //TODO: changer la règle par un simple index
                     alias = $"{dirNameBase}_{num++}";
                 }
 
