@@ -63,7 +63,9 @@ namespace TinfoilWebServer.Settings
                         rootedPath = servedDirRaw;
                     else
                         rootedPath = Path.Combine(Program.CurrentDirectory, servedDirRaw.TrimStart('\\', '/'));
-                    return rootedPath;
+
+                    var fullPathRooted = Path.GetFullPath(rootedPath);
+                    return fullPathRooted;
                 })
                 .ToArray();
         }

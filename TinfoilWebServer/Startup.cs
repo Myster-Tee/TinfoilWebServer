@@ -27,7 +27,7 @@ namespace TinfoilWebServer
         {
             logger.LogInformation($"Welcome to Tinfoil Web Server v{Assembly.GetExecutingAssembly().GetName().Version}");
 
-            logger.LogInformation($"Served directories:{string.Join("", appSettings.ServedDirectories.Select(s => $"{Spacing}-> {s}"))}");
+            logger.LogInformation($"Served directories:{string.Join("", appSettings.ServedDirectories.Select(s => $"{Spacing} {s}"))}");
 
             foreach (var servedDirectory in appSettings.ServedDirectories)
             {

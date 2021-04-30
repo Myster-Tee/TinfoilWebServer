@@ -54,7 +54,7 @@ namespace TinfoilWebServer
                 var dirs = _servedDirAliasMap.Select(dirWithAlias => new Dir
                 {
                     Path = dirWithAlias.DirPath,
-                    CorrespondingUrl = new Uri(url + HttpUtility.UrlDecode(dirWithAlias.Alias)) //TODO: vérifier la présence du slash
+                    CorrespondingUrl = new Uri(url + HttpUtility.UrlDecode(dirWithAlias.Alias))
                 }).ToArray();
 
                 var tinfoilIndex = _tinfoilIndexBuilder.Build(dirs, _appSettings.IndexType, _appSettings.MessageOfTheDay);

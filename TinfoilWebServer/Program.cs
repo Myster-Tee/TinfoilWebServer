@@ -30,8 +30,6 @@ namespace TinfoilWebServer
 
             var appSettings = AppSettingsLoader.Load(configRoot);
 
-            //Host.CreateDefaultBuilder(args)
-
             var webHostBuilder = new WebHostBuilder()
                 .SuppressStatusMessages(true)
                 .ConfigureLogging((hostingContext, loggingBuilder) =>
@@ -56,7 +54,6 @@ namespace TinfoilWebServer
                 {
                     options.Configure(appSettings.KestrelConfig);
                 })
-                //.UseContentRoot(appSettings.ServedDirectories)
                 .UseStartup<Startup>();
 
             webHostBuilder.Build().Run();

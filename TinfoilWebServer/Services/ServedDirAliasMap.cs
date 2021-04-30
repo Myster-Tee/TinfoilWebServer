@@ -68,37 +68,5 @@ namespace TinfoilWebServer.Services
             return GetEnumerator();
         }
 
-        //private class Enumerator : IEnumerator<DirWithAlias>
-        //{
-        //    private readonly IEnumerator<KeyValuePair<string, string>> _servedDirPerAliasEnumerator;
-
-        //    public Enumerator(IEnumerator<KeyValuePair<string, string>> servedDirPerAliasEnumerator)
-        //    {
-        //        _servedDirPerAliasEnumerator = servedDirPerAliasEnumerator;
-        //    }
-
-        //    public bool MoveNext()
-        //    {
-        //        var moveNext = _servedDirPerAliasEnumerator.MoveNext();
-
-        //        _servedDirPerAliasEnumerator.Current.Key
-
-        //        return moveNext;
-        //    }
-
-        //    public void Reset()
-        //    {
-        //        _servedDirPerAliasEnumerator.Reset();
-        //    }
-
-        //    public DirWithAlias Current { get; private set; }
-
-        //    object IEnumerator.Current => Current;
-
-        //    public void Dispose()
-        //    {
-        //        _servedDirPerAliasEnumerator.Dispose();
-        //    }
-        //}
     }
 }
