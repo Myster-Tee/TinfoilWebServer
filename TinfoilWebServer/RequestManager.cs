@@ -22,13 +22,16 @@ namespace TinfoilWebServer
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
         private readonly IFileFilter _fileFilter;
+        private readonly IPhysicalPathConverter _physicalPathConverter;
 
-        public RequestManager(IAppSettings appSettings, IWebHostEnvironment webHostEnvironment, ITinfoilIndexBuilder tinfoilIndexBuilder, IFileFilter fileFilter)
+        public RequestManager(IAppSettings appSettings, IWebHostEnvironment webHostEnvironment,
+            ITinfoilIndexBuilder tinfoilIndexBuilder, IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
             _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
             _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
+            _physicalPathConverter = physicalPathConverter ?? throw new ArgumentNullException(nameof(physicalPathConverter));
         }
 
         public async Task OnRequest(HttpContext context)
@@ -43,11 +46,12 @@ namespace TinfoilWebServer
             }
 
             //TODO
-            var currentUrl = new Uri(context.Request.GetDisplayUrl());
+            var physicalPath = _physicalPathConverter.Convert(context.Request.GetDisplayUrl());
+
 
             var decodedPath = HttpUtility.UrlDecode(requestPath);
 
-            var physicalPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
+            physicalPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
 
             if (Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
             {

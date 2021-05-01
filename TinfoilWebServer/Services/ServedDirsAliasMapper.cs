@@ -4,16 +4,16 @@ using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services
 {
-    public class ServedDirAliasMapper : IServedDirAliasMapper
-
+    public class ServedDirsAliasMapper : IServedDirsAliasMapper
     {
         private readonly Dictionary<string, string> _servedDirPerAlias = new();
+        private readonly object _lock = new();
 
-        public ServedDirAliasMapper(IAppSettings appSettings)
+        public ServedDirsAliasMapper(IAppSettings appSettings)
         {
             foreach (var servedDirectory in appSettings.ServedDirectories)
             {
-                var dirNameBase = Path.GetDirectoryName(servedDirectory)!;
+                var dirNameBase = Path.GetFileName(servedDirectory)!;
 
                 var num = 1;
                 var alias = dirNameBase;
@@ -28,19 +28,25 @@ namespace TinfoilWebServer.Services
 
         public string? GetAlias(string servedDir)
         {
-            foreach (var (alias, servedDirTmp) in _servedDirPerAlias)
+            lock (_lock)
             {
-                if (servedDirTmp.Equals(servedDir))
-                    return alias;
-            }
+                foreach (var (alias, servedDirTmp) in _servedDirPerAlias)
+                {
+                    if (servedDirTmp.Equals(servedDir))
+                        return alias;
+                }
 
-            return null;
+                return null;
+            }
         }
 
         public string? GetServedDir(string alias)
         {
-            _servedDirPerAlias.TryGetValue(alias, out var servedDir);
-            return servedDir;
+            lock (_lock)
+            {
+                _servedDirPerAlias.TryGetValue(alias, out var servedDir);
+                return servedDir;
+            }
         }
 
     }

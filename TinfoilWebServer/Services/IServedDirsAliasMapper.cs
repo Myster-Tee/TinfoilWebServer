@@ -1,6 +1,6 @@
 ﻿namespace TinfoilWebServer.Services
 {
-    public interface IServedDirAliasMapper
+    public interface IServedDirsAliasMapper
     {
         string? GetAlias(string servedDir);
 
