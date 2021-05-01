@@ -3,6 +3,6 @@
     public interface IFileFilter
     {
 
-        bool IsFileAllowed(string filePath);
+        bool IsFileAllowed(string? filePath);
     }
 }

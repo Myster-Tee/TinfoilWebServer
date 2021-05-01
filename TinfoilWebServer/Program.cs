@@ -1,4 +1,4 @@
-using System;
+using System.Diagnostics;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,24 +13,27 @@ namespace TinfoilWebServer
     public class Program
     {
         public static string CurrentDirectory { get; }
+        public static string ConfigFileName { get; }
 
         static Program()
         {
             CurrentDirectory = Directory.GetCurrentDirectory();
+            ConfigFileName = InitConfigFileName(); 
+        }
+
+        private static string InitConfigFileName()
+        {
+            var currentExeWithoutExt = Path.GetFileNameWithoutExtension(Process.GetCurrentProcess()?.MainModule?.FileName) ?? "TinfoilWebServer";
+            return $"{currentExeWithoutExt}.config.json";
         }
 
         public static void Main(string[] args)
         {
-            Console.WriteLine(CurrentDirectory);
-
             var configRoot = new ConfigurationBuilder()
                 .SetBasePath(CurrentDirectory)
-                .AddJsonFile("appSettings.json", optional: true, reloadOnChange: true)
+                .AddJsonFile("TinfoilWebServer.config.json", optional: true, reloadOnChange: true)
                 .Build();
-
             var appSettings = AppSettingsLoader.Load(configRoot);
-
-            //Host.CreateDefaultBuilder(args)
 
             var webHostBuilder = new WebHostBuilder()
                 .SuppressStatusMessages(true)
@@ -47,6 +50,8 @@ namespace TinfoilWebServer
                         .AddSingleton(appSettings)
                         .AddSingleton<IRequestManager, RequestManager>()
                         .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
+                        .AddSingleton<IServedDirAliasMap, ServedDirAliasMap>()
+                        .AddSingleton<IPhysicalPathConverter, PhysicalPathConverter>()
                         .AddSingleton<IFileFilter, FileFilter>();
                 })
                 .UseConfiguration(configRoot)
@@ -54,7 +59,6 @@ namespace TinfoilWebServer
                 {
                     options.Configure(appSettings.KestrelConfig);
                 })
-                .UseContentRoot(appSettings.ServedDirectory)
                 .UseStartup<Startup>();
 
             webHostBuilder.Build().Run();

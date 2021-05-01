@@ -13,7 +13,7 @@ namespace TinfoilWebServer.Settings
         {
             var appSettings = new AppSettings
             {
-                ServedDirectory = GetServedDirectory(configRoot),
+                ServedDirectories = GetServedDirectories(configRoot),
                 AllowedExt = GetAllowedExt(configRoot),
                 MessageOfTheDay = GetMessageOfTheDay(configRoot),
                 IndexType = GetIndexType(configRoot),
@@ -48,17 +48,26 @@ namespace TinfoilWebServer.Settings
             return allowedExtensions;
         }
 
-        private static string GetServedDirectory(IConfiguration config)
+        private static string[] GetServedDirectories(IConfiguration config)
         {
-            var value = config.GetValue<string>("ServedDirectory");
+            var configurationSection = config.GetSection("ServedDirectories");
+            if (!configurationSection.Exists())
+                return new[] { Program.CurrentDirectory };
 
-            if (string.IsNullOrWhiteSpace(value))
-                return Program.CurrentDirectory;
+            return configurationSection.GetChildren()
+                .Select(section => section.Value)
+                .Where(value => value != null).Select(servedDirRaw =>
+                {
+                    string rootedPath;
+                    if (Path.IsPathRooted(servedDirRaw))
+                        rootedPath = servedDirRaw;
+                    else
+                        rootedPath = Path.Combine(Program.CurrentDirectory, servedDirRaw.TrimStart('\\', '/'));
 
-            if (Path.IsPathRooted(value))
-                return value;
-
-            return Path.Combine(Program.CurrentDirectory, value.TrimStart('\\', '/'));
+                    var fullPathRooted = Path.GetFullPath(rootedPath);
+                    return fullPathRooted;
+                })
+                .ToArray();
         }
     }
 }

@@ -14,8 +14,11 @@ namespace TinfoilWebServer.Services
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         }
 
-        public bool IsFileAllowed(string filePath)
+        public bool IsFileAllowed(string? filePath)
         {
+            if (filePath == null)
+                return false;
+
             var currentExtension = Path.GetExtension(filePath).TrimStart('.');
             var ext = _appSettings.AllowedExt.FirstOrDefault(allowedExtension => string.Equals(allowedExtension, currentExtension, StringComparison.OrdinalIgnoreCase));
             return ext != null;

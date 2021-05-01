@@ -1,5 +1,5 @@
 ﻿{
-  "ServedDirectory": "",
+  "ServedDirectories": [ "C:\\Switch", "D:\\NXPackages", "D:\\NSwitch", "." ],
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
   "IndexType": "Flatten",
