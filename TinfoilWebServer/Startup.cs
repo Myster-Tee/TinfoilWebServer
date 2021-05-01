@@ -25,7 +25,9 @@ namespace TinfoilWebServer
         /// <param name="appSettings"></param>
         public void Configure(IApplicationBuilder app, IRequestManager requestManager, ILogger<Startup> logger, IAppSettings appSettings)
         {
-            logger.LogInformation($"Welcome to Tinfoil Web Server v{Assembly.GetExecutingAssembly().GetName().Version}");
+            var version = Assembly.GetExecutingAssembly().GetName().Version!;
+
+            logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Revision}");
 
             logger.LogInformation($"Served directories:{string.Join("", appSettings.ServedDirectories.Select(s => $"{Spacing} {s}"))}");
 

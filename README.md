@@ -5,6 +5,9 @@ Install your Nintendo Switch packages (NSP, NSZ, XCI, etc.) with [Tinfoil](https
 
 All served files must have "[titleid]" in the file name to be recognized by Tinfoil to show up in "New Games", "New DLC", and "New Updates".
 
+## Download
+Releases page [here](https://github.com/Myster-Tee/TinfoilWebServer/releases/tag).
+
 ## Requirements
 
 The requirements depend on the version you choose to download.
