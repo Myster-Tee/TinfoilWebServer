@@ -3,7 +3,7 @@
     public interface IPhysicalPathConverter
     {
 
-        string? Convert(string url);
+        string? Convert(string urlRelPathDecoded, out bool isRoot);
 
     }
 }

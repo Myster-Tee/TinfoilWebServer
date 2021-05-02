@@ -15,13 +15,13 @@ namespace TinfoilWebServer.Models
         /// "files": ["https://url1", "sdmc:/url2", "http://url3"],
         /// </summary>
         [JsonPropertyName("files")]
-        public List<FileNfo> Files { get; set; } = new List<FileNfo>();
+        public List<FileNfo> Files { get; set; } = new();
 
         /// <summary>
         /// "directories": ["https://url1", "sdmc:/url2", "http://url3"],
         /// </summary>
         [JsonPropertyName("directories")]
-        public List<string> Directories { get; set; } = new List<string>();
+        public List<string> Directories { get; set; } = new();
 
         /// <summary>
         /// Message of the Day

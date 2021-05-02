@@ -47,7 +47,7 @@ namespace TinfoilWebServer
                         .AddSingleton(appSettings)
                         .AddSingleton<IRequestManager, RequestManager>()
                         .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
-                        .AddSingleton<IServedDirsAliasMapper, ServedDirsAliasMapper>()
+                        .AddSingleton<IServedDirAliasMap, ServedDirAliasMap>()
                         .AddSingleton<IPhysicalPathConverter, PhysicalPathConverter>()
                         .AddSingleton<IFileFilter, FileFilter>();
                 })

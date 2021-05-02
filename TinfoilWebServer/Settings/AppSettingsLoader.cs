@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -14,7 +13,7 @@ namespace TinfoilWebServer.Settings
         {
             var appSettings = new AppSettings
             {
-                ServedDirectories = GetServedDirectories(configRoot).ToArray(),
+                ServedDirectories = GetServedDirectories(configRoot),
                 AllowedExt = GetAllowedExt(configRoot),
                 MessageOfTheDay = GetMessageOfTheDay(configRoot),
                 IndexType = GetIndexType(configRoot),
@@ -49,25 +48,24 @@ namespace TinfoilWebServer.Settings
             return allowedExtensions;
         }
 
-        private static IEnumerable<string> GetServedDirectories(IConfiguration config)
+        private static string[] GetServedDirectories(IConfiguration config)
         {
-            var values = config.GetValue<string[]?>("ServedDirectory");
-            if (values != null)
-            {
-                foreach (var value in values)
+            var configurationSection = config.GetSection("ServedDirectories");
+            if (!configurationSection.Exists())
+                return new[] { Program.CurrentDirectory };
+
+            return configurationSection.GetChildren()
+                .Select(section => section.Value)
+                .Where(value => value != null).Select(servedDirRaw =>
                 {
                     string rootedPath;
-                    if (Path.IsPathRooted(value))
-                        rootedPath = value;
+                    if (Path.IsPathRooted(servedDirRaw))
+                        rootedPath = servedDirRaw;
                     else
-                        rootedPath = Path.Combine(Program.CurrentDirectory, value.TrimStart('\\', '/'));
-
-                    yield return rootedPath;
-                }
-                yield break;
-            }
-
-            yield return Program.CurrentDirectory;
+                        rootedPath = Path.Combine(Program.CurrentDirectory, servedDirRaw.TrimStart('\\', '/'));
+                    return rootedPath;
+                })
+                .ToArray();
         }
     }
 }

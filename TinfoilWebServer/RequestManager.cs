@@ -23,22 +23,27 @@ namespace TinfoilWebServer
         private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
         private readonly IFileFilter _fileFilter;
         private readonly IPhysicalPathConverter _physicalPathConverter;
+        private readonly IServedDirAliasMap _servedDirAliasMap;
 
         public RequestManager(IAppSettings appSettings, IWebHostEnvironment webHostEnvironment,
-            ITinfoilIndexBuilder tinfoilIndexBuilder, IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter)
+            ITinfoilIndexBuilder tinfoilIndexBuilder, IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter, IServedDirAliasMap servedDirAliasMap)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
             _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
             _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
             _physicalPathConverter = physicalPathConverter ?? throw new ArgumentNullException(nameof(physicalPathConverter));
+            _servedDirAliasMap = servedDirAliasMap;
         }
 
         public async Task OnRequest(HttpContext context)
         {
             var request = context.Request;
-            var requestPath = request.Path;
-            if (string.Equals(requestPath, "/favicon.ico", StringComparison.OrdinalIgnoreCase))
+            
+            var encodedPath = request.Path;
+            var decodedPath = HttpUtility.UrlDecode(encodedPath);
+
+            if (string.Equals(decodedPath, "/favicon.ico", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.StatusCode = 200;
                 await context.Response.Body.WriteAsync(Resources.Favicon);
@@ -46,27 +51,44 @@ namespace TinfoilWebServer
             }
 
             //TODO
-            var physicalPath = _physicalPathConverter.Convert(context.Request.GetDisplayUrl());
-
-
-            var decodedPath = HttpUtility.UrlDecode(requestPath);
-
-            physicalPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
-
-            if (Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
+            var physicalPath = _physicalPathConverter.Convert(decodedPath, out var isRoot);
+            if (isRoot)
             {
-                var url = $"{request.Scheme}://{request.Host}{requestPath}";
-                var uri = new Uri(url);
+                var url = request.GetEncodedUrl();
 
-                var isRootPath = string.Equals(requestPath, "/") || true;
-                var mainPayload = _tinfoilIndexBuilder.Build(physicalPath, uri, _appSettings.IndexType, isRootPath ? _appSettings.MessageOfTheDay : null);
+                var dirs = _servedDirAliasMap.Select(dirWithAlias => new Dir
+                {
+                    Path = dirWithAlias.DirPath,
+                    CorrespondingUrl = new Uri(url + HttpUtility.UrlDecode(dirWithAlias.Alias)) //TODO: vérifier la présence du slash
+                }).ToArray();
 
-                var json = JsonSerializer.Serialize(mainPayload, new JsonSerializerOptions { WriteIndented = true });
+                var tinfoilIndex = _tinfoilIndexBuilder.Build(dirs, _appSettings.IndexType, _appSettings.MessageOfTheDay);
+
+                var json = JsonSerializer.Serialize(tinfoilIndex, new JsonSerializerOptions { WriteIndented = true });
 
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "application/json";
 
                 await context.Response.WriteAsync(json, Encoding.UTF8);
+            }
+            else if(Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
+            {
+
+                //TODO: à finir
+                //physicalPath = _webHostEnvironment.ContentRootFileProvider.GetFileInfo(decodedPath).PhysicalPath;
+               
+                //var url = $"{request.Scheme}://{request.Host}{encodedPath}";
+                //var uri = new Uri(context.Request.GetEncodedUrl());
+
+                //var isRootPath = string.Equals(encodedPath, "/") || true;
+                //var mainPayload = _tinfoilIndexBuilder.Build(physicalPath, uri, _appSettings.IndexType, isRootPath ? _appSettings.MessageOfTheDay : null);
+
+                //var json = JsonSerializer.Serialize(mainPayload, new JsonSerializerOptions { WriteIndented = true });
+
+                //context.Response.StatusCode = 200;
+                //context.Response.ContentType = "application/json";
+
+                //await context.Response.WriteAsync(json, Encoding.UTF8);
             }
             else if (_fileFilter.IsFileAllowed(physicalPath) && File.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
             {

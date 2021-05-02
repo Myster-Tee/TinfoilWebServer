@@ -1,30 +1,45 @@
 ﻿using System;
+using System.IO;
 
 namespace TinfoilWebServer.Services
 {
     public class PhysicalPathConverter : IPhysicalPathConverter
     {
-        private readonly IServedDirsAliasMapper _servedDirsAliasMapper;
+        private readonly IServedDirAliasMap _servedDirAliasMap;
 
-        public PhysicalPathConverter(IServedDirsAliasMapper servedDirsAliasMapper)
+        public PhysicalPathConverter(IServedDirAliasMap servedDirAliasMap)
         {
-            _servedDirsAliasMapper = servedDirsAliasMapper ?? throw new ArgumentNullException(nameof(servedDirsAliasMapper));
+            _servedDirAliasMap = servedDirAliasMap ?? throw new ArgumentNullException(nameof(servedDirAliasMap));
         }
 
-        public string? Convert(string url)
+        public string? Convert(string urlRelPathDecoded, out bool isRoot)
         {
-            var uri = new Uri(url, UriKind.Absolute);
+            var pathParts = SanitizeRelPath(urlRelPathDecoded).Split('/', 2);
 
-            if (uri.Segments.Length >= 2)
+            isRoot = false;
+            if (pathParts.Length <= 1)
             {
-                var servedDirAlias = uri.Segments[1].TrimEnd('/');
-                var servedDir = _servedDirsAliasMapper.GetServedDir(servedDirAlias);
-                if (servedDir == null)
-                    return null;
-
+                isRoot = true;
+                return null;
             }
 
-            return null;
+            var servedDirAlias = pathParts[0];
+            var servedDir = _servedDirAliasMap.GetServedDir(servedDirAlias);
+            if (servedDir == null)
+                return null;
+
+            var physicalPath = Path.GetFullPath(Path.Combine(servedDir, pathParts[1]));
+            
+            return physicalPath;
         }
+
+        private static string SanitizeRelPath(string urlRelPathDecoded)
+        {
+            if (urlRelPathDecoded.StartsWith('/'))
+                return urlRelPathDecoded[1..];
+            return urlRelPathDecoded;
+        }
+
+
     }
 }
