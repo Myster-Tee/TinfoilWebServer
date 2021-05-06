@@ -80,6 +80,7 @@ namespace TinfoilWebServer
                         .AddSingleton<IFileFilter, FileFilter>()
                         .AddSingleton<IUrlCombinerFactory, UrlCombinerFactory>()
                         .AddSingleton<IJsonSerializer, JsonSerializer>()
+                        .AddSingleton<ICachedTinfoilIndexBuilder, CachedTinfoilIndexBuilder>()
                         .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>();
 
                 })

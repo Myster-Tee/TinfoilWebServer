@@ -16,7 +16,7 @@ namespace TinfoilWebServer
     public class RequestManager : IRequestManager
     {
         private readonly IAppSettings _appSettings;
-        private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
+        private readonly ICachedTinfoilIndexBuilder _cachedTinfoilIndexBuilder;
         private readonly IFileFilter _fileFilter;
         private readonly IPhysicalPathConverter _physicalPathConverter;
         private readonly IServedDirAliasMap _servedDirAliasMap;
@@ -24,13 +24,13 @@ namespace TinfoilWebServer
         private readonly IUrlCombinerFactory _urlCombinerFactory;
 
         public RequestManager(
-            IAppSettings appSettings, ITinfoilIndexBuilder tinfoilIndexBuilder,
+            IAppSettings appSettings, ICachedTinfoilIndexBuilder cachedTinfoilIndexBuilder,
             IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter,
             IServedDirAliasMap servedDirAliasMap, IJsonSerializer jsonSerializer,
             IUrlCombinerFactory urlCombinerFactory)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-            _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
+            _cachedTinfoilIndexBuilder = cachedTinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(cachedTinfoilIndexBuilder));
             _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
             _physicalPathConverter = physicalPathConverter ?? throw new ArgumentNullException(nameof(physicalPathConverter));
             _servedDirAliasMap = servedDirAliasMap ?? throw new ArgumentNullException(nameof(servedDirAliasMap));
@@ -43,6 +43,7 @@ namespace TinfoilWebServer
             var request = context.Request;
 
             var rootUrlCombiner = _urlCombinerFactory.Create(new Uri(context.Request.GetEncodedUrl(), UriKind.Absolute));
+
 
             var decodedRelPath = request.Path.Value!; // NOTE: good to read this article https://stackoverflow.com/questions/66471763/inconsistent-url-decoding-of-httprequest-path-in-asp-net-core
 
@@ -63,7 +64,7 @@ namespace TinfoilWebServer
                     CorrespondingUrl = rootUrlCombiner.CombineLocalPath(dirWithAlias.Alias)
                 }).ToArray();
 
-                var tinfoilIndex = _tinfoilIndexBuilder.Build(dirs, _appSettings.IndexType, _appSettings.MessageOfTheDay);
+                var tinfoilIndex = _cachedTinfoilIndexBuilder.Build(decodedRelPath, dirs, _appSettings.IndexType, _appSettings.MessageOfTheDay);
 
                 var json = _jsonSerializer.Serialize(tinfoilIndex);
 
@@ -74,7 +75,7 @@ namespace TinfoilWebServer
             }
             else if (Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
             {
-                var tinfoilIndex = _tinfoilIndexBuilder.Build(new[]{new Dir
+                var tinfoilIndex = _cachedTinfoilIndexBuilder.Build(decodedRelPath, new[]{new Dir
                 {
                     CorrespondingUrl = rootUrlCombiner.BaseAbsUrl,
                     Path = physicalPath!,
