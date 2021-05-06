@@ -3,14 +3,17 @@
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
   "IndexType": "Flatten",
-  "CacheExpiration": "01:00:00",
+  "CacheExpiration": "00:00:10",
   "Kestrel": {
     "Endpoints": {
       "Http": {
         "Url": "http://0.0.0.0:80"
       }
-    },
-    "Logging": {
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug"
     }
   }
 }
