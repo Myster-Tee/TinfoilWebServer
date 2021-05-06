@@ -13,7 +13,7 @@
   },
   "Logging": {
     "LogLevel": {
-      "Default": "Debug"
+      "Default": "Information"
     }
   }
 }

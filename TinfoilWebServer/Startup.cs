@@ -25,7 +25,7 @@ namespace TinfoilWebServer
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version!;
 
-            logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Revision} (press CTRL+C to exit)");
+            logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Build} (press CTRL+C to exit)");
 
             logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
 
