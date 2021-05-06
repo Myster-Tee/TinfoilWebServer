@@ -10,7 +10,6 @@ namespace TinfoilWebServer.Settings
 {
     public class AppSettingsLoader
     {
-        //TODO: finir la remontée des erreurs
 
         public static IAppSettings Load(IConfigurationRoot configRoot, out string[] loadingErrors)
         {
@@ -75,12 +74,18 @@ namespace TinfoilWebServer.Settings
 
             private TinfoilIndexType GetIndexType()
             {
-                var valueStr = _configurationRoot.GetValue<string>("IndexType");
+                const string? SETTING_NAME = "IndexType";
 
-                if (Enum.TryParse(typeof(TinfoilIndexType), valueStr, true, out var value))
-                    return (TinfoilIndexType)value;
-                else
+                var valueStr = _configurationRoot.GetValue<string>(SETTING_NAME);
+
+                if (!Enum.TryParse(typeof(TinfoilIndexType), valueStr, true, out var value))
+                {
+                    var allowedValues = string.Join(", ", Enum.GetValues<TinfoilIndexType>().Select(v => v.ToString()));
+                    _loadingErrors.Add($"Invalid setting «{SETTING_NAME}», allowed values «{allowedValues}».");
                     return TinfoilIndexType.Flatten;
+                }
+
+                return (TinfoilIndexType)value;
             }
 
             private string? GetMessageOfTheDay()

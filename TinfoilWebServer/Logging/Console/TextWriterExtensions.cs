@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace TinfoilWebServer.ConsoleLogging
+namespace TinfoilWebServer.Logging.Console
 {
     public static class TextWriterExtensions
     {

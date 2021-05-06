@@ -3,6 +3,7 @@
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
   "IndexType": "Flatten",
+  "CacheExpiration": "01:00:00",
   "Kestrel": {
     "Endpoints": {
       "Http": {

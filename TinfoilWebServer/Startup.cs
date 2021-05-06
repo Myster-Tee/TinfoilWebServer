@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.Logging;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer
 {
     public class Startup
     {
-        private static readonly string Spacing = $"{Environment.NewLine}        ";
 
         /// <summary>
         /// WTF ASP.NET, this method is implicitly called «.UseStartup<Startup>()»
@@ -29,17 +27,17 @@ namespace TinfoilWebServer
 
             logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Revision}");
 
-            logger.LogInformation($"Served directories:{string.Join("", appSettings.ServedDirectories.Select(s => $"{Spacing} {s}"))}");
+            logger.LogInformation($"Served directories:{appSettings.ServedDirectories.ToMultilineString()}");
 
             foreach (var servedDirectory in appSettings.ServedDirectories)
             {
-                if(!Directory.Exists(servedDirectory))
+                if (!Directory.Exists(servedDirectory))
                     logger.LogWarning($"Directory «{servedDirectory}» not found!");
             }
 
-            logger.LogInformation($"Server Host/IP:{Spacing}{string.Join($"{Spacing}", GetCurrentComputerAddressesOrHosts())}");
+            logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
 
-            logger.LogInformation($"Tinfoil index type:{Spacing}{appSettings.IndexType}.");
+            logger.LogInformation($"Tinfoil index type:{LogUtil.MultilineLogSpacing}{appSettings.IndexType}.");
 
             app.Run(requestManager.OnRequest);
         }

@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TinfoilWebServer.ConsoleLogging;
+using TinfoilWebServer.Logging;
+using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Settings;
 
@@ -48,9 +49,10 @@ namespace TinfoilWebServer
             }
 
             IAppSettings? appSettings;
+            string[]? settingsLoadingErrors;
             try
             {
-                appSettings = AppSettingsLoader.Load(configRoot, out var errors);
+                appSettings = AppSettingsLoader.Load(configRoot, out settingsLoadingErrors);
             }
             catch (Exception ex)
             {
@@ -88,7 +90,14 @@ namespace TinfoilWebServer
                 })
                 .UseStartup<Startup>();
 
-            webHostBuilder.Build().Run();
+
+            var webHost = webHostBuilder.Build();
+
+            var logger = webHost.Services.GetRequiredService<ILogger<Program>>();
+            if (settingsLoadingErrors.Length > 0)
+                logger.LogError($"Settings error:{settingsLoadingErrors.ToMultilineString()}");
+
+            webHost.Run();
         }
 
 

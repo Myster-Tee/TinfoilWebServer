@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 
-namespace TinfoilWebServer.ConsoleLogging
+namespace TinfoilWebServer.Logging.Console
 {
     public class CustomConsoleFormatter : ConsoleFormatter
     {
