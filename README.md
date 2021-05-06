@@ -23,14 +23,20 @@ No requirements but heavytweight.
 ```jsonc
 {
   "ServedDirectories": ["dir1", "dir2", ...],   // ex: ["C:\\SomeDir\\DirWithPackages", "D:\\AnotherDir", "."] !!! Don't forget to escape backslashes with another one !!!
-  "AllowedExt": ["ext1", "ext2", ...],          // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
-  "MessageOfTheDay": "SomeText",                // The welcome message displayed when Tinfoil starts scanning files
+  "AllowedExt": ["ext1", "ext2", ...],          // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ].
+  "MessageOfTheDay": "SomeText",                // The welcome message displayed when Tinfoil requests the root index.
   "IndexType": "<enum>",                        // The type of index file returned to Tinfoil, can be either "Flatten" or "Hierarchical".
-  "Kestrel": {                                  // HTTP server configuration see �https://docs.microsoft.com/fr-fr/aspnet/core/fundamentals/servers/kestrel?view=aspnetcore-5.0#configureiconfiguration� for more information
+  "CacheExpiration": "<duration>",              // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]».
+  "Kestrel": {                                  // HTTP server configuration see «https://docs.microsoft.com/fr-fr/aspnet/core/fundamentals/servers/kestrel?view=aspnetcore-5.0#configureiconfiguration» for more information.
     "Endpoints": {
       "Http": {
         "Url": "http://0.0.0.0:80"
       }
+    }
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information"                  // See «https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-5.0» for more information.
     }
   }
 }
