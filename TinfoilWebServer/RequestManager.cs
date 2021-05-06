@@ -1,10 +1,11 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Threading.Tasks;
-using System.Web;
 using ElMariachi.Http.Header.Managed;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -36,8 +37,9 @@ namespace TinfoilWebServer
         {
             var request = context.Request;
 
-            var encodedPath = request.Path;
-            var decodedPath = HttpUtility.UrlDecode(encodedPath);
+            var decodedPath = request.Path.Value;
+            var encodedPath = request.Path.ToUriComponent();
+
 
             if (string.Equals(decodedPath, "/favicon.ico", StringComparison.OrdinalIgnoreCase))
             {
@@ -54,12 +56,16 @@ namespace TinfoilWebServer
                 var dirs = _servedDirAliasMap.Select(dirWithAlias => new Dir
                 {
                     Path = dirWithAlias.DirPath,
-                    CorrespondingUrl = new Uri(url + HttpUtility.UrlDecode(dirWithAlias.Alias))
+                    CorrespondingUrl = new Uri(url + WebUtility.UrlDecode(dirWithAlias.Alias))
                 }).ToArray();
 
                 var tinfoilIndex = _tinfoilIndexBuilder.Build(dirs, _appSettings.IndexType, _appSettings.MessageOfTheDay);
 
-                var json = JsonSerializer.Serialize(tinfoilIndex, new JsonSerializerOptions { WriteIndented = true });
+                var json = JsonSerializer.Serialize(tinfoilIndex, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping // NOTE: required to avoid escaping of some special chars like '+', '&', etc. (See https://docs.microsoft.com/fr-fr/dotnet/standard/serialization/system-text-json-character-encoding for more information)
+                });
 
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "application/json";

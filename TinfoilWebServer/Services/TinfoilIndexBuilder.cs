@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Web;
+using System.Net;
 using TinfoilWebServer.Models;
 
 namespace TinfoilWebServer.Services
@@ -59,7 +59,7 @@ namespace TinfoilWebServer.Services
 
                 var relFilePath = filePath[(sanitizedDir.Length + 1)..]; // SubString starting at dirPath.Length+1 to the end
 
-                var encodedFileName = HttpUtility.UrlPathEncode(relFilePath);
+                var encodedFileName = WebUtility.UrlEncode(relFilePath);
                 var newUri = new Uri(rooDirUri, new Uri(encodedFileName, UriKind.Relative));
 
                 tinfoilIndex.Files.Add(new FileNfo
@@ -82,7 +82,7 @@ namespace TinfoilWebServer.Services
             var dirPaths = Directory.GetDirectories(sanitizedDir);
             foreach (var subDirPath in dirPaths)
             {
-                var dirName = HttpUtility.UrlPathEncode(Path.GetFileName(subDirPath));
+                var dirName = WebUtility.UrlEncode(Path.GetFileName(subDirPath));
 
                 var newUri = new Uri(rooDirUri, dirName);
                 tinfoilIndex.Directories.Add(newUri.AbsoluteUri);
@@ -94,7 +94,7 @@ namespace TinfoilWebServer.Services
                     continue;
 
                 var fileName = Path.GetFileName(filePath);
-                var encodedFileName = HttpUtility.UrlPathEncode(fileName);
+                var encodedFileName = WebUtility.UrlEncode(fileName);
                 var newUri = new Uri(rooDirUri, new Uri(encodedFileName, UriKind.Relative));
                 tinfoilIndex.Files.Add(new FileNfo
                 {
