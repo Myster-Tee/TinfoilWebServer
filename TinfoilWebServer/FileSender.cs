@@ -65,17 +65,18 @@ namespace TinfoilWebServer
                 var nbRemainingBytes = _contentLength;
                 _fileStream.Position = _startOffset;
 
-                int nbBytesRead;
-                do
+                while(nbRemainingBytes > 0)
                 {
                     var nbBytesToRead = (int)Math.Min(bufferSize, nbRemainingBytes);
 
-                    nbBytesRead = _fileStream.Read(buffer, 0, nbBytesToRead);
+                    var nbBytesRead = _fileStream.Read(buffer, 0, nbBytesToRead);
+                    if(nbBytesRead <= 0)
+                        break;
 
                     await _response.Body.WriteAsync(buffer, 0, nbBytesRead);
 
                     nbRemainingBytes -= nbBytesRead;
-                } while (nbRemainingBytes > 0 || nbBytesRead == 0);
+                }
 
                 if (nbRemainingBytes > 0)
                     throw new Exception($"Unexpected error: the number of bytes to write could not be honored, {nbRemainingBytes} byte(s) missing.");
