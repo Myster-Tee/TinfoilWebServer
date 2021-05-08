@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using TinfoilWebServer.Models;
 
 namespace TinfoilWebServer.Services
@@ -9,10 +8,12 @@ namespace TinfoilWebServer.Services
     public class TinfoilIndexBuilder : ITinfoilIndexBuilder
     {
         private readonly IFileFilter _fileFilter;
+        private readonly IUrlCombinerFactory _urlCombinerFactory;
 
-        public TinfoilIndexBuilder(IFileFilter fileFilter)
+        public TinfoilIndexBuilder(IFileFilter fileFilter, IUrlCombinerFactory urlCombinerFactory)
         {
             _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
+            _urlCombinerFactory = urlCombinerFactory ?? throw new ArgumentNullException(nameof(urlCombinerFactory));
         }
 
         public TinfoilIndex Build(IEnumerable<Dir> dirs, TinfoilIndexType indexType, string? messageOfTheDay)
@@ -45,22 +46,22 @@ namespace TinfoilWebServer.Services
 
         private void AppendFlatten(Dir dir, TinfoilIndex tinfoilIndex)
         {
-            var rooDirUri = SanitizeDirUrl(dir.CorrespondingUrl);
-            var sanitizedDir = SanitizeDir(dir.Path);
+            var urlCombiner = _urlCombinerFactory.Create(dir.CorrespondingUrl);
 
-            if (!Directory.Exists(sanitizedDir))
+            var localDirPath = dir.Path;
+
+            if (!Directory.Exists(localDirPath))
                 return;
 
-            var filePaths = Directory.GetFiles(sanitizedDir, "*.*", SearchOption.AllDirectories);
+            var filePaths = Directory.GetFiles(localDirPath, "*.*", SearchOption.AllDirectories);
             foreach (var filePath in filePaths)
             {
                 if (!_fileFilter.IsFileAllowed(filePath))
                     continue;
 
-                var relFilePath = filePath[(sanitizedDir.Length + 1)..]; // SubString starting at dirPath.Length+1 to the end
+                var relFilePath = filePath[localDirPath.Length..]; // SubString from dirPath.Length to the end
 
-                var encodedFileName = WebUtility.UrlEncode(relFilePath);
-                var newUri = new Uri(rooDirUri, new Uri(encodedFileName, UriKind.Relative));
+                var newUri = urlCombiner.CombineLocalPath(relFilePath);
 
                 tinfoilIndex.Files.Add(new FileNfo
                 {
@@ -72,30 +73,28 @@ namespace TinfoilWebServer.Services
 
         private void AppendHierarchical(Dir dir, TinfoilIndex tinfoilIndex)
         {
-            var rooDirUri = SanitizeDirUrl(dir.CorrespondingUrl);
+            var urlCombiner = _urlCombinerFactory.Create(dir.CorrespondingUrl);
 
-            var sanitizedDir = SanitizeDir(dir.Path);
+            var localDirPath = dir.Path;
 
-            if (!Directory.Exists(sanitizedDir))
+            if (!Directory.Exists(localDirPath))
                 return;
 
-            var dirPaths = Directory.GetDirectories(sanitizedDir);
+            var dirPaths = Directory.GetDirectories(localDirPath);
             foreach (var subDirPath in dirPaths)
             {
-                var dirName = WebUtility.UrlEncode(Path.GetFileName(subDirPath));
-
-                var newUri = new Uri(rooDirUri, dirName);
+                var dirName = Path.GetFileName(subDirPath);
+                var newUri = urlCombiner.CombineLocalPath(dirName);
                 tinfoilIndex.Directories.Add(newUri.AbsoluteUri);
             }
 
-            foreach (var filePath in Directory.GetFiles(sanitizedDir))
+            foreach (var filePath in Directory.GetFiles(localDirPath))
             {
                 if (!_fileFilter.IsFileAllowed(filePath))
                     continue;
 
                 var fileName = Path.GetFileName(filePath);
-                var encodedFileName = WebUtility.UrlEncode(fileName);
-                var newUri = new Uri(rooDirUri, new Uri(encodedFileName, UriKind.Relative));
+                var newUri = urlCombiner.CombineLocalPath(fileName);
                 tinfoilIndex.Files.Add(new FileNfo
                 {
                     Size = new FileInfo(filePath).Length,
@@ -104,16 +103,5 @@ namespace TinfoilWebServer.Services
             }
         }
 
-        private static string SanitizeDir(string dirPath)
-        {
-            var sanitizedDir = dirPath.TrimEnd(Path.DirectorySeparatorChar, '/');
-            return sanitizedDir;
-        }
-
-        private static Uri SanitizeDirUrl(Uri url)
-        {
-            var rooDirUri = url.OriginalString.EndsWith('/') ? url : new Uri(url.OriginalString + "/");
-            return rooDirUri;
-        }
     }
 }

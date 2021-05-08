@@ -49,10 +49,13 @@ namespace TinfoilWebServer
                     services
                         .AddSingleton(appSettings)
                         .AddSingleton<IRequestManager, RequestManager>()
-                        .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
                         .AddSingleton<IServedDirAliasMap, ServedDirAliasMap>()
                         .AddSingleton<IPhysicalPathConverter, PhysicalPathConverter>()
-                        .AddSingleton<IFileFilter, FileFilter>();
+                        .AddSingleton<IFileFilter, FileFilter>()
+                        .AddSingleton<IUrlCombinerFactory, UrlCombinerFactory>()
+                        .AddSingleton<IJsonSerializer, JsonSerializer>()
+                        .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>();
+
                 })
                 .UseConfiguration(configRoot)
                 .UseKestrel((ctx, options) =>

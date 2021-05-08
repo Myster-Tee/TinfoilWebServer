@@ -8,11 +8,18 @@ namespace TinfoilWebServer.HttpExtensions
     {
         public static async Task WriteFile(this HttpResponse response, string filePath, string contentType = "application/octet-stream", IRange? range = null)
         {
-            await using var fileSender = new FileSender(response, filePath, contentType, range);
+            var fileSender = new FileSender(response, filePath, contentType, range);
 
-            response.StatusCode = fileSender.IsPartialContent ? 206 : 200;
+            try
+            {
+                response.StatusCode = fileSender.IsPartialContent ? 206 : 200;
+                await fileSender.Send();
+            }
+            finally
+            {
+                await fileSender.DisposeAsync();
+            }
 
-            await fileSender.Send();
         }
     }
 }

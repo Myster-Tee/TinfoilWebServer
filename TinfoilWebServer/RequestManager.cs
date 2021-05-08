@@ -1,10 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Threading.Tasks;
 using ElMariachi.Http.Header.Managed;
 using Microsoft.AspNetCore.Http;
@@ -23,49 +20,52 @@ namespace TinfoilWebServer
         private readonly IFileFilter _fileFilter;
         private readonly IPhysicalPathConverter _physicalPathConverter;
         private readonly IServedDirAliasMap _servedDirAliasMap;
+        private readonly IJsonSerializer _jsonSerializer;
+        private readonly IUrlCombinerFactory _urlCombinerFactory;
 
-        public RequestManager(IAppSettings appSettings, ITinfoilIndexBuilder tinfoilIndexBuilder, IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter, IServedDirAliasMap servedDirAliasMap)
+        public RequestManager(
+            IAppSettings appSettings, ITinfoilIndexBuilder tinfoilIndexBuilder,
+            IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter,
+            IServedDirAliasMap servedDirAliasMap, IJsonSerializer jsonSerializer,
+            IUrlCombinerFactory urlCombinerFactory)
         {
             _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
             _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
             _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
             _physicalPathConverter = physicalPathConverter ?? throw new ArgumentNullException(nameof(physicalPathConverter));
-            _servedDirAliasMap = servedDirAliasMap;
+            _servedDirAliasMap = servedDirAliasMap ?? throw new ArgumentNullException(nameof(servedDirAliasMap));
+            _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
+            _urlCombinerFactory = urlCombinerFactory ?? throw new ArgumentNullException(nameof(urlCombinerFactory));
         }
 
         public async Task OnRequest(HttpContext context)
         {
             var request = context.Request;
 
-            var decodedPath = request.Path.Value;
-            var encodedPath = request.Path.ToUriComponent();
+            var rootUrlCombiner = _urlCombinerFactory.Create(new Uri(context.Request.GetEncodedUrl(), UriKind.Absolute));
 
+            var decodedRelPath = request.Path.Value!; // NOTE: good to read this article https://stackoverflow.com/questions/66471763/inconsistent-url-decoding-of-httprequest-path-in-asp-net-core
 
-            if (string.Equals(decodedPath, "/favicon.ico", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(decodedRelPath, "/favicon.ico", StringComparison.OrdinalIgnoreCase))
             {
                 context.Response.StatusCode = 200;
                 await context.Response.Body.WriteAsync(Resources.Favicon);
                 return;
             }
 
-            var physicalPath = _physicalPathConverter.Convert(decodedPath, out var isRoot);
+            var physicalPath = _physicalPathConverter.Convert(decodedRelPath, out var isRoot);
             if (isRoot)
             {
-                var url = request.GetEncodedUrl();
 
                 var dirs = _servedDirAliasMap.Select(dirWithAlias => new Dir
                 {
                     Path = dirWithAlias.DirPath,
-                    CorrespondingUrl = new Uri(url + WebUtility.UrlDecode(dirWithAlias.Alias))
+                    CorrespondingUrl = rootUrlCombiner.CombineLocalPath(dirWithAlias.Alias)
                 }).ToArray();
 
                 var tinfoilIndex = _tinfoilIndexBuilder.Build(dirs, _appSettings.IndexType, _appSettings.MessageOfTheDay);
 
-                var json = JsonSerializer.Serialize(tinfoilIndex, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping // NOTE: required to avoid escaping of some special chars like '+', '&', etc. (See https://docs.microsoft.com/fr-fr/dotnet/standard/serialization/system-text-json-character-encoding for more information)
-                });
+                var json = _jsonSerializer.Serialize(tinfoilIndex);
 
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "application/json";
@@ -76,11 +76,11 @@ namespace TinfoilWebServer
             {
                 var tinfoilIndex = _tinfoilIndexBuilder.Build(new[]{new Dir
                 {
-                    CorrespondingUrl = new Uri($"{request.Scheme}://{request.Host}{encodedPath}"),
+                    CorrespondingUrl = rootUrlCombiner.BaseAbsUrl,
                     Path = physicalPath!,
                 }}, _appSettings.IndexType, null);
 
-                var json = JsonSerializer.Serialize(tinfoilIndex, new JsonSerializerOptions { WriteIndented = true });
+                var json = _jsonSerializer.Serialize(tinfoilIndex);
 
                 context.Response.StatusCode = 200;
                 context.Response.ContentType = "application/json";
