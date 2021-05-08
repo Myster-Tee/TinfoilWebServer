@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System;
+using Microsoft.Extensions.Configuration;
 using TinfoilWebServer.Services;
 
 namespace TinfoilWebServer.Settings
@@ -19,5 +20,7 @@ namespace TinfoilWebServer.Settings
         string? MessageOfTheDay { get; }
 
         TinfoilIndexType IndexType { get; }
+
+        TimeSpan CacheExpiration { get; }
     }
 }

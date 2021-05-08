@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
@@ -18,7 +19,7 @@ namespace TinfoilWebServer
         static Program()
         {
             CurrentDirectory = Directory.GetCurrentDirectory();
-            ConfigFileName = InitConfigFileName(); 
+            ConfigFileName = InitConfigFileName();
         }
 
         private static string InitConfigFileName()
@@ -29,11 +30,34 @@ namespace TinfoilWebServer
 
         public static void Main(string[] args)
         {
-            var configRoot = new ConfigurationBuilder()
-                .SetBasePath(CurrentDirectory)
-                .AddJsonFile("TinfoilWebServer.config.json", optional: true, reloadOnChange: true)
-                .Build();
-            var appSettings = AppSettingsLoader.Load(configRoot);
+            const string? CONFIG_FILE_NAME = "TinfoilWebServer.config.json";
+
+            IConfigurationRoot configRoot;
+            try
+            {
+                configRoot = new ConfigurationBuilder()
+                    .SetBasePath(CurrentDirectory)
+                    .AddJsonFile(CONFIG_FILE_NAME, optional: true, reloadOnChange: true)
+                    .Build();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to build configuration: {ex.Message}{Environment.NewLine}Is «{CONFIG_FILE_NAME}» a valid JSON file?");
+                Environment.ExitCode = 1;
+                return;
+            }
+
+            IAppSettings? appSettings;
+            try
+            {
+                appSettings = AppSettingsLoader.Load(configRoot, out var errors);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Failed to load configuration from file «{CONFIG_FILE_NAME}»: {ex.Message}");
+                Environment.ExitCode = 1;
+                return;
+            }
 
             var webHostBuilder = new WebHostBuilder()
                 .SuppressStatusMessages(true)

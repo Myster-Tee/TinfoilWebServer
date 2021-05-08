@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
@@ -8,66 +10,118 @@ namespace TinfoilWebServer.Settings
 {
     public class AppSettingsLoader
     {
+        //TODO: finir la remontée des erreurs
 
-        public static IAppSettings Load(IConfigurationRoot configRoot)
+        public static IAppSettings Load(IConfigurationRoot configRoot, out string[] loadingErrors)
         {
-            var appSettings = new AppSettings
+            var loader = new AppSettingsLoaderInternal(configRoot);
+            return loader.Load(out loadingErrors);
+        }
+
+
+        private class AppSettingsLoaderInternal
+        {
+            private readonly IConfigurationRoot _configurationRoot;
+            private readonly List<string> _loadingErrors = new();
+
+
+            public AppSettingsLoaderInternal(IConfigurationRoot configurationRoot)
             {
-                ServedDirectories = GetServedDirectories(configRoot),
-                AllowedExt = GetAllowedExt(configRoot),
-                MessageOfTheDay = GetMessageOfTheDay(configRoot),
-                IndexType = GetIndexType(configRoot),
-                KestrelConfig = configRoot.GetSection("Kestrel"),
-                LoggingConfig = configRoot.GetSection("Logging")
-            };
-            return appSettings;
-        }
+                _configurationRoot = configurationRoot;
+            }
 
-        private static TinfoilIndexType GetIndexType(IConfiguration config)
-        {
-            var valueStr = config.GetValue<string>("IndexType");
+            public IAppSettings Load(out string[] loadingErrors)
+            {
+                _loadingErrors.Clear();
 
-            if (Enum.TryParse(typeof(TinfoilIndexType), valueStr, true, out var value))
-                return (TinfoilIndexType)value;
-            else
-                return TinfoilIndexType.Flatten;
-        }
-
-        private static string? GetMessageOfTheDay(IConfiguration config)
-        {
-            return config.GetValue<string>("MessageOfTheDay");
-        }
-
-        private static string[] GetAllowedExt(IConfiguration config)
-        {
-            var configurationSection = config.GetSection("AllowedExt");
-            if (!configurationSection.Exists())
-                return new[] { "xci", "nsz", "nsp" };
-
-            var allowedExtensions = configurationSection.GetChildren().Select(section => section.Value).Where(value => value != null).ToArray();
-            return allowedExtensions;
-        }
-
-        private static string[] GetServedDirectories(IConfiguration config)
-        {
-            var configurationSection = config.GetSection("ServedDirectories");
-            if (!configurationSection.Exists())
-                return new[] { Program.CurrentDirectory };
-
-            return configurationSection.GetChildren()
-                .Select(section => section.Value)
-                .Where(value => value != null).Select(servedDirRaw =>
+                var appSettings = new AppSettings
                 {
-                    string rootedPath;
-                    if (Path.IsPathRooted(servedDirRaw))
-                        rootedPath = servedDirRaw;
-                    else
-                        rootedPath = Path.Combine(Program.CurrentDirectory, servedDirRaw.TrimStart('\\', '/'));
+                    ServedDirectories = GetServedDirectories(),
+                    AllowedExt = GetAllowedExt(),
+                    MessageOfTheDay = GetMessageOfTheDay(),
+                    IndexType = GetIndexType(),
+                    CacheExpiration = GetCacheExpiration(),
+                    KestrelConfig = _configurationRoot.GetSection("Kestrel"),
+                    LoggingConfig = _configurationRoot.GetSection("Logging")
+                };
 
-                    var fullPathRooted = Path.GetFullPath(rootedPath);
-                    return fullPathRooted;
-                })
-                .ToArray();
+                loadingErrors = _loadingErrors.ToArray();
+
+                return appSettings;
+            }
+
+            private TimeSpan GetCacheExpiration()
+            {
+                const string? SETTING_NAME = "CacheExpiration";
+
+                var cacheExpirationRaw = _configurationRoot.GetValue<string>(SETTING_NAME);
+                if(cacheExpirationRaw == null)
+                    return TimeSpan.Zero;
+
+                if (!TimeSpan.TryParseExact(cacheExpirationRaw, "c", null, TimeSpanStyles.None, out var cacheExpiration)) // Format for "c": [d'.']hh':'mm':'ss['.'fffffff]
+                {
+                    _loadingErrors.Add($"Invalid setting «{SETTING_NAME}», expected format «[d'.']hh':'mm':'ss['.'fffffff]».");
+                    return TimeSpan.Zero;
+                }
+
+                if (cacheExpiration.Ticks < 0)
+                {
+                    _loadingErrors.Add($"Invalid setting «{SETTING_NAME}», value can't be negative.");
+                    return TimeSpan.Zero;
+                }
+
+                return cacheExpiration;
+            }
+
+            private TinfoilIndexType GetIndexType()
+            {
+                var valueStr = _configurationRoot.GetValue<string>("IndexType");
+
+                if (Enum.TryParse(typeof(TinfoilIndexType), valueStr, true, out var value))
+                    return (TinfoilIndexType)value;
+                else
+                    return TinfoilIndexType.Flatten;
+            }
+
+            private string? GetMessageOfTheDay()
+            {
+                return _configurationRoot.GetValue<string?>("MessageOfTheDay");
+            }
+
+            private string[] GetAllowedExt()
+            {
+                var configurationSection = _configurationRoot.GetSection("AllowedExt");
+                if (!configurationSection.Exists())
+                    return new[] { "xci", "nsz", "nsp" };
+
+                var allowedExtensions = configurationSection.GetChildren().Select(section => section.Value).Where(value => value != null).ToArray();
+                return allowedExtensions;
+            }
+
+            private string[] GetServedDirectories()
+            {
+                var configurationSection = _configurationRoot.GetSection("ServedDirectories");
+                if (!configurationSection.Exists())
+                    return new[] { Program.CurrentDirectory };
+
+                return configurationSection.GetChildren()
+                    .Select(section => section.Value)
+                    .Where(value => value != null).Select(servedDirRaw =>
+                    {
+                        string rootedPath;
+                        if (Path.IsPathRooted(servedDirRaw))
+                            rootedPath = servedDirRaw;
+                        else
+                            rootedPath = Path.Combine(Program.CurrentDirectory, servedDirRaw.TrimStart('\\', '/'));
+
+                        var fullPathRooted = Path.GetFullPath(rootedPath);
+                        return fullPathRooted;
+                    })
+                    .ToArray();
+            }
+
         }
+
+
     }
 }
