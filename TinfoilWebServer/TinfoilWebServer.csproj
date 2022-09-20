@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Nullable>enable</Nullable>
     <UserSecretsId>437ef1a7-7fbd-490e-9580-9a3cf8c175d5</UserSecretsId>
     <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
