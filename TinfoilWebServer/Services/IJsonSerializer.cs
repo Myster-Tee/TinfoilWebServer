@@ -1,7 +1,6 @@
-﻿namespace TinfoilWebServer.Services
+﻿namespace TinfoilWebServer.Services;
+
+public interface IJsonSerializer
 {
-    public interface IJsonSerializer
-    {
-        string Serialize(object obj);
-    }
+    string Serialize(object obj);
 }

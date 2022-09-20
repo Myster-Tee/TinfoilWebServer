@@ -1,8 +1,7 @@
-﻿namespace TinfoilWebServer.Services
+﻿namespace TinfoilWebServer.Services;
+
+public enum TinfoilIndexType
 {
-    public enum TinfoilIndexType
-    {
-        Flatten,
-        Hierarchical,
-    }
+    Flatten,
+    Hierarchical,
 }

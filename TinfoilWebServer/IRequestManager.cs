@@ -1,10 +1,9 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
-namespace TinfoilWebServer
+namespace TinfoilWebServer;
+
+public interface IRequestManager
 {
-    public interface IRequestManager
-    {
-        Task OnRequest(HttpContext context);
-    }
+    Task OnRequest(HttpContext context);
 }

@@ -2,24 +2,23 @@
 using ElMariachi.Http.Header.Managed;
 using Microsoft.AspNetCore.Http;
 
-namespace TinfoilWebServer.HttpExtensions
+namespace TinfoilWebServer.HttpExtensions;
+
+public static class HttpResponseExt
 {
-    public static class HttpResponseExt
+    public static async Task WriteFile(this HttpResponse response, string filePath, string contentType = "application/octet-stream", IRange? range = null)
     {
-        public static async Task WriteFile(this HttpResponse response, string filePath, string contentType = "application/octet-stream", IRange? range = null)
+        var fileSender = new FileSender(response, filePath, contentType, range);
+
+        try
         {
-            var fileSender = new FileSender(response, filePath, contentType, range);
-
-            try
-            {
-                response.StatusCode = fileSender.IsPartialContent ? 206 : 200;
-                await fileSender.Send();
-            }
-            finally
-            {
-                await fileSender.DisposeAsync();
-            }
-
+            response.StatusCode = fileSender.IsPartialContent ? 206 : 200;
+            await fileSender.Send();
         }
+        finally
+        {
+            await fileSender.DisposeAsync();
+        }
+
     }
 }

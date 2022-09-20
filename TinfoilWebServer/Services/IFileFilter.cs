@@ -1,8 +1,7 @@
-﻿namespace TinfoilWebServer.Services
-{
-    public interface IFileFilter
-    {
+﻿namespace TinfoilWebServer.Services;
 
-        bool IsFileAllowed(string? filePath);
-    }
+public interface IFileFilter
+{
+
+    bool IsFileAllowed(string? filePath);
 }

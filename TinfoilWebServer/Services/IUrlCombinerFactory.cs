@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace TinfoilWebServer.Services
+namespace TinfoilWebServer.Services;
+
+public interface IUrlCombinerFactory
 {
-    public interface IUrlCombinerFactory
-    {
-        IUrlCombiner Create(Uri baseAbsUrl);
-    }
+    IUrlCombiner Create(Uri baseAbsUrl);
 }

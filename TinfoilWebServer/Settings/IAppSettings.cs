@@ -2,25 +2,24 @@
 using Microsoft.Extensions.Configuration;
 using TinfoilWebServer.Services;
 
-namespace TinfoilWebServer.Settings
+namespace TinfoilWebServer.Settings;
+
+public interface IAppSettings
 {
-    public interface IAppSettings
-    {
-        string[] AllowedExt { get; }
+    string[] AllowedExt { get; }
 
-        /// <summary>
-        /// The list of served directories rooted
-        /// </summary>
-        string[] ServedDirectories { get; }
+    /// <summary>
+    /// The list of served directories rooted
+    /// </summary>
+    string[] ServedDirectories { get; }
 
-        IConfiguration KestrelConfig { get; }
+    IConfiguration KestrelConfig { get; }
 
-        IConfiguration LoggingConfig { get; }
+    IConfiguration LoggingConfig { get; }
 
-        string? MessageOfTheDay { get; }
+    string? MessageOfTheDay { get; }
 
-        TinfoilIndexType IndexType { get; }
+    TinfoilIndexType IndexType { get; }
 
-        TimeSpan CacheExpiration { get; }
-    }
+    TimeSpan CacheExpiration { get; }
 }

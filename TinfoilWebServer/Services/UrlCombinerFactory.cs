@@ -1,12 +1,11 @@
 ﻿using System;
 
-namespace TinfoilWebServer.Services
+namespace TinfoilWebServer.Services;
+
+public class UrlCombinerFactory : IUrlCombinerFactory
 {
-    public class UrlCombinerFactory : IUrlCombinerFactory
+    public IUrlCombiner Create(Uri baseAbsUrl)
     {
-        public IUrlCombiner Create(Uri baseAbsUrl)
-        {
-            return new UrlCombiner(baseAbsUrl);
-        }
+        return new UrlCombiner(baseAbsUrl);
     }
 }

@@ -1,9 +1,8 @@
-﻿namespace TinfoilWebServer.Services
+﻿namespace TinfoilWebServer.Services;
+
+public interface IPhysicalPathConverter
 {
-    public interface IPhysicalPathConverter
-    {
 
-        string? Convert(string urlRelPathDecoded, out bool isRoot);
+    string? Convert(string urlRelPathDecoded, out bool isRoot);
 
-    }
 }
