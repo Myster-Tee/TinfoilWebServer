@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using ElMariachi.Http.Header.Managed;
@@ -49,7 +50,7 @@ public class RequestManager : IRequestManager
 
         if (string.Equals(decodedRelPath, "/favicon.ico", StringComparison.OrdinalIgnoreCase))
         {
-            context.Response.StatusCode = 200;
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
             await context.Response.Body.WriteAsync(Resources.Favicon);
             return;
         }
@@ -68,7 +69,7 @@ public class RequestManager : IRequestManager
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 
-            context.Response.StatusCode = 200;
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
             context.Response.ContentType = "application/json";
 
             await context.Response.WriteAsync(json, Encoding.UTF8);
@@ -83,7 +84,7 @@ public class RequestManager : IRequestManager
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 
-            context.Response.StatusCode = 200;
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
             context.Response.ContentType = "application/json";
 
             await context.Response.WriteAsync(json, Encoding.UTF8);
@@ -102,8 +103,8 @@ public class RequestManager : IRequestManager
         }
         else
         {
-            context.Response.StatusCode = 404;
-            await context.Response.WriteAsync("<!DOCTYPE html><http><head><title>Oops!</title></head><body style='text-align:center'>404<br>Not found...</body></html>");
+            context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+            await context.Response.CompleteAsync();
         }
     }
 

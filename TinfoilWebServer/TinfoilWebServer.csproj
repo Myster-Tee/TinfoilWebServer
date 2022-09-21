@@ -6,7 +6,7 @@
     <UserSecretsId>437ef1a7-7fbd-490e-9580-9a3cf8c175d5</UserSecretsId>
     <ApplicationIcon>Resources\Icon.ico</ApplicationIcon>
     <StartupObject>TinfoilWebServer.Program</StartupObject>
-    <Version>1.2.0</Version>
+    <Version>1.3.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

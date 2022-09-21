@@ -15,5 +15,14 @@
     "LogLevel": {
       "Default": "Information"
     }
+  },
+  "Authentication": {
+    "Enabled": true,
+    "Users": [
+      {
+        "Name": "Myster-Tee",
+        "Pwd": "123456"
+      }
+    ]
   }
 }

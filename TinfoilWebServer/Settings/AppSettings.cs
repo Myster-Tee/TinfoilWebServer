@@ -6,17 +6,19 @@ namespace TinfoilWebServer.Settings;
 
 public class AppSettings : IAppSettings
 {
-    public string[] AllowedExt { get; set; }
+    public string[] AllowedExt { get; init; }
 
-    public string[] ServedDirectories { get; set; }
+    public string[] ServedDirectories { get; init; }
 
-    public IConfiguration KestrelConfig { get; set; }
+    public IConfiguration KestrelConfig { get; init; }
 
-    public IConfiguration LoggingConfig { get; set; }
+    public IConfiguration LoggingConfig { get; init; }
 
-    public string? MessageOfTheDay { get; set; }
+    public string? MessageOfTheDay { get; init; }
 
-    public TinfoilIndexType IndexType { get; set; }
+    public TinfoilIndexType IndexType { get; init; }
 
-    public TimeSpan CacheExpiration { get; set; }
+    public TimeSpan CacheExpiration { get; init; }
+
+    public IAuthenticationSettings? AuthenticationSettings { get; init; }
 }

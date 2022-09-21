@@ -74,6 +74,7 @@ public class Program
             {
                 services
                     .AddSingleton(appSettings)
+                    .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                     .AddSingleton<IRequestManager, RequestManager>()
                     .AddSingleton<IServedDirAliasMap, ServedDirAliasMap>()
                     .AddSingleton<IPhysicalPathConverter, PhysicalPathConverter>()

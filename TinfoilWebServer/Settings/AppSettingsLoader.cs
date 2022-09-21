@@ -41,7 +41,8 @@ public class AppSettingsLoader
                 IndexType = GetIndexType(),
                 CacheExpiration = GetCacheExpiration(),
                 KestrelConfig = _configurationRoot.GetSection("Kestrel"),
-                LoggingConfig = _configurationRoot.GetSection("Logging")
+                LoggingConfig = _configurationRoot.GetSection("Logging"),
+                AuthenticationSettings = GetAuthentication(),
             };
 
             loadingErrors = _loadingErrors.ToArray();
@@ -49,12 +50,52 @@ public class AppSettingsLoader
             return appSettings;
         }
 
+        private IAuthenticationSettings? GetAuthentication()
+        {
+            const string? SECTION_NAME = "Authentication";
+
+            var authenticationSection = _configurationRoot.GetSection(SECTION_NAME);
+            if (authenticationSection == null)
+                return null;
+
+
+            var authentication = new AuthenticationSettings
+            {
+                Enabled = authenticationSection.GetValue("Enabled", true),
+                AllowedUsers = LoadUsers(authenticationSection).ToArray()
+            };
+
+            return authentication;
+        }
+
+        private IEnumerable<IAllowedUser> LoadUsers(IConfiguration authenticationSection)
+        {
+            var configurationSection = authenticationSection.GetSection("Users");
+
+            foreach (var user in configurationSection.GetChildren())
+            {
+                var name = user.GetValue<string>("Name");
+                if (string.IsNullOrWhiteSpace(name))
+                    _loadingErrors.Add($"Empty user name found.");
+
+                var pwd = user.GetValue<string>("Pwd");
+                if (string.IsNullOrWhiteSpace(pwd))
+                    _loadingErrors.Add($"Empty password found for user «{name}».");
+
+                yield return new AllowedUser
+                {
+                    Name = name,
+                    Password = pwd
+                };
+            }
+        }
+
         private TimeSpan GetCacheExpiration()
         {
             const string? SETTING_NAME = "CacheExpiration";
 
             var cacheExpirationRaw = _configurationRoot.GetValue<string>(SETTING_NAME);
-            if(cacheExpirationRaw == null)
+            if (cacheExpirationRaw == null)
                 return TimeSpan.Zero;
 
             if (!TimeSpan.TryParseExact(cacheExpirationRaw, "c", null, TimeSpanStyles.None, out var cacheExpiration)) // Format for "c": [d'.']hh':'mm':'ss['.'fffffff]
@@ -78,14 +119,14 @@ public class AppSettingsLoader
 
             var valueStr = _configurationRoot.GetValue<string>(SETTING_NAME);
 
-            if (!Enum.TryParse(typeof(TinfoilIndexType), valueStr, true, out var value))
+            if (!Enum.TryParse<TinfoilIndexType>(valueStr, true, out var value))
             {
                 var allowedValues = string.Join(", ", Enum.GetValues<TinfoilIndexType>().Select(v => v.ToString()));
                 _loadingErrors.Add($"Invalid setting «{SETTING_NAME}», allowed values «{allowedValues}».");
                 return TinfoilIndexType.Flatten;
             }
 
-            return (TinfoilIndexType)value;
+            return value;
         }
 
         private string? GetMessageOfTheDay()

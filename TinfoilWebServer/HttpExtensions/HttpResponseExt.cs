@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Net;
+using System.Threading.Tasks;
 using ElMariachi.Http.Header.Managed;
 using Microsoft.AspNetCore.Http;
 
@@ -12,7 +13,7 @@ public static class HttpResponseExt
 
         try
         {
-            response.StatusCode = fileSender.IsPartialContent ? 206 : 200;
+            response.StatusCode = fileSender.IsPartialContent ? (int)HttpStatusCode.PartialContent : (int)HttpStatusCode.OK;
             await fileSender.Send();
         }
         finally

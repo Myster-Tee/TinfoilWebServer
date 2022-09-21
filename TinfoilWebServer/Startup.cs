@@ -7,13 +7,13 @@ using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Logging;
+using TinfoilWebServer.Services;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer;
 
 public class Startup
 {
-
     /// <summary>
     /// WTF ASP.NET, this method is implicitly called «.UseStartup<Startup>()»
     /// </summary>
@@ -43,7 +43,16 @@ public class Startup
 
         logger.LogInformation($"Cache index expiration:{LogUtil.MultilineLogSpacing}{appSettings.CacheExpiration}");
 
-
+        var authenticationSettings = appSettings.AuthenticationSettings;
+        if (authenticationSettings is { Enabled: true })
+        {
+            app.UseMiddleware<IBasicAuthMiddleware>();
+            logger.LogInformation($"Authentication enabled, {authenticationSettings.AllowedUsers.Count} user(s) defined.");
+        }
+        else
+        {
+            logger.LogWarning($"Authentication disabled.");
+        }
         app.Run(requestManager.OnRequest);
     }
 
