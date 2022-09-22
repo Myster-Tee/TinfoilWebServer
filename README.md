@@ -13,10 +13,10 @@ Releases page [here](https://github.com/Myster-Tee/TinfoilWebServer/releases/tag
 The requirements depend on the version you choose to download.
 
 ### Framework-Dependent version (recommended)
-This version is lightweight but you'll need to install the [ASP.NET Core Runtime 5.X.X or more](https://dotnet.microsoft.com/download/dotnet/5.0) before running the server.
+This version is lightweight but you'll need to install the [ASP.NET Core Runtime 6.X.X or more](https://dotnet.microsoft.com/download/dotnet/6.0) before running the server.
 
 ### Framework-Dependent version
-No requirements but heavytweight.
+No requirements but heavyweight.
 
 ## TinfoilWebServer.config.json format
 
@@ -38,6 +38,16 @@ No requirements but heavytweight.
     "LogLevel": {
       "Default": "Information"                  // See «https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-5.0» for more information.
     }
+  }
+  "Authentication": {
+    "Enabled": true,                            // «true» to enable authentication, «false» otherwise
+    "Users": [                                  // List of allowed users
+      {
+        "Name": "SomeUserName",
+        "Pwd": "SomePassword"
+      },
+      ...
+    ]
   }
 }
 ```
