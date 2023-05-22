@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using TinfoilWebServer.Models;
@@ -9,11 +10,13 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
 {
     private readonly IFileFilter _fileFilter;
     private readonly IUrlCombinerFactory _urlCombinerFactory;
+    private readonly ILogger<TinfoilIndexBuilder> _logger;
 
-    public TinfoilIndexBuilder(IFileFilter fileFilter, IUrlCombinerFactory urlCombinerFactory)
+    public TinfoilIndexBuilder(IFileFilter fileFilter, IUrlCombinerFactory urlCombinerFactory, ILogger<TinfoilIndexBuilder> logger)
     {
         _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
         _urlCombinerFactory = urlCombinerFactory ?? throw new ArgumentNullException(nameof(urlCombinerFactory));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public TinfoilIndex Build(IEnumerable<Dir> dirs, TinfoilIndexType indexType, string? messageOfTheDay)
@@ -53,21 +56,49 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         if (!Directory.Exists(localDirPath))
             return;
 
-        var filePaths = Directory.GetFiles(localDirPath, "*.*", SearchOption.AllDirectories);
-        foreach (var filePath in filePaths)
+        var remainingDirsToBrowse = new List<string> { localDirPath };
+
+        while (remainingDirsToBrowse.Count > 0)
         {
-            if (!_fileFilter.IsFileAllowed(filePath))
-                continue;
+            var dirPath = remainingDirsToBrowse[0];
+            remainingDirsToBrowse.RemoveAt(0);
 
-            var relFilePath = filePath[localDirPath.Length..]; // SubString from dirPath.Length to the end
-
-            var newUri = urlCombiner.CombineLocalPath(relFilePath);
-
-            tinfoilIndex.Files.Add(new FileNfo
+            string[] filePaths;
+            try
             {
-                Size = new FileInfo(filePath).Length,
-                Url = newUri.AbsoluteUri
-            });
+                filePaths = SafeGetFiles(dirPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to list files of directory \"{dirPath}\": {ex.Message}");
+                continue;
+            }
+
+            foreach (var filePath in filePaths)
+            {
+                if (!_fileFilter.IsFileAllowed(filePath))
+                    continue;
+
+                var relFilePath = filePath[localDirPath.Length..]; // SubString from dirPath.Length to the end
+
+                var newUri = urlCombiner.CombineLocalPath(relFilePath);
+
+                tinfoilIndex.Files.Add(new FileNfo
+                {
+                    Size = new FileInfo(filePath).Length,
+                    Url = newUri.AbsoluteUri
+                });
+            }
+
+            try
+            {
+                remainingDirsToBrowse.AddRange(SafeGetSubDirectories(dirPath));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to list sub-directories of \"{dirPath}\": {ex.Message}");
+                continue;
+            }
         }
     }
 
@@ -80,7 +111,7 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         if (!Directory.Exists(localDirPath))
             return;
 
-        var dirPaths = Directory.GetDirectories(localDirPath);
+        var dirPaths = SafeGetSubDirectories(localDirPath);
         foreach (var subDirPath in dirPaths)
         {
             var dirName = Path.GetFileName(subDirPath);
@@ -88,7 +119,7 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
             tinfoilIndex.Directories.Add(newUri.AbsoluteUri);
         }
 
-        foreach (var filePath in Directory.GetFiles(localDirPath))
+        foreach (var filePath in SafeGetFiles(localDirPath))
         {
             if (!_fileFilter.IsFileAllowed(filePath))
                 continue;
@@ -100,6 +131,32 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
                 Size = new FileInfo(filePath).Length,
                 Url = newUri.AbsoluteUri
             });
+        }
+    }
+
+    private string[] SafeGetSubDirectories(string dirPath)
+    {
+        try
+        {
+            return Directory.GetDirectories(dirPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to list sub-directories of \"{dirPath}\": {ex.Message}");
+            return  Array.Empty<string>();
+        }
+    }
+
+    private string[] SafeGetFiles(string dirPath)
+    {
+        try
+        {
+            return Directory.GetFiles(dirPath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Failed to list files of \"{dirPath}\": {ex.Message}");
+            return Array.Empty<string>();
         }
     }
 

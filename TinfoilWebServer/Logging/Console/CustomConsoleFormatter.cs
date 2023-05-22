@@ -10,13 +10,18 @@ public class CustomConsoleFormatter : ConsoleFormatter
 {
     public CustomConsoleFormatter() : base(nameof(CustomConsoleFormatter))
     {
+
     }
+     
 
     public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider scopeProvider, TextWriter textWriter)
     {
-        var message = logEntry.Formatter(logEntry.State, logEntry.Exception);
+        var message = logEntry.State.ToString();
         if (message == null)
             return;
+
+        if (logEntry.Exception != null)
+            message += Environment.NewLine + logEntry.Exception.Message;
 
         switch (logEntry.LogLevel)
         {
