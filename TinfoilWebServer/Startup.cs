@@ -5,6 +5,7 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Services;
@@ -15,7 +16,7 @@ namespace TinfoilWebServer;
 public class Startup
 {
     /// <summary>
-    /// WTF ASP.NET, this method is implicitly called «.UseStartup<Startup>()»
+    /// WTF ASP.NET! This method is implicitly called by <see cref="WebHostBuilderExtensions.UseStartup{TStartup}(IWebHostBuilder)"/>
     /// </summary>
     /// <param name="app"></param>
     /// <param name="requestManager"></param>

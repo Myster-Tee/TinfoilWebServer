@@ -46,8 +46,7 @@ public class CachedTinfoilIndexBuilder : ICachedTinfoilIndexBuilder
                 var cacheDuration = DateTime.Now - cacheData.CreationTime;
                 if (cacheDuration < cacheExpiration)
                 {
-                    _logger.LogDebug(
-                        $"Cached index returned for URL «{url}» (cache will expired in {cacheExpiration - cacheDuration}).");
+                    _logger.LogDebug($"Cached index returned for URL «{url}» (cache will expired in {cacheExpiration - cacheDuration}).");
                     return cacheData.TinfoilIndex;
                 }
 
