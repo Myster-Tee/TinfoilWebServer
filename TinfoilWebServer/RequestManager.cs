@@ -41,6 +41,7 @@ public class RequestManager : IRequestManager
 
     public async Task OnRequest(HttpContext context)
     {
+        
         var request = context.Request;
 
         var rootUrlCombiner = _urlCombinerFactory.Create(new Uri(context.Request.GetEncodedUrl(), UriKind.Absolute));
@@ -56,7 +57,7 @@ public class RequestManager : IRequestManager
         }
 
         var physicalPath = _physicalPathConverter.Convert(decodedRelPath, out var isRoot);
-        if (isRoot)
+        if (isRoot && request.Method == "GET")
         {
 
             var dirs = _servedDirAliasMap.Select(dirWithAlias => new Dir
