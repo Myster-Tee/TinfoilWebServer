@@ -47,6 +47,11 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         return tinfoilIndex;
     }
 
+    /// <summary>
+    /// Build a single index containing all files found in all served directories
+    /// </summary>
+    /// <param name="dir"></param>
+    /// <param name="tinfoilIndex"></param>
     private void AppendFlatten(Dir dir, TinfoilIndex tinfoilIndex)
     {
         var urlCombiner = _urlCombinerFactory.Create(dir.CorrespondingUrl);
@@ -54,7 +59,10 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         var localDirPath = dir.Path;
 
         if (!Directory.Exists(localDirPath))
+        {
+            _logger.LogError($"Directory \"{localDirPath}\" not found.");
             return;
+        }
 
         var remainingDirsToBrowse = new List<string> { localDirPath };
 
@@ -102,6 +110,11 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         }
     }
 
+    /// <summary>
+    /// Build an index containing only the files and sub-directories at the root of the specified directory
+    /// </summary>
+    /// <param name="dir"></param>
+    /// <param name="tinfoilIndex"></param>
     private void AppendHierarchical(Dir dir, TinfoilIndex tinfoilIndex)
     {
         var urlCombiner = _urlCombinerFactory.Create(dir.CorrespondingUrl);
@@ -109,7 +122,10 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         var localDirPath = dir.Path;
 
         if (!Directory.Exists(localDirPath))
+        {
+            _logger.LogError($"Directory \"{localDirPath}\" not found.");
             return;
+        }
 
         var dirPaths = SafeGetSubDirectories(localDirPath);
         foreach (var subDirPath in dirPaths)

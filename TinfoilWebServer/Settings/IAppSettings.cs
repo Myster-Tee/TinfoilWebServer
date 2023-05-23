@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Configuration;
 using TinfoilWebServer.Services;
 
@@ -50,7 +51,9 @@ public interface IAllowedUser
 
 public class AllowedUser : IAllowedUser
 {
-    public string Name { get; init; }
+    [Required]
+    public string Name { get; init; } = null!;
 
-    public string Password { get; init; }
+    [Required]
+    public string Password { get; init; } = null!;
 }

@@ -6,13 +6,13 @@ namespace TinfoilWebServer.Settings;
 
 public class AppSettings : IAppSettings
 {
-    public string[] AllowedExt { get; init; }
+    public string[] AllowedExt { get; init; } = null!;
 
-    public string[] ServedDirectories { get; init; }
+    public string[] ServedDirectories { get; init; } = null!;
 
-    public IConfiguration KestrelConfig { get; init; }
+    public IConfiguration KestrelConfig { get; init; } = null!;
 
-    public IConfiguration LoggingConfig { get; init; }
+    public IConfiguration LoggingConfig { get; init; } = null!;
 
     public string? MessageOfTheDay { get; init; }
 
