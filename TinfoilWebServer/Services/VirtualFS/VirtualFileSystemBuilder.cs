@@ -55,7 +55,9 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
 
     private static void SafePopulateFile(VirtualDirectory parent, string subFilePath)
     {
-        var segmentGenerator = new SegmentGenerator(Path.GetFileName(subFilePath));
+        var fileInfo = new FileInfo(subFilePath);
+
+        var segmentGenerator = new SegmentGenerator(fileInfo.Name);
 
         FileUriSegment uriSegment;
         do
@@ -63,7 +65,7 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             uriSegment = segmentGenerator.GetNextFile();
         } while (parent.ChildExists(uriSegment.UriSegment));
 
-        parent.AddFile(new VirtualFile(uriSegment, subFilePath));
+        parent.AddFile(new VirtualFile(uriSegment, subFilePath, fileInfo.Length));
     }
 
 
@@ -118,6 +120,7 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             }
             foreach (var subFilePath in subFilePaths)
             {
+                //TODO: filtrer sur les extensions autorisées
                 SafePopulateFile(virtualDir, subFilePath);
             }
         }
@@ -127,14 +130,3 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     }
 
 }
-
-public interface IVirtualFileSystemBuilder
-{
-    /// <summary>
-    /// Build the served files tree
-    /// </summary>
-    /// <param name="servedDirectories"></param>
-    /// <returns></returns>
-    VirtualFileSystemRoot BuildHierarchical(string[] servedDirectories);
-}
-

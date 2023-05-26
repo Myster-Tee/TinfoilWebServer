@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using TinfoilWebServer.Models;
+using TinfoilWebServer.Services.VirtualFS;
 
 namespace TinfoilWebServer.Services;
 
@@ -14,6 +15,10 @@ public interface ITinfoilIndexBuilder
     /// <param name="messageOfTheDay"></param>
     /// <returns></returns>
     TinfoilIndex Build(IEnumerable<Dir> dirs, TinfoilIndexType indexType, string? messageOfTheDay);
+
+
+    TinfoilIndex Build(VirtualDirectory virtualDirectory, TinfoilIndexType indexType, string? messageOfTheDay);
+
 }
 
 public class Dir

@@ -83,6 +83,37 @@ public class VirtualDirectory : VirtualItem
         return $"DIRECTORY: {base.ToString()}";
     }
 
+    /// <summary>
+    /// Deep return the sub directories of this directory
+    /// </summary>
+    /// <param name="includeThisDirectory">true to include this directory in the list of returned directories</param>
+    /// <returns></returns>
+    public IEnumerable<VirtualDirectory> GetDescendantDirectories(bool includeThisDirectory = false)
+    {
+        var remainingDirectories = new List<VirtualDirectory>();
+
+        if (includeThisDirectory)
+            remainingDirectories.Add(this);
+        else
+            remainingDirectories.AddRange(this.Directories);
+
+        while (remainingDirectories.Count > 0)
+        {
+            var directory = remainingDirectories[0];
+            remainingDirectories.RemoveAt(0);
+            remainingDirectories.AddRange(directory.Directories);
+            yield return directory;
+        }
+    }
+
+    /// <summary>
+    /// Return all the files contains in this directory, including files from all sub-directories
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<VirtualFile> GetDescendantFiles()
+    {
+        return GetDescendantDirectories(true).SelectMany(directory => directory.Files);
+    }
 }
 
 public class DirectoryUriSegment

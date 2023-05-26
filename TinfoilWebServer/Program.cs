@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
+using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer;
@@ -82,7 +83,9 @@ public class Program
                     .AddSingleton<IUrlCombinerFactory, UrlCombinerFactory>()
                     .AddSingleton<IJsonSerializer, JsonSerializer>()
                     .AddSingleton<ICachedTinfoilIndexBuilder, CachedTinfoilIndexBuilder>()
-                    .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>();
+                    .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
+                    .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
+                    .AddSingleton<IVirtualFileSystemProvider, VirtualFileSystemProvider>();
 
             })
             .UseConfiguration(configRoot)
@@ -98,6 +101,9 @@ public class Program
         var logger = webHost.Services.GetRequiredService<ILogger<Program>>();
         if (settingsLoadingErrors.Length > 0)
             logger.LogError($"Settings error:{settingsLoadingErrors.ToMultilineString()}");
+
+        //TODO: try/catcher ici
+        webHost.Services.GetRequiredService<IVirtualFileSystemProvider>().Initialize();
 
         webHost.Run();
     }

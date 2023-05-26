@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using TinfoilWebServer.Models;
+using TinfoilWebServer.Services.VirtualFS;
 
 namespace TinfoilWebServer.Services;
 
@@ -39,6 +41,28 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
                 {
                     AppendHierarchical(dir, tinfoilIndex);
                 }
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(indexType), indexType, null);
+        }
+
+        return tinfoilIndex;
+    }
+
+    public TinfoilIndex Build(VirtualDirectory virtualDirectory, TinfoilIndexType indexType, string? messageOfTheDay)
+    {
+        var tinfoilIndex = new TinfoilIndex
+        {
+            Success = messageOfTheDay
+        };
+        switch (indexType)
+        {
+            case TinfoilIndexType.Hierarchical:
+                tinfoilIndex.Directories.AddRange(virtualDirectory.Directories.Select(vd => vd.RelativeUri));
+                tinfoilIndex.Files.AddRange(virtualDirectory.Files.Select(vf => new FileNfo { Size = vf.Size, Url = vf.RelativeUri }));
+                break;
+            case TinfoilIndexType.Flatten:
+                tinfoilIndex.Files.AddRange(virtualDirectory.GetDescendantFiles().Select(vf => new FileNfo { Size = vf.Size, Url = vf.RelativeUri }));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(indexType), indexType, null);
@@ -159,7 +183,7 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         catch (Exception ex)
         {
             _logger.LogError($"Failed to list sub-directories of \"{dirPath}\": {ex.Message}");
-            return  Array.Empty<string>();
+            return Array.Empty<string>();
         }
     }
 
