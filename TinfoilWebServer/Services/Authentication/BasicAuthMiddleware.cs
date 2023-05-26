@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TinfoilWebServer.Settings;
 
-namespace TinfoilWebServer.Services;
+namespace TinfoilWebServer.Services.Authentication;
 
 public class BasicAuthMiddleware : IBasicAuthMiddleware
 {
@@ -19,7 +19,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         if (appSettings == null)
             throw new ArgumentNullException(nameof(appSettings));
 
-        var authenticationSettings = appSettings.AuthenticationSettings;
+        var authenticationSettings = appSettings.Authentication;
 
         if (authenticationSettings != null)
         {

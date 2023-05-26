@@ -15,9 +15,9 @@ public interface IAppSettings
     /// </summary>
     string[] ServedDirectories { get; }
 
-    IConfiguration KestrelConfig { get; }
+    IConfiguration? KestrelConfig { get; }
 
-    IConfiguration LoggingConfig { get; }
+    IConfiguration? LoggingConfig { get; }
 
     string? MessageOfTheDay { get; }
 
@@ -25,7 +25,7 @@ public interface IAppSettings
 
     TimeSpan CacheExpiration { get; }
 
-    IAuthenticationSettings? AuthenticationSettings { get; }
+    IAuthenticationSettings? Authentication { get; }
 }
 
 public class AuthenticationSettings : IAuthenticationSettings

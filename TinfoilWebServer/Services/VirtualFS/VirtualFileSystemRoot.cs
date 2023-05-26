@@ -16,12 +16,13 @@ public class VirtualFileSystemRoot : VirtualDirectory
     /// <summary>
     /// Find the <see cref="VirtualItem"/> corresponding to the given url
     /// </summary>
-    /// <param name="url"></param>
+    /// <param name="uri"></param>
     /// <returns></returns>
     [Pure]
-    public VirtualItem? ReachItem(string url)
+    public VirtualItem? ReachItem(Uri uri)
     {
-        var uri = new Uri(url);
+        if (!uri.IsAbsoluteUri)
+            throw new InvalidOperationException("URI should be absolute.");
 
         if (uri.Segments.Length <= 0 || uri.Segments[0] != this.UriSegment)
             return null;

@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace TinfoilWebServer.Services.VirtualFS;
 
 public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
 {
+
+    private readonly IFileFilter _fileFilter;
+    private readonly ILogger<VirtualFileSystemBuilder> _logger;
+
 
     private class SegmentGenerator
     {
@@ -35,9 +40,15 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
         }
     }
 
+    public VirtualFileSystemBuilder(IFileFilter fileFilter, ILogger<VirtualFileSystemBuilder> logger)
+    {
+        _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
     private static void SafePopulateSubDir(VirtualDirectory parent, string subDirPath)
     {
-        var fileName = Path.GetFileName(subDirPath);
+        var fileName = Path.GetFileName(subDirPath.TrimEnd('/', '\\'));
 
         // Can be null or empty when serving the root of a drive, but in this case we really need to define a name to avoid empty URI path segment
         fileName = string.IsNullOrEmpty(fileName) ? "root" : fileName;
@@ -76,13 +87,9 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
         foreach (var servedDirectory in servedDirectories)
         {
             if (Directory.Exists(servedDirectory))
-            {
                 SafePopulateSubDir(virtualFileSystemRoot, servedDirectory);
-            }
             else
-            {
-                //TODO: Loguer
-            }
+                _logger.LogError($"Served directory \"{servedDirectory}\" not found.");
         }
 
         var remainingDirsToBrowse = new List<VirtualDirectory>(virtualFileSystemRoot.Directories);
@@ -98,7 +105,7 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             }
             catch (Exception ex)
             {
-                //TODO: Loguer
+                _logger.LogError(ex, $"Failed to list directories of \"{virtualDir.FullLocalPath}\": {ex.Message}");
                 continue;
             }
 
@@ -115,13 +122,13 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             }
             catch (Exception ex)
             {
-                //TODO: Loguer
+                _logger.LogError(ex, $"Failed to list files of \"{virtualDir.FullLocalPath}\": {ex.Message}");
                 continue;
             }
             foreach (var subFilePath in subFilePaths)
             {
-                //TODO: filtrer sur les extensions autorisées
-                SafePopulateFile(virtualDir, subFilePath);
+                if (_fileFilter.IsFileAllowed(subFilePath))
+                    SafePopulateFile(virtualDir, subFilePath);
             }
         }
 

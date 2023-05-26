@@ -5,9 +5,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
+using TinfoilWebServer.Services.Authentication;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
@@ -16,6 +16,7 @@ namespace TinfoilWebServer;
 public class Program
 {
     public static string CurrentDirectory { get; }
+
     public static string ConfigFileName { get; }
 
     static Program()
@@ -50,10 +51,9 @@ public class Program
         }
 
         IAppSettings? appSettings;
-        string[]? settingsLoadingErrors;
         try
         {
-            appSettings = AppSettingsLoader.Load(configRoot, out settingsLoadingErrors);
+            appSettings = configRoot.LoadAppSettings();
         }
         catch (Exception ex)
         {
@@ -77,12 +77,8 @@ public class Program
                     .AddSingleton(appSettings)
                     .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                     .AddSingleton<IRequestManager, RequestManager>()
-                    .AddSingleton<IServedDirAliasMap, ServedDirAliasMap>()
-                    .AddSingleton<IPhysicalPathConverter, PhysicalPathConverter>()
                     .AddSingleton<IFileFilter, FileFilter>()
-                    .AddSingleton<IUrlCombinerFactory, UrlCombinerFactory>()
                     .AddSingleton<IJsonSerializer, JsonSerializer>()
-                    .AddSingleton<ICachedTinfoilIndexBuilder, CachedTinfoilIndexBuilder>()
                     .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
                     .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
                     .AddSingleton<IVirtualFileSystemProvider, VirtualFileSystemProvider>();
@@ -91,7 +87,9 @@ public class Program
             .UseConfiguration(configRoot)
             .UseKestrel((ctx, options) =>
             {
-                options.Configure(appSettings.KestrelConfig);
+                var kestrelConfig = appSettings.KestrelConfig;
+                if (kestrelConfig != null)
+                    options.Configure(kestrelConfig);
             })
             .UseStartup<Startup>();
 
@@ -99,11 +97,14 @@ public class Program
         var webHost = webHostBuilder.Build();
 
         var logger = webHost.Services.GetRequiredService<ILogger<Program>>();
-        if (settingsLoadingErrors.Length > 0)
-            logger.LogError($"Settings error:{settingsLoadingErrors.ToMultilineString()}");
-
-        //TODO: try/catcher ici
-        webHost.Services.GetRequiredService<IVirtualFileSystemProvider>().Initialize();
+        try
+        {
+            webHost.Services.GetRequiredService<IVirtualFileSystemProvider>().Initialize();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"Failed to initialize Virtual File System: {ex.Message}");
+        }
 
         webHost.Run();
     }

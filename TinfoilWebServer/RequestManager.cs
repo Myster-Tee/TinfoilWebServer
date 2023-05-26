@@ -1,6 +1,4 @@
 using System;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +8,7 @@ using Microsoft.AspNetCore.Http.Extensions;
 using TinfoilWebServer.HttpExtensions;
 using TinfoilWebServer.Properties;
 using TinfoilWebServer.Services;
+using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer;
@@ -17,34 +16,28 @@ namespace TinfoilWebServer;
 public class RequestManager : IRequestManager
 {
     private readonly IAppSettings _appSettings;
-    private readonly ICachedTinfoilIndexBuilder _cachedTinfoilIndexBuilder;
-    private readonly IFileFilter _fileFilter;
-    private readonly IPhysicalPathConverter _physicalPathConverter;
-    private readonly IServedDirAliasMap _servedDirAliasMap;
     private readonly IJsonSerializer _jsonSerializer;
-    private readonly IUrlCombinerFactory _urlCombinerFactory;
+    private readonly IVirtualFileSystemProvider _virtualFileSystemProvider;
+    private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
 
     public RequestManager(
-        IAppSettings appSettings, ICachedTinfoilIndexBuilder cachedTinfoilIndexBuilder,
-        IFileFilter fileFilter, IPhysicalPathConverter physicalPathConverter,
-        IServedDirAliasMap servedDirAliasMap, IJsonSerializer jsonSerializer,
-        IUrlCombinerFactory urlCombinerFactory)
+        IAppSettings appSettings,
+        IFileFilter fileFilter,
+        IJsonSerializer jsonSerializer,
+        IVirtualFileSystemProvider virtualFileSystemProvider,
+        ITinfoilIndexBuilder tinfoilIndexBuilder
+        )
     {
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-        _cachedTinfoilIndexBuilder = cachedTinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(cachedTinfoilIndexBuilder));
-        _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
-        _physicalPathConverter = physicalPathConverter ?? throw new ArgumentNullException(nameof(physicalPathConverter));
-        _servedDirAliasMap = servedDirAliasMap ?? throw new ArgumentNullException(nameof(servedDirAliasMap));
         _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
-        _urlCombinerFactory = urlCombinerFactory ?? throw new ArgumentNullException(nameof(urlCombinerFactory));
+        _virtualFileSystemProvider = virtualFileSystemProvider ?? throw new ArgumentNullException(nameof(virtualFileSystemProvider));
+        _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
     }
 
     public async Task OnRequest(HttpContext context)
     {
-        
-        var request = context.Request;
 
-        var rootUrlCombiner = _urlCombinerFactory.Create(new Uri(context.Request.GetEncodedUrl(), UriKind.Absolute));
+        var request = context.Request;
 
 
         var decodedRelPath = request.Path.Value!; // NOTE: good to read this article https://stackoverflow.com/questions/66471763/inconsistent-url-decoding-of-httprequest-path-in-asp-net-core
@@ -56,17 +49,13 @@ public class RequestManager : IRequestManager
             return;
         }
 
-        var physicalPath = _physicalPathConverter.Convert(decodedRelPath, out var isRoot);
-        if (isRoot && request.Method == "GET")
+        var rawUri = new Uri(request.GetEncodedUrl());
+        var virtualItem = _virtualFileSystemProvider.Root.ReachItem(rawUri);
+        var serverUrlRoot = rawUri.GetLeftPart(UriPartial.Authority);
+
+        if (virtualItem == _virtualFileSystemProvider.Root && request.Method == "GET")
         {
-
-            var dirs = _servedDirAliasMap.Select(dirWithAlias => new Dir
-            {
-                Path = dirWithAlias.DirPath,
-                CorrespondingUrl = rootUrlCombiner.CombineLocalPath(dirWithAlias.Alias)
-            }).ToArray();
-
-            var tinfoilIndex = _cachedTinfoilIndexBuilder.Build(decodedRelPath, dirs, _appSettings.IndexType, _appSettings.MessageOfTheDay);
+            var tinfoilIndex = _tinfoilIndexBuilder.Build(serverUrlRoot, _virtualFileSystemProvider.Root, _appSettings.IndexType, _appSettings.MessageOfTheDay);
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 
@@ -75,13 +64,9 @@ public class RequestManager : IRequestManager
 
             await context.Response.WriteAsync(json, Encoding.UTF8);
         }
-        else if (Directory.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
+        else if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualDirectory virtualDirectory)
         {
-            var tinfoilIndex = _cachedTinfoilIndexBuilder.Build(decodedRelPath, new[]{new Dir
-            {
-                CorrespondingUrl = rootUrlCombiner.BaseAbsUrl,
-                Path = physicalPath!,
-            }}, _appSettings.IndexType, null);
+            var tinfoilIndex = _tinfoilIndexBuilder.Build(serverUrlRoot, virtualDirectory, _appSettings.IndexType, null);
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 
@@ -90,7 +75,7 @@ public class RequestManager : IRequestManager
 
             await context.Response.WriteAsync(json, Encoding.UTF8);
         }
-        else if (_fileFilter.IsFileAllowed(physicalPath) && File.Exists(physicalPath) && request.Method == "GET" || request.Method == "HEAD")
+        else if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualFile virtualFile)
         {
             var rangeHeader = new RangeHeader
             {
@@ -100,7 +85,7 @@ public class RequestManager : IRequestManager
             var ranges = rangeHeader.Ranges;
             var range = ranges.Count == 1 ? ranges[0] : null;
 
-            await context.Response.WriteFile(physicalPath!, range: range);
+            await context.Response.WriteFile(virtualFile.FullLocalPath, range: range);
         }
         else
         {

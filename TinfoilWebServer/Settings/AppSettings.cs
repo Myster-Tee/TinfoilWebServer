@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Configuration;
 using TinfoilWebServer.Services;
 
@@ -6,19 +7,23 @@ namespace TinfoilWebServer.Settings;
 
 public class AppSettings : IAppSettings
 {
-    public string[] AllowedExt { get; init; } = null!;
+    [Required]
+    public string[] AllowedExt { get; set; }
 
-    public string[] ServedDirectories { get; init; } = null!;
+    [Required]
+    public string[] ServedDirectories { get; set; }
 
-    public IConfiguration KestrelConfig { get; init; } = null!;
+    public IConfiguration? KestrelConfig { get; set; }
 
-    public IConfiguration LoggingConfig { get; init; } = null!;
+    public IConfiguration? LoggingConfig { get; set; }
 
-    public string? MessageOfTheDay { get; init; }
+    public string? MessageOfTheDay { get; set; }
 
-    public TinfoilIndexType IndexType { get; init; }
+    public TinfoilIndexType IndexType { get; set; }
 
-    public TimeSpan CacheExpiration { get; init; }
+    public TimeSpan CacheExpiration { get; set; }
 
-    public IAuthenticationSettings? AuthenticationSettings { get; init; }
+    public AuthenticationSettings? Authentication { get; set; }
+
+    IAuthenticationSettings? IAppSettings.Authentication => Authentication;
 }

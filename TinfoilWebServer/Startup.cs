@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Logging;
-using TinfoilWebServer.Services;
+using TinfoilWebServer.Services.Authentication;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer;
@@ -44,7 +44,7 @@ public class Startup
 
         logger.LogInformation($"Cache index expiration:{LogUtil.MultilineLogSpacing}{appSettings.CacheExpiration}");
 
-        var authenticationSettings = appSettings.AuthenticationSettings;
+        var authenticationSettings = appSettings.Authentication;
         if (authenticationSettings is { Enabled: true })
         {
             app.UseMiddleware<IBasicAuthMiddleware>();
