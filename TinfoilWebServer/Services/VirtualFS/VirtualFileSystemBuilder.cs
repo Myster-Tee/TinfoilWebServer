@@ -11,72 +11,65 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     private readonly IFileFilter _fileFilter;
     private readonly ILogger<VirtualFileSystemBuilder> _logger;
 
-
-    private class SegmentGenerator
-    {
-        private readonly string _baseFileName;
-        private int? _num;
-
-        public SegmentGenerator(string baseFileName)
-        {
-            _baseFileName = baseFileName;
-            _num = null;
-        }
-
-        public DirectoryUriSegment GetNextDirectory()
-        {
-            return new DirectoryUriSegment(GetNextFileName());
-        }
-
-        public FileUriSegment GetNextFile()
-        {
-            return new FileUriSegment(GetNextFileName());
-        }
-
-
-        private string GetNextFileName()
-        {
-            return _num == null ? _baseFileName : $"{_baseFileName}{++_num}";
-        }
-    }
-
     public VirtualFileSystemBuilder(IFileFilter fileFilter, ILogger<VirtualFileSystemBuilder> logger)
     {
         _fileFilter = fileFilter ?? throw new ArgumentNullException(nameof(fileFilter));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    /// <summary>
+    /// Helper to ensure we never have duplicated key
+    /// </summary>
+    private class KeyGenerator
+    {
+        private readonly string _baseFileName;
+        private int? _num;
+
+        public KeyGenerator(string baseFileName)
+        {
+            _baseFileName = baseFileName;
+            _num = null;
+        }
+
+        public string GetNextKey()
+        {
+            var nextKey = _num == null ? _baseFileName : $"{_baseFileName}{++_num}";
+            return nextKey;
+        }
+    }
+
+
     private static void SafePopulateSubDir(VirtualDirectory parent, string subDirPath)
     {
-        var fileName = Path.GetFileName(subDirPath.TrimEnd('/', '\\'));
+        var dirName = Path.GetFileName(subDirPath);
 
         // Can be null or empty when serving the root of a drive, but in this case we really need to define a name to avoid empty URI path segment
-        fileName = string.IsNullOrEmpty(fileName) ? "root" : fileName;
+        dirName = string.IsNullOrEmpty(dirName) ? "root" : dirName;
 
-        var segmentGenerator = new SegmentGenerator(fileName);
+        var keyGenerator = new KeyGenerator(dirName);
 
-        DirectoryUriSegment uriSegment;
+        string key;
         do
         {
-            uriSegment = segmentGenerator.GetNextDirectory();
-        } while (parent.ChildExists(uriSegment.UriSegment));
+            key = keyGenerator.GetNextKey();
+        } while (parent.ChildExists(key));
 
-        parent.AddDirectory(new VirtualDirectory(uriSegment, subDirPath));
+        parent.AddDirectory(new VirtualDirectory(key, subDirPath));
     }
 
     private static void SafePopulateFile(VirtualDirectory parent, string subFilePath)
     {
         var fileInfo = new FileInfo(subFilePath);
 
-        var segmentGenerator = new SegmentGenerator(fileInfo.Name);
+        var keyGenerator = new KeyGenerator(fileInfo.Name);
 
-        FileUriSegment uriSegment;
+        string key;
         do
         {
-            uriSegment = segmentGenerator.GetNextFile();
-        } while (parent.ChildExists(uriSegment.UriSegment));
+            key = keyGenerator.GetNextKey();
+        } while (parent.ChildExists(key));
 
-        parent.AddFile(new VirtualFile(uriSegment, subFilePath, fileInfo.Length));
+        parent.AddFile(new VirtualFile(key, subFilePath, fileInfo.Length));
     }
 
 
@@ -86,8 +79,11 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
 
         foreach (var servedDirectory in servedDirectories)
         {
-            if (Directory.Exists(servedDirectory))
-                SafePopulateSubDir(virtualFileSystemRoot, servedDirectory);
+            // Trims end separator to avoid having an empty name while calling Path.GetFileName
+            var safeDirPath = servedDirectory.TrimEnd(Path.DirectorySeparatorChar);
+
+            if (Directory.Exists(safeDirPath))
+                SafePopulateSubDir(virtualFileSystemRoot, safeDirPath);
             else
                 _logger.LogError($"Served directory \"{servedDirectory}\" not found.");
         }

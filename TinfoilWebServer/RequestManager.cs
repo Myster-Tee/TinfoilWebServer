@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading.Tasks;
 using ElMariachi.Http.Header.Managed;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
 using TinfoilWebServer.HttpExtensions;
 using TinfoilWebServer.Properties;
 using TinfoilWebServer.Services;
@@ -17,30 +16,29 @@ public class RequestManager : IRequestManager
 {
     private readonly IAppSettings _appSettings;
     private readonly IJsonSerializer _jsonSerializer;
-    private readonly IVirtualFileSystemProvider _virtualFileSystemProvider;
     private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
+    private readonly IVirtualItemFinder _virtualItemFinder;
 
     public RequestManager(
         IAppSettings appSettings,
         IFileFilter fileFilter,
         IJsonSerializer jsonSerializer,
-        IVirtualFileSystemProvider virtualFileSystemProvider,
-        ITinfoilIndexBuilder tinfoilIndexBuilder
+
+        ITinfoilIndexBuilder tinfoilIndexBuilder,
+        IVirtualItemFinder virtualItemFinder
         )
     {
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
-        _virtualFileSystemProvider = virtualFileSystemProvider ?? throw new ArgumentNullException(nameof(virtualFileSystemProvider));
         _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
+        _virtualItemFinder = virtualItemFinder ?? throw new ArgumentNullException(nameof(virtualItemFinder));
     }
 
     public async Task OnRequest(HttpContext context)
     {
-
         var request = context.Request;
 
-
-        var decodedRelPath = request.Path.Value!; // NOTE: good to read this article https://stackoverflow.com/questions/66471763/inconsistent-url-decoding-of-httprequest-path-in-asp-net-core
+        var decodedRelPath = request.Path.Value ?? ""; // NOTE: good to read this article https://stackoverflow.com/questions/66471763/inconsistent-url-decoding-of-httprequest-path-in-asp-net-core
 
         if (string.Equals(decodedRelPath, "/favicon.ico", StringComparison.OrdinalIgnoreCase))
         {
@@ -49,24 +47,17 @@ public class RequestManager : IRequestManager
             return;
         }
 
-        var rawUri = new Uri(request.GetEncodedUrl());
-        var virtualItem = _virtualFileSystemProvider.Root.ReachItem(rawUri);
-        var serverUrlRoot = rawUri.GetLeftPart(UriPartial.Authority);
+        var virtualItem = _virtualItemFinder.Find(request.Path);
 
-        if (virtualItem == _virtualFileSystemProvider.Root && request.Method == "GET")
+        var serverUrlRoot = $"{request.Scheme}{Uri.SchemeDelimiter}{request.Host}";
+
+        if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualDirectory virtualDirectory)
         {
-            var tinfoilIndex = _tinfoilIndexBuilder.Build(serverUrlRoot, _virtualFileSystemProvider.Root, _appSettings.IndexType, _appSettings.MessageOfTheDay);
+            string? message = null;
+            if (virtualItem is VirtualFileSystemRoot)
+                message = _appSettings.MessageOfTheDay;
 
-            var json = _jsonSerializer.Serialize(tinfoilIndex);
-
-            context.Response.StatusCode = (int)HttpStatusCode.OK;
-            context.Response.ContentType = "application/json";
-
-            await context.Response.WriteAsync(json, Encoding.UTF8);
-        }
-        else if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualDirectory virtualDirectory)
-        {
-            var tinfoilIndex = _tinfoilIndexBuilder.Build(serverUrlRoot, virtualDirectory, _appSettings.IndexType, null);
+            var tinfoilIndex = _tinfoilIndexBuilder.Build(serverUrlRoot, virtualDirectory, _appSettings.IndexType, message);
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 

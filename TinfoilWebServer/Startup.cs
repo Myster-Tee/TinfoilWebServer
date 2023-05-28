@@ -42,17 +42,21 @@ public class Startup
 
         logger.LogInformation($"Tinfoil index type:{LogUtil.MultilineLogSpacing}{appSettings.IndexType}");
 
-        logger.LogInformation($"Cache index expiration:{LogUtil.MultilineLogSpacing}{appSettings.CacheExpiration}");
+        if (appSettings.CacheExpiration != null && appSettings.CacheExpiration.Enabled)
+            logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Enabled: {appSettings.CacheExpiration.ExpirationDelay}");
+        else
+            logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Disabled");
+
 
         var authenticationSettings = appSettings.Authentication;
         if (authenticationSettings is { Enabled: true })
         {
             app.UseMiddleware<IBasicAuthMiddleware>();
-            logger.LogInformation($"Authentication enabled, {authenticationSettings.AllowedUsers.Count} user(s) defined.");
+            logger.LogInformation($"Authentication:{LogUtil.MultilineLogSpacing}Enabled: {authenticationSettings.AllowedUsers.Count} user(s) defined");
         }
         else
         {
-            logger.LogWarning($"Authentication disabled.");
+            logger.LogWarning($"Authentication:{LogUtil.MultilineLogSpacing}Disabled");
         }
         app.Run(requestManager.OnRequest);
     }

@@ -16,11 +16,11 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         switch (indexType)
         {
             case TinfoilIndexType.Hierarchical:
-                tinfoilIndex.Directories.AddRange(virtualDirectory.Directories.Select(vd => serverUrlRoot + vd.RelativeUri));
-                tinfoilIndex.Files.AddRange(virtualDirectory.Files.Select(vf => new FileNfo { Size = vf.Size, Url = serverUrlRoot + vf.RelativeUri }));
+                tinfoilIndex.Directories.AddRange(virtualDirectory.Directories.Select(vd => vd.ToEscapedUrl(serverUrlRoot)));
+                tinfoilIndex.Files.AddRange(virtualDirectory.Files.Select(vf => new FileNfo { Size = vf.Size, Url = vf.ToEscapedUrl(serverUrlRoot) }));
                 break;
             case TinfoilIndexType.Flatten:
-                tinfoilIndex.Files.AddRange(virtualDirectory.GetDescendantFiles().Select(vf => new FileNfo { Size = vf.Size, Url = serverUrlRoot + vf.RelativeUri }));
+                tinfoilIndex.Files.AddRange(virtualDirectory.GetDescendantFiles().Select(vf => new FileNfo { Size = vf.Size, Url = vf.ToEscapedUrl(serverUrlRoot) }));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(indexType), indexType, null);

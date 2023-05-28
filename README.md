@@ -26,7 +26,10 @@ No requirements but heavyweight.
   "AllowedExt": ["ext1", "ext2", ...],          // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ].
   "MessageOfTheDay": "SomeText",                // The welcome message displayed when Tinfoil requests the root index.
   "IndexType": "<enum>",                        // The type of index file returned to Tinfoil, can be either "Flatten" or "Hierarchical".
-  "CacheExpiration": "<duration>",              // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]».
+  "CacheExpiration": {
+    "Enable":                                   // «true» to enable cache expiration, «false» otherwise
+    "ExpirationDelay" : "<duration>",           // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s.
+  },
   "Kestrel": {                                  // HTTP server configuration see «https://docs.microsoft.com/fr-fr/aspnet/core/fundamentals/servers/kestrel?view=aspnetcore-5.0#configureiconfiguration» for more information.
     "Endpoints": {
       "Http": {

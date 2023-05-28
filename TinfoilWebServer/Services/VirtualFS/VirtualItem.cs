@@ -3,12 +3,16 @@
 public abstract class VirtualItem
 {
 
-    protected VirtualItem(string fullLocalPath)
+    protected VirtualItem(string key, string fullLocalPath)
     {
+        Key = key;
         FullLocalPath = fullLocalPath;
     }
 
-    public abstract string UriSegment { get; }
+    /// <summary>
+    /// The key of this item (<see cref="FullLocalPath"/>)
+    /// </summary>
+    public string Key { get; }
 
     public string FullLocalPath { get; }
 
@@ -16,24 +20,7 @@ public abstract class VirtualItem
 
     public override string ToString()
     {
-        return $"[{UriSegment}]=>[{FullLocalPath}]";
-    }
-
-    public string RelativeUri
-    {
-        get
-        {
-            var itemTemp = this;
-            var path = "";
-            do
-            {
-                path = itemTemp.UriSegment + path;
-                itemTemp = itemTemp.Parent;
-
-            } while (itemTemp != null);
-
-            return path;
-        }
+        return $"[{Key}]=>[{FullLocalPath}]";
     }
 
 }

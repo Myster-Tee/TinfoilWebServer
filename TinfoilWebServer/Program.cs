@@ -78,10 +78,11 @@ public class Program
                     .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                     .AddSingleton<IRequestManager, RequestManager>()
                     .AddSingleton<IFileFilter, FileFilter>()
+                    .AddSingleton<IVirtualItemFinder, VirtualItemFinder>()
                     .AddSingleton<IJsonSerializer, JsonSerializer>()
                     .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
                     .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
-                    .AddSingleton<IVirtualFileSystemProvider, VirtualFileSystemProvider>();
+                    .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>();
 
             })
             .UseConfiguration(configRoot)
@@ -95,18 +96,18 @@ public class Program
 
 
         var webHost = webHostBuilder.Build();
-
         var logger = webHost.Services.GetRequiredService<ILogger<Program>>();
+
+
         try
         {
-            webHost.Services.GetRequiredService<IVirtualFileSystemProvider>().Initialize();
+            webHost.Run();
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Failed to initialize Virtual File System: {ex.Message}");
+            logger.LogError(ex, $"Failed to run server: {ex.Message}");
         }
 
-        webHost.Run();
     }
 
 

@@ -14,9 +14,8 @@ public class VirtualDirectory : VirtualItem
 
     public VirtualDirectory[] Directories => _childItemsByUriSegment.Values.OfType<VirtualDirectory>().ToArray();
 
-    public VirtualDirectory(DirectoryUriSegment directoryUriSegment, string fullLocalPath) : base(fullLocalPath)
+    public VirtualDirectory(string key, string fullLocalPath) : base(key, fullLocalPath)
     {
-        UriSegment = (directoryUriSegment ?? throw new ArgumentNullException(nameof(directoryUriSegment))).UriSegment;
     }
 
     public void AddDirectory(VirtualDirectory virtualDirectory)
@@ -24,7 +23,7 @@ public class VirtualDirectory : VirtualItem
         if (virtualDirectory == null)
             throw new ArgumentNullException(nameof(virtualDirectory));
 
-        _childItemsByUriSegment.Add(virtualDirectory.UriSegment, virtualDirectory);
+        _childItemsByUriSegment.Add(virtualDirectory.Key, virtualDirectory);
         virtualDirectory.Parent = this;
     }
 
@@ -33,50 +32,21 @@ public class VirtualDirectory : VirtualItem
         if (virtualFile == null)
             throw new ArgumentNullException(nameof(virtualFile));
 
-        _childItemsByUriSegment.Add(virtualFile.UriSegment, virtualFile);
+        _childItemsByUriSegment.Add(virtualFile.Key, virtualFile);
         virtualFile.Parent = this;
     }
 
     [Pure]
-    public VirtualItem? GetChild(string uriSegment)
+    public VirtualItem? GetChild(string key)
     {
-        _childItemsByUriSegment.TryGetValue(uriSegment, out var result);
+        _childItemsByUriSegment.TryGetValue(key, out var result);
         return result;
     }
 
-    [Pure]
-    public VirtualItem? ReachItem(string[]? uriSegments)
+    public bool ChildExists(string key)
     {
-        if (uriSegments is not { Length: > 0 })
-            return this;
-
-        var remainingSegments = uriSegments;
-        var dirTemp = this;
-
-        while (true)
-        {
-            var firstSegment = remainingSegments[0];
-            remainingSegments = remainingSegments[1..];
-            var childTemp = dirTemp.GetChild(firstSegment);
-
-            if (remainingSegments.Length <= 0)
-                return childTemp;
-
-            if (childTemp is not VirtualDirectory childDirTemp)
-                return null;
-
-            dirTemp = childDirTemp;
-        }
-
+        return _childItemsByUriSegment.ContainsKey(key);
     }
-
-
-    public bool ChildExists(string uriSegment)
-    {
-        return _childItemsByUriSegment.ContainsKey(uriSegment);
-    }
-
-    public override string UriSegment { get; }
 
     public override string ToString()
     {
@@ -114,14 +84,4 @@ public class VirtualDirectory : VirtualItem
     {
         return GetDescendantDirectories(true).SelectMany(directory => directory.Files);
     }
-}
-
-public class DirectoryUriSegment
-{
-    public DirectoryUriSegment(string fileName)
-    {
-        UriSegment = $"{Uri.EscapeDataString(fileName)}/";
-    }
-
-    public string UriSegment { get; }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Configuration;
 using TinfoilWebServer.Services;
 
@@ -23,16 +22,16 @@ public interface IAppSettings
 
     TinfoilIndexType IndexType { get; }
 
-    TimeSpan CacheExpiration { get; }
+    ICacheExpirationSettings? CacheExpiration { get; }
 
     IAuthenticationSettings? Authentication { get; }
 }
 
-public class AuthenticationSettings : IAuthenticationSettings
+public interface ICacheExpirationSettings
 {
-    public bool Enabled { get; init; }
+    bool Enabled { get; }
 
-    public IReadOnlyList<IAllowedUser> AllowedUsers { get; init; } = Array.Empty<IAllowedUser>();
+    TimeSpan ExpirationDelay { get; }
 }
 
 public interface IAuthenticationSettings
@@ -49,11 +48,3 @@ public interface IAllowedUser
     public string Password { get; }
 }
 
-public class AllowedUser : IAllowedUser
-{
-    [Required]
-    public string Name { get; init; } = null!;
-
-    [Required]
-    public string Password { get; init; } = null!;
-}

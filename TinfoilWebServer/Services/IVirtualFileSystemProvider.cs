@@ -2,7 +2,7 @@
 
 namespace TinfoilWebServer.Services;
 
-public interface IVirtualFileSystemProvider
+public interface IVirtualFileSystemRootProvider
 {
 
     /// <summary>
@@ -10,6 +10,5 @@ public interface IVirtualFileSystemProvider
     /// </summary>
     VirtualFileSystemRoot Root { get; }
 
-    public void Initialize();
 
 }

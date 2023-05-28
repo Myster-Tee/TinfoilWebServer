@@ -1,5 +1,5 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
 using TinfoilWebServer.Services;
 
@@ -7,11 +7,9 @@ namespace TinfoilWebServer.Settings;
 
 public class AppSettings : IAppSettings
 {
-    [Required]
-    public string[] AllowedExt { get; set; }
+    public string[] AllowedExt { get; set; } = null!;
 
-    [Required]
-    public string[] ServedDirectories { get; set; }
+    public string[] ServedDirectories { get; set; } = null!;
 
     public IConfiguration? KestrelConfig { get; set; }
 
@@ -21,9 +19,38 @@ public class AppSettings : IAppSettings
 
     public TinfoilIndexType IndexType { get; set; }
 
-    public TimeSpan CacheExpiration { get; set; }
+    public CacheExpirationSettings? CacheExpiration { get; set; }
+
+    ICacheExpirationSettings? IAppSettings.CacheExpiration => CacheExpiration;
 
     public AuthenticationSettings? Authentication { get; set; }
 
     IAuthenticationSettings? IAppSettings.Authentication => Authentication;
+
+}
+
+public class CacheExpirationSettings : ICacheExpirationSettings
+{
+    public bool Enabled { get; set; }
+
+    public TimeSpan ExpirationDelay { get; set; }
+}
+
+public class AuthenticationSettings : IAuthenticationSettings
+{
+
+    public bool Enabled { get; set; } = true!;
+
+    public AllowedUser[] Users { get; set; } = null!;
+
+    IReadOnlyList<IAllowedUser> IAuthenticationSettings.AllowedUsers => Users;
+
+}
+
+public class AllowedUser : IAllowedUser
+{
+    public string Name { get; set; } = null!;
+
+
+    public string Password { get; set; } = null!;
 }

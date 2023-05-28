@@ -1,17 +1,12 @@
-﻿using System;
-
-namespace TinfoilWebServer.Services.VirtualFS;
+﻿namespace TinfoilWebServer.Services.VirtualFS;
 
 public class VirtualFile : VirtualItem
 {
 
-    public VirtualFile(FileUriSegment fileUriSegment, string fullLocalPath, long size) : base(fullLocalPath)
+    public VirtualFile(string key, string fullLocalPath, long size) : base(key, fullLocalPath)
     {
-        UriSegment = (fileUriSegment ?? throw new ArgumentNullException(nameof(fileUriSegment))).UriSegment;
-        Size = size;    
+        Size = size;
     }
-
-    public override string UriSegment { get; }
 
     public long Size { get; }
 
@@ -22,12 +17,3 @@ public class VirtualFile : VirtualItem
 }
 
 
-public class FileUriSegment
-{
-    public FileUriSegment(string fileName)
-    {
-        UriSegment = Uri.EscapeDataString(fileName);
-    }
-
-    public string UriSegment { get; }
-}

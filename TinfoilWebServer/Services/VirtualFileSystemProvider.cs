@@ -1,33 +1,54 @@
+using Microsoft.Extensions.Logging;
 using System;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services;
 
-public class VirtualFileSystemProvider : IVirtualFileSystemProvider
+public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
 {
     private readonly IVirtualFileSystemBuilder _virtualFileSystemBuilder;
     private readonly IAppSettings _appSettings;
+    private readonly ILogger<VirtualFileSystemRootProvider> _logger;
     private VirtualFileSystemRoot? _root;
+    private DateTime? _lastCacheCreationDate;
 
-    public VirtualFileSystemProvider(IVirtualFileSystemBuilder virtualFileSystemBuilder, IAppSettings appSettings)
+    public VirtualFileSystemRootProvider(IVirtualFileSystemBuilder virtualFileSystemBuilder, IAppSettings appSettings, ILogger<VirtualFileSystemRootProvider> logger)
     {
         _virtualFileSystemBuilder = virtualFileSystemBuilder ?? throw new ArgumentNullException(nameof(virtualFileSystemBuilder));
-        _appSettings = appSettings;
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        _logger = logger;
     }
 
-    public void Initialize()
-    {
-        _root = _virtualFileSystemBuilder.BuildHierarchical(_appSettings.ServedDirectories);
-    }
 
-    public VirtualFileSystemRoot Root
+    private bool IsCacheExpired
     {
         get
         {
-            if (_root == null)
-                throw new InvalidOperationException($"{nameof(Initialize)} method should be invoked first!");
-            return _root;
+            var cacheExpirationSettings = _appSettings.CacheExpiration;
+            if (cacheExpirationSettings == null || !cacheExpirationSettings.Enabled)
+                return false;
+
+            if (_lastCacheCreationDate == null)
+                return true;
+
+            return DateTime.Now > _lastCacheCreationDate.Value + cacheExpirationSettings.ExpirationDelay;
         }
+    }
+
+
+    public VirtualFileSystemRoot Root => GetRoot();
+
+
+    private VirtualFileSystemRoot GetRoot()
+    {
+        if (_root == null || IsCacheExpired)
+        {
+            _root = _virtualFileSystemBuilder.BuildHierarchical(_appSettings.ServedDirectories);
+            _lastCacheCreationDate = DateTime.Now;
+            _logger.LogInformation("Served files cache updated.");
+        }
+
+        return _root;
     }
 }
