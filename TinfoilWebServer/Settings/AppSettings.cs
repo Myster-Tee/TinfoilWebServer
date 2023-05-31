@@ -7,9 +7,9 @@ namespace TinfoilWebServer.Settings;
 
 public class AppSettings : IAppSettings
 {
-    public string[] AllowedExt { get; set; } = null!;
+    public string[]? AllowedExt { get; set; }
 
-    public string[] ServedDirectories { get; set; } = null!;
+    public string[]? ServedDirectories { get; set; }
 
     public IConfiguration? KestrelConfig { get; set; }
 
@@ -17,7 +17,7 @@ public class AppSettings : IAppSettings
 
     public string? MessageOfTheDay { get; set; }
 
-    public TinfoilIndexType IndexType { get; set; }
+    public TinfoilIndexType IndexType { get; set; } = TinfoilIndexType.Flatten;
 
     public CacheExpirationSettings? CacheExpiration { get; set; }
 
@@ -41,9 +41,9 @@ public class AuthenticationSettings : IAuthenticationSettings
 
     public bool Enabled { get; set; } = true!;
 
-    public AllowedUser[] Users { get; set; } = null!;
+    public AllowedUser[]? Users { get; set; }
 
-    IReadOnlyList<IAllowedUser> IAuthenticationSettings.AllowedUsers => Users;
+    IReadOnlyList<IAllowedUser> IAuthenticationSettings.AllowedUsers => Users ?? Array.Empty<IAllowedUser>();
 
 }
 

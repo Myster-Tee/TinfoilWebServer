@@ -10,7 +10,7 @@ public interface IAppSettings
     string[] AllowedExt { get; }
 
     /// <summary>
-    /// The list of served directories rooted
+    /// The list of served directories
     /// </summary>
     string[] ServedDirectories { get; }
 

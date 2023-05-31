@@ -1,4 +1,6 @@
-﻿namespace TinfoilWebServer.Services.VirtualFS;
+﻿using System.Collections.Generic;
+
+namespace TinfoilWebServer.Services.VirtualFS;
 
 public interface IVirtualFileSystemBuilder
 {
@@ -7,5 +9,5 @@ public interface IVirtualFileSystemBuilder
     /// </summary>
     /// <param name="servedDirectories"></param>
     /// <returns></returns>
-    VirtualFileSystemRoot BuildHierarchical(string[] servedDirectories);
+    VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<string> servedDirectories);
 }

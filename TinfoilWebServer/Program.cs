@@ -50,7 +50,7 @@ public class Program
             return;
         }
 
-        IAppSettings? appSettings;
+        IAppSettings appSettings;
         try
         {
             appSettings = configRoot.LoadAppSettings();

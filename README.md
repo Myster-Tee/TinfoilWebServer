@@ -55,9 +55,14 @@ No requirements but heavyweight.
 }
 ```
 
-- ***Note 1:** If "ServedDirectories" is omitted, current directory will be used.*
-- ***Note 2:** If "AllowedExt" is omitted, the following extensions ["xci", "nsz", "nsp"] will be used.*
-- ***Note 3:** If "IndexType" is omitted, "Flatten" type will be used.  
-When "Flatten" index is used, all files are returned at once, including files from subdirectories.  
-When "Hierachical" index is used, only files and folders contained in the corresponding requested directory will be returned.*
+**"IndexType"** principle:  
+- *"Flatten"*: all files are returned at once, including files from subdirectories.  
+- *"Hierachical"*: only files and folders contained in the corresponding requested directory will be returned.
 
+
+
+### Default settings
+- When *"Kestrel"* configuration is omitted, server listens to *http://localhost:5000/*.
+- When *"ServedDirectories"* is omitted, current directory is used.
+- When *"AllowedExt"* is omitted, the following extensions *["xci", "nsz", "nsp"]* are used.
+- When *"IndexType"* is omitted, *"Flatten"* type is used.

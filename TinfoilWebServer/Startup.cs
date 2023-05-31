@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -31,12 +30,6 @@ public class Startup
         logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
 
         logger.LogInformation($"Served directories:{appSettings.ServedDirectories.ToMultilineString()}");
-
-        foreach (var servedDirectory in appSettings.ServedDirectories)
-        {
-            if (!Directory.Exists(servedDirectory))
-                logger.LogWarning($"Directory «{servedDirectory}» not found!");
-        }
 
         logger.LogInformation($"Allowed extensions:{appSettings.AllowedExt.ToMultilineString()}");
 

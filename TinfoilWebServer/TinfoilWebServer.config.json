@@ -20,7 +20,7 @@
     }
   },
   "Authentication": {
-    "Enabled": true,
+    "Enabled": false,
     "Users": [
       {
         "Name": "JohnDoe",

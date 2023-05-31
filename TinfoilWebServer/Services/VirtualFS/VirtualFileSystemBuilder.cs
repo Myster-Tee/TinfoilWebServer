@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 
 namespace TinfoilWebServer.Services.VirtualFS;
@@ -73,19 +74,19 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     }
 
 
-    public VirtualFileSystemRoot BuildHierarchical(string[] servedDirectories)
+    public VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<string> servedDirectories)
     {
         var virtualFileSystemRoot = new VirtualFileSystemRoot();
 
-        foreach (var servedDirectory in servedDirectories)
+        foreach (var servedDirectoryFullPath in servedDirectories.Select(ToFullPath))
         {
             // Trims end separator to avoid having an empty name while calling Path.GetFileName
-            var safeDirPath = servedDirectory.TrimEnd(Path.DirectorySeparatorChar);
+            var safeDirPath = servedDirectoryFullPath.TrimEnd(Path.DirectorySeparatorChar);
 
             if (Directory.Exists(safeDirPath))
                 SafePopulateSubDir(virtualFileSystemRoot, safeDirPath);
             else
-                _logger.LogError($"Served directory \"{servedDirectory}\" not found.");
+                _logger.LogError($"Served directory \"{servedDirectoryFullPath}\" not found.");
         }
 
         var remainingDirsToBrowse = new List<VirtualDirectory>(virtualFileSystemRoot.Directories);
@@ -132,4 +133,11 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
 
     }
 
+    private string ToFullPath(string path)
+    {
+        if (Path.IsPathRooted(path))
+            return path;
+
+        return Path.GetFullPath(path);
+    }
 }
