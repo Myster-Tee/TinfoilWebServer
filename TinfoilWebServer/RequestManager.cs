@@ -2,7 +2,6 @@ using System;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using ElMariachi.Http.Header.Managed;
 using Microsoft.AspNetCore.Http;
 using TinfoilWebServer.HttpExtensions;
 using TinfoilWebServer.Properties;
@@ -21,9 +20,7 @@ public class RequestManager : IRequestManager
 
     public RequestManager(
         IAppSettings appSettings,
-        IFileFilter fileFilter,
         IJsonSerializer jsonSerializer,
-
         ITinfoilIndexBuilder tinfoilIndexBuilder,
         IVirtualItemFinder virtualItemFinder
         )
@@ -49,13 +46,13 @@ public class RequestManager : IRequestManager
 
         var virtualItem = _virtualItemFinder.Find(request.Path);
 
-        var serverUrlRoot = $"{request.Scheme}{Uri.SchemeDelimiter}{request.Host}";
-
         if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualDirectory virtualDirectory)
         {
             string? message = null;
             if (virtualItem is VirtualFileSystemRoot)
                 message = _appSettings.MessageOfTheDay;
+
+            var serverUrlRoot = $"{request.Scheme}{Uri.SchemeDelimiter}{request.Host}";
 
             var tinfoilIndex = _tinfoilIndexBuilder.Build(serverUrlRoot, virtualDirectory, _appSettings.IndexType, message);
 
@@ -68,15 +65,9 @@ public class RequestManager : IRequestManager
         }
         else if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualFile virtualFile)
         {
-            var rangeHeader = new RangeHeader
-            {
-                RawValue = request.Headers["range"]
-            };
+            var rangeHeader = request.GetTypedHeaders().Range;
 
-            var ranges = rangeHeader.Ranges;
-            var range = ranges.Count == 1 ? ranges[0] : null;
-
-            await context.Response.WriteFile(virtualFile.FullLocalPath, range: range);
+            await context.Response.WriteFile(virtualFile.FullLocalPath, rangeHeader: rangeHeader);
         }
         else
         {

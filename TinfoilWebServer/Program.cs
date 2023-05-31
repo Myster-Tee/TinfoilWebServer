@@ -1,6 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,37 +15,36 @@ namespace TinfoilWebServer;
 
 public class Program
 {
-    public static string CurrentDirectory { get; }
 
-    public static string ConfigFileName { get; }
+    public static string ExpectedConfigFilePath { get; }
 
     static Program()
     {
-        CurrentDirectory = Directory.GetCurrentDirectory();
-        ConfigFileName = InitConfigFileName();
+        ExpectedConfigFilePath = InitExpectedConfigFilePath();
     }
 
-    private static string InitConfigFileName()
+    private static string InitExpectedConfigFilePath()
     {
-        var currentExeWithoutExt = Path.GetFileNameWithoutExtension(Process.GetCurrentProcess()?.MainModule?.FileName) ?? "TinfoilWebServer";
-        return $"{currentExeWithoutExt}.config.json";
+        var currentAssemblyName = Assembly.GetExecutingAssembly().ManifestModule.Name;
+        var currentAssemblyNameWithoutExt = Path.GetFileNameWithoutExtension(currentAssemblyName);
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{currentAssemblyNameWithoutExt}.config.json");
     }
 
     public static void Main(string[] args)
     {
-        const string? CONFIG_FILE_NAME = "TinfoilWebServer.config.json";
 
         IConfigurationRoot configRoot;
+        var configFilePath = ExpectedConfigFilePath;
         try
         {
             configRoot = new ConfigurationBuilder()
-                .SetBasePath(CurrentDirectory)
-                .AddJsonFile(CONFIG_FILE_NAME, optional: true, reloadOnChange: true)
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile(configFilePath, optional: true, reloadOnChange: true)
                 .Build();
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Failed to build configuration: {ex.Message}{Environment.NewLine}Is «{CONFIG_FILE_NAME}» a valid JSON file?");
+            Console.Error.WriteLine($"Failed to build configuration: {ex.Message}{Environment.NewLine}Is \"{configFilePath}\" a valid JSON file?");
             Environment.ExitCode = 1;
             return;
         }
@@ -57,7 +56,7 @@ public class Program
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Failed to load configuration from file «{CONFIG_FILE_NAME}»: {ex.Message}");
+            Console.Error.WriteLine($"Failed to load configuration from file \"{configFilePath}\": {ex.Message}");
             Environment.ExitCode = 1;
             return;
         }
@@ -96,8 +95,6 @@ public class Program
 
 
         var webHost = webHostBuilder.Build();
-        var logger = webHost.Services.GetRequiredService<ILogger<Program>>();
-
 
         try
         {
@@ -105,7 +102,9 @@ public class Program
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, $"Failed to run server: {ex.Message}");
+            Console.Error.WriteLine($"Failed to run server: {ex.Message}");
+            Environment.ExitCode = 1;
+            return;
         }
 
     }

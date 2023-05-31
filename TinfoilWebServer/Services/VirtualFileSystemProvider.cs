@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
@@ -17,9 +18,8 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     {
         _virtualFileSystemBuilder = virtualFileSystemBuilder ?? throw new ArgumentNullException(nameof(virtualFileSystemBuilder));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-
 
     private bool IsCacheExpired
     {
@@ -36,19 +36,22 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
         }
     }
 
-
     public VirtualFileSystemRoot Root => GetRoot();
 
 
     private VirtualFileSystemRoot GetRoot()
     {
         if (_root == null || IsCacheExpired)
-        {
-            _root = _virtualFileSystemBuilder.BuildHierarchical(_appSettings.ServedDirectories);
-            _lastCacheCreationDate = DateTime.Now;
-            _logger.LogInformation("Served files cache updated.");
-        }
+            UpdateVirtualFileSystem();
 
         return _root;
+    }
+
+    [MemberNotNull(nameof(_root))]
+    private void UpdateVirtualFileSystem()
+    {
+        _root = _virtualFileSystemBuilder.BuildHierarchical(_appSettings.ServedDirectories);
+        _lastCacheCreationDate = DateTime.Now;
+        _logger.LogInformation("Served files cache updated.");
     }
 }

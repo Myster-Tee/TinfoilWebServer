@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using ElMariachi.Http.Header.Managed;
 using Microsoft.AspNetCore.Http;
-using Range = ElMariachi.Http.Header.Managed.Range;
+using Microsoft.Net.Http.Headers;
 
 namespace TinfoilWebServer;
 
@@ -17,7 +16,7 @@ public class FileSender : IDisposable, IAsyncDisposable
     private int _bufferSize = 4 * 1024 * 1024; // 4 MiB
     private readonly long _fileSize;
 
-    public FileSender(HttpResponse response, string filePath, string contentType = "application/octet-stream", IRange? range = null)
+    public FileSender(HttpResponse response, string filePath, string contentType = "application/octet-stream", RangeItemHeaderValue? range = null)
     {
         _response = response ?? throw new ArgumentNullException(nameof(response));
         if (filePath == null)
@@ -65,12 +64,12 @@ public class FileSender : IDisposable, IAsyncDisposable
             var nbRemainingBytes = _contentLength;
             _fileStream.Position = _startOffset;
 
-            while(nbRemainingBytes > 0)
+            while (nbRemainingBytes > 0)
             {
                 var nbBytesToRead = (int)Math.Min(bufferSize, nbRemainingBytes);
 
-                var nbBytesRead = _fileStream.Read(buffer, 0, nbBytesToRead);
-                if(nbBytesRead <= 0)
+                var nbBytesRead = await _fileStream.ReadAsync(buffer, 0, nbBytesToRead);
+                if (nbBytesRead <= 0)
                     break;
 
                 await _response.Body.WriteAsync(buffer, 0, nbBytesRead);
@@ -90,17 +89,15 @@ public class FileSender : IDisposable, IAsyncDisposable
 
         if (IsPartialContent)
         {
-            var contentRangeHeader = new ContentRangeHeader
+            var contentRangeHeader = new ContentRangeHeaderValue(_startOffset, _startOffset + _contentLength - 1, _fileSize)
             {
-                Unit = "bytes",
-                Range = new Range(_startOffset, _startOffset + _contentLength - 1),
-                Size = _fileSize,
+                Unit = "bytes"
             };
-            headers[contentRangeHeader.Name] = contentRangeHeader.RawValue;
+            headers["Content-Range"] = contentRangeHeader.ToString();
         }
     }
 
-    private static void ComputeCopyInfo(IRange? range, long fileSize, out long contentLength, out long startOffset)
+    private static void ComputeCopyInfo(RangeItemHeaderValue? range, long fileSize, out long contentLength, out long startOffset)
     {
         if (range == null)
         {
@@ -109,63 +106,63 @@ public class FileSender : IDisposable, IAsyncDisposable
             return;
         }
 
-        var start = range.Start;
-        var end = range.End;
-        if (start == null && end == null)
+        var from = range.From;
+        var to = range.To;
+        if (from == null && to == null)
             throw new ArgumentException("Invalid range, start and end value can't be both undefined.", nameof(range));
 
-        if (start == null && end != null)
+        if (from == null && to != null)
         {
-            if (end.Value < 0)
-                throw new ArgumentException($"Invalid range, end value «{end.Value}» can't be less than zero.", nameof(range));
+            if (to.Value < 0)
+                throw new ArgumentException($"Invalid range, end value {to.Value} can't be less than zero.", nameof(range));
 
-            if (end.Value > fileSize)
+            if (to.Value > fileSize)
             {
                 startOffset = 0;
                 contentLength = fileSize;
             }
             else
             {
-                startOffset = fileSize - end.Value;
-                contentLength = end.Value;
+                startOffset = fileSize - to.Value;
+                contentLength = to.Value;
             }
             return;
         }
 
-        if (start != null && end == null)
+        if (from != null && to == null)
         {
-            if (start.Value < 0)
-                throw new ArgumentException($"Invalid range, start value «{start.Value}» can't be less than zero.", nameof(range));
+            if (from.Value < 0)
+                throw new ArgumentException($"Invalid range, start value {from.Value} can't be less than zero.", nameof(range));
 
-            if (start.Value >= fileSize)
-                throw new ArgumentException($"Invalid range, when end is undefined, start «{start.Value}» can't be greater than or equal to file size «{fileSize}» (bytes).", nameof(range));
+            if (from.Value >= fileSize)
+                throw new ArgumentException($"Invalid range, when end is undefined, start {from.Value} can't be greater than or equal to file size {fileSize} (bytes).", nameof(range));
 
-            startOffset = start.Value;
-            contentLength = fileSize - start.Value;
+            startOffset = from.Value;
+            contentLength = fileSize - from.Value;
             return;
         }
 
-        if (start.Value > end.Value)
-            throw new ArgumentException($"Invalid range, start value «{start.Value}» can't be greater than end value «{end.Value}».", nameof(range));
+        if (from.Value > to.Value)
+            throw new ArgumentException($"Invalid range, start value {from.Value} can't be greater than end value {to.Value}.", nameof(range));
 
-        if (start.Value < 0)
+        if (from.Value < 0)
             throw new ArgumentException("Invalid range, start value can't be less than zero.", nameof(range));
 
-        if (end.Value < 0)
+        if (to.Value < 0)
             throw new ArgumentException("Invalid range, end value can't be less than zero.", nameof(range));
 
         long realEnd;
-        if (end.Value >= fileSize)
+        if (to.Value >= fileSize)
         {
             realEnd = fileSize - 1;
         }
         else
         {
-            realEnd = end.Value;
+            realEnd = to.Value;
         }
-        contentLength = realEnd - start.Value + 1;
+        contentLength = realEnd - from.Value + 1;
 
-        startOffset = start.Value;
+        startOffset = from.Value;
 
     }
 

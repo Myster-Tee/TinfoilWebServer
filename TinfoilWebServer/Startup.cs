@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -26,6 +27,13 @@ public class Startup
         var version = Assembly.GetExecutingAssembly().GetName().Version!;
 
         logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Build} (press CTRL+C to exit)");
+
+        var configFilePath = Program.ExpectedConfigFilePath;
+        if (File.Exists(configFilePath))
+            logger.LogInformation($"Configuration file found at location \"{configFilePath}\".");
+        else
+            logger.LogWarning($"No configuration file found at location \"{configFilePath}\".");
+
 
         logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
 

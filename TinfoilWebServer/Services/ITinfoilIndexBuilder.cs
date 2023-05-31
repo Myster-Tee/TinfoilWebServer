@@ -1,4 +1,5 @@
-﻿using TinfoilWebServer.Models;
+﻿using System.Diagnostics.Contracts;
+using TinfoilWebServer.Models;
 using TinfoilWebServer.Services.VirtualFS;
 
 namespace TinfoilWebServer.Services;
@@ -14,6 +15,7 @@ public interface ITinfoilIndexBuilder
     /// <param name="indexType"></param>
     /// <param name="messageOfTheDay"></param>
     /// <returns></returns>
+    [Pure]
     TinfoilIndex Build(string serverUrlRoot, VirtualDirectory virtualDirectory, TinfoilIndexType indexType, string? messageOfTheDay);
 
 }
