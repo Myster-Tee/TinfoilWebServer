@@ -52,9 +52,7 @@ public class RequestManager : IRequestManager
             if (virtualItem is VirtualFileSystemRoot)
                 message = _appSettings.MessageOfTheDay;
 
-            var serverUrlRoot = $"{request.Scheme}{Uri.SchemeDelimiter}{request.Host}";
-
-            var tinfoilIndex = _tinfoilIndexBuilder.Build(serverUrlRoot, virtualDirectory, _appSettings.IndexType, message);
+            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory, _appSettings.IndexType, message);
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 

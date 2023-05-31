@@ -10,13 +10,12 @@ public interface ITinfoilIndexBuilder
     /// <summary>
     /// Builds a <see cref="TinfoilIndex"/> model from the specified VirtualDirectory
     /// </summary>
-    /// <param name="serverUrlRoot"></param>
     /// <param name="virtualDirectory"></param>
     /// <param name="indexType"></param>
     /// <param name="messageOfTheDay"></param>
     /// <returns></returns>
     [Pure]
-    TinfoilIndex Build(string serverUrlRoot, VirtualDirectory virtualDirectory, TinfoilIndexType indexType, string? messageOfTheDay);
+    TinfoilIndex Build(VirtualDirectory virtualDirectory, TinfoilIndexType indexType, string? messageOfTheDay);
 
 }
 
