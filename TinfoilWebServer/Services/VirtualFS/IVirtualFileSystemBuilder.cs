@@ -9,7 +9,8 @@ public interface IVirtualFileSystemBuilder
     /// Build the served files tree
     /// </summary>
     /// <param name="servedDirectories"></param>
+    /// <param name="excludeEmptyDirectories"></param>
     /// <returns></returns>
     [Pure]
-    VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<string> servedDirectories);
+    VirtualFileSystemRoot Build(IReadOnlyList<string> servedDirectories, bool excludeEmptyDirectories);
 }

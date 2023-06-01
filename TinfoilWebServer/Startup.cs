@@ -38,6 +38,8 @@ public class Startup
         logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
 
         logger.LogInformation($"Served directories:{appSettings.ServedDirectories.ToMultilineString()}");
+        
+        logger.LogInformation($"Serve empty directories:{LogUtil.MultilineLogSpacing}{appSettings.ServeEmptyDirectories}");
 
         logger.LogInformation($"Allowed extensions:{appSettings.AllowedExt.ToMultilineString()}");
 

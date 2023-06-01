@@ -3,10 +3,10 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using TinfoilWebServer.HttpExtensions;
 using TinfoilWebServer.Properties;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.VirtualFS;
+using TinfoilWebServer.Utils;
 
 namespace TinfoilWebServer;
 

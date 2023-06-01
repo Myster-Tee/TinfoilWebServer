@@ -1,5 +1,6 @@
 ﻿{
   "ServedDirectories": [ "C:\\Switch", "D:\\NXPackages", "D:\\NSwitch", "." ],
+  "ServeEmptyDirectories": false,
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
   "ExtraRepositories": [],

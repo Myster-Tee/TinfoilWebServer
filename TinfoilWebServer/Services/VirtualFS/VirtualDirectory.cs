@@ -7,12 +7,12 @@ namespace TinfoilWebServer.Services.VirtualFS;
 
 public class VirtualDirectory : VirtualItem
 {
-    private readonly Dictionary<string, VirtualItem> _childItemsByUriSegment = new();
+    private readonly Dictionary<string, VirtualItem> _childItemsByKey = new();
 
 
-    public VirtualFile[] Files => _childItemsByUriSegment.Values.OfType<VirtualFile>().ToArray();
+    public VirtualFile[] Files => _childItemsByKey.Values.OfType<VirtualFile>().ToArray();
 
-    public VirtualDirectory[] Directories => _childItemsByUriSegment.Values.OfType<VirtualDirectory>().ToArray();
+    public VirtualDirectory[] Directories => _childItemsByKey.Values.OfType<VirtualDirectory>().ToArray();
 
     public VirtualDirectory(string key, string fullLocalPath) : base(key, fullLocalPath)
     {
@@ -23,8 +23,23 @@ public class VirtualDirectory : VirtualItem
         if (virtualDirectory == null)
             throw new ArgumentNullException(nameof(virtualDirectory));
 
-        _childItemsByUriSegment.Add(virtualDirectory.Key, virtualDirectory);
+        virtualDirectory.Parent?.RemoveDirectory(virtualDirectory);
+
+        _childItemsByKey.Add(virtualDirectory.Key, virtualDirectory);
         virtualDirectory.Parent = this;
+    }
+
+    public bool RemoveDirectory(VirtualDirectory virtualDirectory)
+    {
+        if (virtualDirectory == null)
+            throw new ArgumentNullException(nameof(virtualDirectory));
+
+        if (!_childItemsByKey.TryGetValue(virtualDirectory.Key, out var foundItem) || foundItem != virtualDirectory)
+            return false;
+
+        virtualDirectory.Parent = null;
+        return _childItemsByKey.Remove(virtualDirectory.Key);
+
     }
 
     public void AddFile(VirtualFile virtualFile)
@@ -32,20 +47,20 @@ public class VirtualDirectory : VirtualItem
         if (virtualFile == null)
             throw new ArgumentNullException(nameof(virtualFile));
 
-        _childItemsByUriSegment.Add(virtualFile.Key, virtualFile);
+        _childItemsByKey.Add(virtualFile.Key, virtualFile);
         virtualFile.Parent = this;
     }
 
     [Pure]
     public VirtualItem? GetChild(string key)
     {
-        _childItemsByUriSegment.TryGetValue(key, out var result);
+        _childItemsByKey.TryGetValue(key, out var result);
         return result;
     }
 
     public bool ChildExists(string key)
     {
-        return _childItemsByUriSegment.ContainsKey(key);
+        return _childItemsByKey.ContainsKey(key);
     }
 
     public override string ToString()
@@ -53,35 +68,5 @@ public class VirtualDirectory : VirtualItem
         return $"DIRECTORY: {base.ToString()}";
     }
 
-    /// <summary>
-    /// Deep return the sub directories of this directory
-    /// </summary>
-    /// <param name="includeThisDirectory">true to include this directory in the list of returned directories</param>
-    /// <returns></returns>
-    public IEnumerable<VirtualDirectory> GetDescendantDirectories(bool includeThisDirectory = false)
-    {
-        var remainingDirectories = new List<VirtualDirectory>();
 
-        if (includeThisDirectory)
-            remainingDirectories.Add(this);
-        else
-            remainingDirectories.AddRange(this.Directories);
-
-        while (remainingDirectories.Count > 0)
-        {
-            var directory = remainingDirectories[0];
-            remainingDirectories.RemoveAt(0);
-            remainingDirectories.AddRange(directory.Directories);
-            yield return directory;
-        }
-    }
-
-    /// <summary>
-    /// Return all the files contains in this directory, including files from all sub-directories
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerable<VirtualFile> GetDescendantFiles()
-    {
-        return GetDescendantDirectories(true).SelectMany(directory => directory.Files);
-    }
 }

@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
@@ -50,8 +51,9 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     [MemberNotNull(nameof(_root))]
     private void UpdateVirtualFileSystem()
     {
-        _root = _virtualFileSystemBuilder.BuildHierarchical(_appSettings.ServedDirectories);
+        _root = _virtualFileSystemBuilder.Build(_appSettings.ServedDirectories, !_appSettings.ServeEmptyDirectories);
+        var nbFilesServed = _root.GetDescendantFiles().Count();
+        _logger.LogInformation($"Served files cache updated ({nbFilesServed} files served).");
         _lastCacheCreationDate = DateTime.Now;
-        _logger.LogInformation("Served files cache updated.");
     }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.Logging;
+using TinfoilWebServer.Utils;
 
 namespace TinfoilWebServer.Services.VirtualFS;
 
@@ -73,8 +75,7 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
         parent.AddFile(new VirtualFile(key, subFilePath, fileInfo.Length));
     }
 
-
-    public VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<string> servedDirectories)
+    public VirtualFileSystemRoot Build(IReadOnlyList<string> servedDirectories, bool excludeEmptyDirectories)
     {
         var virtualFileSystemRoot = new VirtualFileSystemRoot();
 
@@ -90,10 +91,8 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
         }
 
         var remainingDirsToBrowse = new List<VirtualDirectory>(virtualFileSystemRoot.Directories);
-        while (remainingDirsToBrowse.Count > 0)
+        while (remainingDirsToBrowse.TryRemoveFirst(out var virtualDir))
         {
-            var virtualDir = remainingDirsToBrowse[0];
-            remainingDirsToBrowse.RemoveAt(0);
 
             string[] subDirectoryPaths;
             try
@@ -129,15 +128,24 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             }
         }
 
+        if (excludeEmptyDirectories)
+        {
+            var removedDirectories = virtualFileSystemRoot.RemoveDirectoriesWithoutFile();
+
+            if (_logger.IsEnabled(LogLevel.Debug) && removedDirectories.Count > 0)
+                _logger.LogDebug($"Empty served directories removed:{removedDirectories.Select(directory => directory.FullLocalPath).ToMultilineString()}");
+        }
+
         return virtualFileSystemRoot;
 
     }
 
-    private string ToFullPath(string path)
+    private static string ToFullPath(string path)
     {
         if (Path.IsPathRooted(path))
             return path;
 
         return Path.GetFullPath(path);
     }
+
 }

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
 
-namespace TinfoilWebServer.HttpExtensions;
+namespace TinfoilWebServer.Utils;
 
 public static class HttpResponseExtension
 {

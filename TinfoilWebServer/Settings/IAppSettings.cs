@@ -7,24 +7,19 @@ namespace TinfoilWebServer.Settings;
 public interface IAppSettings
 {
     /// <summary>
-    /// The list of allowed extensions
-    /// </summary>
-    string[] AllowedExt { get; }
-
-    /// <summary>
     /// The list of served directories
     /// </summary>
     string[] ServedDirectories { get; }
 
     /// <summary>
-    /// The web server configuration
+    /// True to serve empty directories
     /// </summary>
-    IConfiguration? KestrelConfig { get; }
+    bool ServeEmptyDirectories { get; }
 
     /// <summary>
-    /// The logging configuration
+    /// The list of allowed extensions
     /// </summary>
-    IConfiguration? LoggingConfig { get; }
+    string[] AllowedExt { get; }
 
     /// <summary>
     /// The message displayed by Tinfoil at startup
@@ -37,6 +32,16 @@ public interface IAppSettings
     string[] ExtraRepositories { get; }
 
     /// <summary>
+    /// The web server configuration
+    /// </summary>
+    IConfiguration? KestrelConfig { get; }
+
+    /// <summary>
+    /// The logging configuration
+    /// </summary>
+    IConfiguration? LoggingConfig { get; }
+
+    /// <summary>
     /// Cache expiration settings
     /// </summary>
     ICacheExpirationSettings? CacheExpiration { get; }
@@ -45,6 +50,7 @@ public interface IAppSettings
     /// Authentication settings
     /// </summary>
     IAuthenticationSettings? Authentication { get; }
+
 }
 
 public interface ICacheExpirationSettings
