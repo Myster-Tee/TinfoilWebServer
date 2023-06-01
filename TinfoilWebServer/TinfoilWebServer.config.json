@@ -20,7 +20,7 @@
     "ExpirationDelay": "01:00:00"
   },
   "Authentication": {
-    "Enabled": false,
+    "Enabled": true,
     "Users": [
       {
         "Name": "JohnDoe",

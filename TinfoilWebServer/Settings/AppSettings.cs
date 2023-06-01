@@ -67,7 +67,7 @@ public class AllowedUser : IAllowedUser
 
     string IAllowedUser.Name => this.Name ??= "";
 
-    public string? Password { get; set; }
+    public string? Pwd { get; set; }
 
-    string IAllowedUser.Password => this.Password ??= "";
+    string IAllowedUser.Password => this.Pwd ??= "";
 }
