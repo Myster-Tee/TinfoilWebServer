@@ -57,7 +57,7 @@ public class RequestManager : IRequestManager
         {
             var rangeHeader = request.GetTypedHeaders().Range;
 
-            await context.Response.WriteFile(virtualFile.FullLocalPath, rangeHeader: rangeHeader);
+            await context.Response.WriteFile(virtualFile.FullLocalPath, context.RequestAborted, rangeHeader: rangeHeader);
         }
         else
         {

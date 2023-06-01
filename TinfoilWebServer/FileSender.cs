@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;
@@ -52,7 +53,7 @@ public class FileSender : IDisposable, IAsyncDisposable
         }
     }
 
-    public async Task Send()
+    public async Task Send(CancellationToken cancellationToken)
     {
         FillHeaders(_response.Headers);
 
@@ -66,13 +67,15 @@ public class FileSender : IDisposable, IAsyncDisposable
 
             while (nbRemainingBytes > 0)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var nbBytesToRead = (int)Math.Min(bufferSize, nbRemainingBytes);
 
-                var nbBytesRead = await _fileStream.ReadAsync(buffer, 0, nbBytesToRead);
+                var nbBytesRead = await _fileStream.ReadAsync(buffer, 0, nbBytesToRead, cancellationToken);
                 if (nbBytesRead <= 0)
                     break;
 
-                await _response.Body.WriteAsync(buffer, 0, nbBytesRead);
+                await _response.Body.WriteAsync(buffer, 0, nbBytesRead, cancellationToken);
 
                 nbRemainingBytes -= nbBytesRead;
             }
