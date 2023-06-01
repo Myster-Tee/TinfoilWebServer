@@ -12,5 +12,13 @@ public interface IVirtualFileSystemBuilder
     /// <param name="excludeEmptyDirectories"></param>
     /// <returns></returns>
     [Pure]
-    VirtualFileSystemRoot Build(IReadOnlyList<string> servedDirectories, bool excludeEmptyDirectories);
+    VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<string> servedDirectories, bool excludeEmptyDirectories);
+
+    /// <summary>
+    /// Build the served files immediately under the returned root
+    /// </summary>
+    /// <param name="servedDirectories"></param>
+    /// <returns></returns>
+    [Pure]
+    VirtualFileSystemRoot BuildFlat(IReadOnlyList<string> servedDirectories);
 }

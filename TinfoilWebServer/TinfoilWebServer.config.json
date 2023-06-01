@@ -1,5 +1,6 @@
 ﻿{
   "ServedDirectories": [ "C:\\Switch", "D:\\NXPackages", "D:\\NSwitch", "." ],
+  "StripDirectoryNames": true,
   "ServeEmptyDirectories": false,
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
@@ -21,7 +22,7 @@
     "ExpirationDelay": "01:00:00"
   },
   "Authentication": {
-    "Enabled": true,
+    "Enabled": false,
     "Users": [
       {
         "Name": "JohnDoe",

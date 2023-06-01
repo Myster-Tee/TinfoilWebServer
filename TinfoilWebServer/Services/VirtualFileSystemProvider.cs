@@ -51,7 +51,9 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     [MemberNotNull(nameof(_root))]
     private void UpdateVirtualFileSystem()
     {
-        _root = _virtualFileSystemBuilder.Build(_appSettings.ServedDirectories, !_appSettings.ServeEmptyDirectories);
+        _root = _appSettings.StripDirectoryNames ?
+            _virtualFileSystemBuilder.BuildFlat(_appSettings.ServedDirectories) :
+            _virtualFileSystemBuilder.BuildHierarchical(_appSettings.ServedDirectories, !_appSettings.ServeEmptyDirectories);
         var nbFilesServed = _root.GetDescendantFiles().Count();
         _logger.LogInformation($"Served files cache updated ({nbFilesServed} files served).");
         _lastCacheCreationDate = DateTime.Now;

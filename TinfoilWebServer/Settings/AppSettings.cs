@@ -13,6 +13,8 @@ public class AppSettings : IAppSettings
         get { return this.ServedDirectories ??= new[] { "." }; }
     }
 
+    public bool StripDirectoryNames { get; set; } = true;
+
     public bool ServeEmptyDirectories { get; set; } = false;
 
     public string[]? AllowedExt { get; set; }

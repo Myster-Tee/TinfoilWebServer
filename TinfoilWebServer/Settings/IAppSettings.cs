@@ -12,6 +12,11 @@ public interface IAppSettings
     string[] ServedDirectories { get; }
 
     /// <summary>
+    /// Removes directories names in URLs of served files
+    /// </summary>
+    bool StripDirectoryNames { get; }
+
+    /// <summary>
     /// True to serve empty directories
     /// </summary>
     bool ServeEmptyDirectories { get; }

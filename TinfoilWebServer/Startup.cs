@@ -34,11 +34,12 @@ public class Startup
         else
             logger.LogWarning($"Configuration file:{LogUtil.MultilineLogSpacing}\"{configFilePath}\" not found");
 
-
         logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
 
         logger.LogInformation($"Served directories:{appSettings.ServedDirectories.ToMultilineString()}");
         
+        logger.LogInformation($"Strip directory names:{LogUtil.MultilineLogSpacing}{appSettings.StripDirectoryNames}");
+
         logger.LogInformation($"Serve empty directories:{LogUtil.MultilineLogSpacing}{appSettings.ServeEmptyDirectories}");
 
         logger.LogInformation($"Allowed extensions:{appSettings.AllowedExt.ToMultilineString()}");
@@ -49,8 +50,7 @@ public class Startup
             logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Enabled: {appSettings.CacheExpiration.ExpirationDelay}");
         else
             logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Disabled");
-
-
+        
         var authenticationSettings = appSettings.Authentication;
         if (authenticationSettings is { Enabled: true })
         {

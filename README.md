@@ -23,12 +23,13 @@ No requirements but heavyweight.
 ```jsonc
 {
   "ServedDirectories": ["dir1", "dir2", ...],   // ex: ["C:\\SomeDir\\DirWithPackages", "D:\\AnotherDir", "."] !!! Don't forget to escape backslashes with another one !!!
-  "ServeEmptyDirectories" : boolean             // «true» to serve empty directories, «false» otherwise
+  "ServeEmptyDirectories" : <boolean>,          // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»).
+  "StripDirectoryNames" : <boolean>,            // «true» to remove directories names in URLs of served files, «false» otherwise.
   "AllowedExt": ["ext1", "ext2", ...],          // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ].
-  "MessageOfTheDay": "SomeText",                // The welcome message displayed when Tinfoil requests the root index.
-  "ExtraRepositories": ["SomeRepo1", ...],      // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information)
+  "MessageOfTheDay": "SomeText",                // The welcome message displayed when Tinfoil successfully contacts the server.
+  "ExtraRepositories": ["SomeRepo1", ...],      // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information).
   "CacheExpiration": {
-    "Enable": boolean                           // «true» to enable cache expiration, «false» otherwise
+    "Enable": boolean                           // «true» to enable cache expiration, «false» otherwise.
     "ExpirationDelay" : "<duration>",           // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s.
   },
   "Kestrel": {                                  // HTTP server configuration see «https://docs.microsoft.com/fr-fr/aspnet/core/fundamentals/servers/kestrel?view=aspnetcore-5.0#configureiconfiguration» for more information.
@@ -44,8 +45,8 @@ No requirements but heavyweight.
     }
   }
   "Authentication": {
-    "Enabled": boolean,                         // «true» to enable authentication, «false» otherwise
-    "Users": [                                  // List of allowed users
+    "Enabled": <boolean>                        // «true» to enable authentication, «false» otherwise.
+    "Users": [                                  // List of allowed users.
       {
         "Name": "SomeUserName",
         "Pwd": "SomePassword"
