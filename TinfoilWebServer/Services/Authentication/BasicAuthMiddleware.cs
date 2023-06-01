@@ -23,7 +23,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
         if (authenticationSettings != null)
         {
-            foreach (var allowedUser in authenticationSettings.AllowedUsers)
+            foreach (var allowedUser in authenticationSettings.Users)
             {
                 var bytes = _encoding.GetBytes($"{allowedUser.Name}:{allowedUser.Password}");
 

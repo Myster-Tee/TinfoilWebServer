@@ -1,23 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
-using TinfoilWebServer.Services;
 
 namespace TinfoilWebServer.Settings;
 
 public class AppSettings : IAppSettings
 {
+    public string[]? ServedDirectories { get; set; }
+
+    string[] IAppSettings.ServedDirectories
+    {
+        get { return this.ServedDirectories ??= new[] { "." }; }
+    }
+
     public string[]? AllowedExt { get; set; }
 
-    public string[]? ServedDirectories { get; set; }
+    string[] IAppSettings.AllowedExt
+    {
+        get { return this.AllowedExt ??= new[] { "xci", "nsz", "nsp" }; }
+    }
+
+    public string? MessageOfTheDay { get; set; }
+
+    public string[]? ExtraRepositories { get; set; }
+
+    string[] IAppSettings.ExtraRepositories
+    {
+        get { return this.ExtraRepositories ??= Array.Empty<string>(); }
+    }
 
     public IConfiguration? KestrelConfig { get; set; }
 
     public IConfiguration? LoggingConfig { get; set; }
-
-    public string? MessageOfTheDay { get; set; }
-
-    public TinfoilIndexType IndexType { get; set; } = TinfoilIndexType.Flatten;
 
     public CacheExpirationSettings? CacheExpiration { get; set; }
 
@@ -39,18 +53,21 @@ public class CacheExpirationSettings : ICacheExpirationSettings
 public class AuthenticationSettings : IAuthenticationSettings
 {
 
-    public bool Enabled { get; set; } = true!;
+    public bool Enabled { get; set; } = true;
 
     public AllowedUser[]? Users { get; set; }
 
-    IReadOnlyList<IAllowedUser> IAuthenticationSettings.AllowedUsers => Users ?? Array.Empty<IAllowedUser>();
+    IReadOnlyList<IAllowedUser> IAuthenticationSettings.Users => Users ??= Array.Empty<AllowedUser>();
 
 }
 
 public class AllowedUser : IAllowedUser
 {
-    public string Name { get; set; } = null!;
+    public string? Name { get; set; }
 
+    string IAllowedUser.Name => this.Name ??= "";
 
-    public string Password { get; set; } = null!;
+    public string? Password { get; set; }
+
+    string IAllowedUser.Password => this.Password ??= "";
 }

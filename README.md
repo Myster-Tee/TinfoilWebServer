@@ -25,7 +25,7 @@ No requirements but heavyweight.
   "ServedDirectories": ["dir1", "dir2", ...],   // ex: ["C:\\SomeDir\\DirWithPackages", "D:\\AnotherDir", "."] !!! Don't forget to escape backslashes with another one !!!
   "AllowedExt": ["ext1", "ext2", ...],          // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ].
   "MessageOfTheDay": "SomeText",                // The welcome message displayed when Tinfoil requests the root index.
-  "IndexType": "<enum>",                        // The type of index file returned to Tinfoil, can be either "Flatten" or "Hierarchical".
+  "ExtraRepositories": ["SomeRepo1", "...],     // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information)
   "CacheExpiration": {
     "Enable":                                   // «true» to enable cache expiration, «false» otherwise
     "ExpirationDelay" : "<duration>",           // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s.
@@ -55,14 +55,7 @@ No requirements but heavyweight.
 }
 ```
 
-**"IndexType"** principle:  
-- *"Flatten"*: all files are returned at once, including files from subdirectories.  
-- *"Hierachical"*: only files and folders contained in the corresponding requested directory will be returned.
-
-
-
 ### Default settings
 - When *"Kestrel"* configuration is omitted, server listens to *http://localhost:5000/*.
 - When *"ServedDirectories"* is omitted, current directory is used.
 - When *"AllowedExt"* is omitted, the following extensions *["xci", "nsz", "nsp"]* are used.
-- When *"IndexType"* is omitted, *"Flatten"* type is used.

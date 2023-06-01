@@ -7,25 +7,21 @@ using TinfoilWebServer.HttpExtensions;
 using TinfoilWebServer.Properties;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.VirtualFS;
-using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer;
 
 public class RequestManager : IRequestManager
 {
-    private readonly IAppSettings _appSettings;
     private readonly IJsonSerializer _jsonSerializer;
     private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
     private readonly IVirtualItemFinder _virtualItemFinder;
 
     public RequestManager(
-        IAppSettings appSettings,
         IJsonSerializer jsonSerializer,
         ITinfoilIndexBuilder tinfoilIndexBuilder,
         IVirtualItemFinder virtualItemFinder
         )
     {
-        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
         _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
         _virtualItemFinder = virtualItemFinder ?? throw new ArgumentNullException(nameof(virtualItemFinder));
@@ -48,11 +44,7 @@ public class RequestManager : IRequestManager
 
         if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualDirectory virtualDirectory)
         {
-            string? message = null;
-            if (virtualItem is VirtualFileSystemRoot)
-                message = _appSettings.MessageOfTheDay;
-
-            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory, _appSettings.IndexType, message);
+            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory);
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 

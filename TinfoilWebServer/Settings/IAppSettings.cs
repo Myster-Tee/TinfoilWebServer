@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Configuration;
-using TinfoilWebServer.Services;
 
 namespace TinfoilWebServer.Settings;
 
 public interface IAppSettings
 {
+    /// <summary>
+    /// The list of allowed extensions
+    /// </summary>
     string[] AllowedExt { get; }
 
     /// <summary>
@@ -14,16 +16,34 @@ public interface IAppSettings
     /// </summary>
     string[] ServedDirectories { get; }
 
+    /// <summary>
+    /// The web server configuration
+    /// </summary>
     IConfiguration? KestrelConfig { get; }
 
+    /// <summary>
+    /// The logging configuration
+    /// </summary>
     IConfiguration? LoggingConfig { get; }
 
+    /// <summary>
+    /// The message displayed by Tinfoil at startup
+    /// </summary>
     string? MessageOfTheDay { get; }
 
-    TinfoilIndexType IndexType { get; }
+    /// <summary>
+    /// A set of extra repositories sent to Tinfoil for scanning
+    /// </summary>
+    string[] ExtraRepositories { get; }
 
+    /// <summary>
+    /// Cache expiration settings
+    /// </summary>
     ICacheExpirationSettings? CacheExpiration { get; }
 
+    /// <summary>
+    /// Authentication settings
+    /// </summary>
     IAuthenticationSettings? Authentication { get; }
 }
 
@@ -38,7 +58,7 @@ public interface IAuthenticationSettings
 {
     public bool Enabled { get; }
 
-    public IReadOnlyList<IAllowedUser> AllowedUsers { get; }
+    public IReadOnlyList<IAllowedUser> Users { get; }
 }
 
 public interface IAllowedUser

@@ -2,29 +2,27 @@
 using System.Linq;
 using TinfoilWebServer.Models;
 using TinfoilWebServer.Services.VirtualFS;
+using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services;
 
 public class TinfoilIndexBuilder : ITinfoilIndexBuilder
 {
-    public TinfoilIndex Build(VirtualDirectory virtualDirectory, TinfoilIndexType indexType, string? messageOfTheDay)
+    private readonly IAppSettings _appSettings;
+
+    public TinfoilIndexBuilder(IAppSettings appSettings)
+    {
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+    }
+
+    public TinfoilIndex Build(VirtualDirectory virtualDirectory)
     {
         var tinfoilIndex = new TinfoilIndex
         {
-            Success = messageOfTheDay
+            Success = _appSettings.MessageOfTheDay,
+            Files = virtualDirectory.GetDescendantFiles().Select(vf => new FileNfo { Size = vf.Size, Url = vf.BuildRelativeUrl(virtualDirectory) }).ToArray(),
+            Directories = _appSettings.ExtraRepositories ?? Array.Empty<string>()
         };
-        switch (indexType)
-        {
-            case TinfoilIndexType.Hierarchical:
-                tinfoilIndex.Directories.AddRange(virtualDirectory.Directories.Select(vd => vd.BuildRelativeUrl(virtualDirectory)));
-                tinfoilIndex.Files.AddRange(virtualDirectory.Files.Select(vf => new FileNfo { Size = vf.Size, Url = vf.BuildRelativeUrl(virtualDirectory) }));
-                break;
-            case TinfoilIndexType.Flatten:
-                tinfoilIndex.Files.AddRange(virtualDirectory.GetDescendantFiles().Select(vf => new FileNfo { Size = vf.Size, Url = vf.BuildRelativeUrl(virtualDirectory) }));
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(indexType), indexType, null);
-        }
 
         return tinfoilIndex;
     }

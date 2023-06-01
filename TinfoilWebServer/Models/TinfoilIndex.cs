@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Text.Json.Serialization;
 
 namespace TinfoilWebServer.Models;
@@ -15,13 +15,13 @@ public class TinfoilIndex
     /// "files": ["https://url1", "sdmc:/url2", "http://url3"],
     /// </summary>
     [JsonPropertyName("files")]
-    public List<FileNfo> Files { get; set; } = new();
+    public FileNfo[] Files { get; set; } = Array.Empty<FileNfo>();
 
     /// <summary>
     /// "directories": ["https://url1", "sdmc:/url2", "http://url3"],
     /// </summary>
     [JsonPropertyName("directories")]
-    public List<string> Directories { get; set; } = new();
+    public string[] Directories { get; set; } = Array.Empty<string>();
 
     /// <summary>
     /// Message of the Day
@@ -33,7 +33,7 @@ public class TinfoilIndex
 public class FileNfo
 {
     [JsonPropertyName("url")]
-    public string Url { get; set; }
+    public string Url { get; set; } = "";
 
     [JsonPropertyName("size")]
     public long Size { get; set; }

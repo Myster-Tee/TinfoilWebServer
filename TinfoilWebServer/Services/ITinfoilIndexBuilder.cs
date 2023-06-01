@@ -11,16 +11,8 @@ public interface ITinfoilIndexBuilder
     /// Builds a <see cref="TinfoilIndex"/> model from the specified VirtualDirectory
     /// </summary>
     /// <param name="virtualDirectory"></param>
-    /// <param name="indexType"></param>
-    /// <param name="messageOfTheDay"></param>
     /// <returns></returns>
     [Pure]
-    TinfoilIndex Build(VirtualDirectory virtualDirectory, TinfoilIndexType indexType, string? messageOfTheDay);
+    TinfoilIndex Build(VirtualDirectory virtualDirectory);
 
-}
-
-public enum TinfoilIndexType
-{
-    Flatten,
-    Hierarchical,
 }

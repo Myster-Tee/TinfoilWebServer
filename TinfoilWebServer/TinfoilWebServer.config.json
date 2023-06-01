@@ -2,11 +2,7 @@
   "ServedDirectories": [ "C:\\Switch", "D:\\NXPackages", "D:\\NSwitch", "." ],
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
-  "IndexType": "Flatten",
-  "CacheExpiration": {
-    "Enabled": true,
-    "ExpirationDelay": "01:00:00"
-  },
+  "ExtraRepositories": [],
   "Kestrel": {
     "Endpoints": {
       "Http": {
@@ -18,6 +14,10 @@
     "LogLevel": {
       "Default": "Information"
     }
+  },
+  "CacheExpiration": {
+    "Enabled": true,
+    "ExpirationDelay": "01:00:00"
   },
   "Authentication": {
     "Enabled": false,

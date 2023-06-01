@@ -30,9 +30,9 @@ public class Startup
 
         var configFilePath = Program.ExpectedConfigFilePath;
         if (File.Exists(configFilePath))
-            logger.LogInformation($"Configuration file found at location \"{configFilePath}\".");
+            logger.LogInformation($"Configuration file:{LogUtil.MultilineLogSpacing}\"{configFilePath}\" found");
         else
-            logger.LogWarning($"No configuration file found at location \"{configFilePath}\".");
+            logger.LogWarning($"Configuration file:{LogUtil.MultilineLogSpacing}\"{configFilePath}\" not found");
 
 
         logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
@@ -41,7 +41,7 @@ public class Startup
 
         logger.LogInformation($"Allowed extensions:{appSettings.AllowedExt.ToMultilineString()}");
 
-        logger.LogInformation($"Tinfoil index type:{LogUtil.MultilineLogSpacing}{appSettings.IndexType}");
+        logger.LogInformation($"Extra repositories:{appSettings.ExtraRepositories.ToMultilineString()}");
 
         if (appSettings.CacheExpiration != null && appSettings.CacheExpiration.Enabled)
             logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Enabled: {appSettings.CacheExpiration.ExpirationDelay}");
@@ -53,7 +53,7 @@ public class Startup
         if (authenticationSettings is { Enabled: true })
         {
             app.UseMiddleware<IBasicAuthMiddleware>();
-            logger.LogInformation($"Authentication:{LogUtil.MultilineLogSpacing}Enabled: {authenticationSettings.AllowedUsers.Count} user(s) defined");
+            logger.LogInformation($"Authentication:{LogUtil.MultilineLogSpacing}Enabled: {authenticationSettings.Users.Count} user(s) defined");
         }
         else
         {
