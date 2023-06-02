@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Configuration;
+using System.ComponentModel;
 
 namespace TinfoilWebServer.Settings;
 
-public interface IAppSettings
+public interface IAppSettings : INotifyPropertyChanged
 {
     /// <summary>
     /// The list of served directories
@@ -37,35 +37,25 @@ public interface IAppSettings
     string[] ExtraRepositories { get; }
 
     /// <summary>
-    /// The web server configuration
-    /// </summary>
-    IConfiguration? KestrelConfig { get; }
-
-    /// <summary>
-    /// The logging configuration
-    /// </summary>
-    IConfiguration? LoggingConfig { get; }
-
-    /// <summary>
     /// Cache expiration settings
     /// </summary>
-    ICacheExpirationSettings? CacheExpiration { get; }
+    ICacheExpirationSettings CacheExpiration { get; }
 
     /// <summary>
     /// Authentication settings
     /// </summary>
-    IAuthenticationSettings? Authentication { get; }
+    IAuthenticationSettings Authentication { get; }
 
 }
 
-public interface ICacheExpirationSettings
+public interface ICacheExpirationSettings : INotifyPropertyChanged
 {
     bool Enabled { get; }
 
     TimeSpan ExpirationDelay { get; }
 }
 
-public interface IAuthenticationSettings
+public interface IAuthenticationSettings : INotifyPropertyChanged
 {
     public bool Enabled { get; }
 

@@ -10,11 +10,13 @@ using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.Authentication;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
+using TinfoilWebServer.Settings.ConfigModels;
 
 namespace TinfoilWebServer;
 
 public class Program
 {
+    private const bool RELOAD_CONFIG_ON_CHANGE = true;
 
     public static string ExpectedConfigFilePath { get; }
 
@@ -32,14 +34,13 @@ public class Program
 
     public static void Main(string[] args)
     {
-
         IConfigurationRoot configRoot;
         var configFilePath = ExpectedConfigFilePath;
         try
         {
             configRoot = new ConfigurationBuilder()
                 .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-                .AddJsonFile(configFilePath, optional: true, reloadOnChange: true)
+                .AddJsonFile(configFilePath, optional: true, reloadOnChange: RELOAD_CONFIG_ON_CHANGE)
                 .Build();
         }
         catch (Exception ex)
@@ -49,34 +50,25 @@ public class Program
             return;
         }
 
-        IAppSettings appSettings;
-        try
-        {
-            appSettings = configRoot.LoadAppSettings();
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Failed to load configuration from file \"{configFilePath}\": {ex.Message}");
-            Environment.ExitCode = 1;
-            return;
-        }
-
-        var webHostBuilder = new WebHostBuilder()
-            .SuppressStatusMessages(true)
+        var webHostBuilder = new WebHostBuilder();
+        webHostBuilder.SuppressStatusMessages(true)
             .ConfigureLogging((hostingContext, loggingBuilder) =>
             {
                 loggingBuilder
                     .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(options => { })
-                    .AddConfiguration(appSettings.LoggingConfig)
+                    .AddConfiguration(configRoot.GetSection("Logging"))
                     .AddConsole(options => options.FormatterName = nameof(CustomConsoleFormatter));
             })
             .ConfigureServices(services =>
             {
                 services
-                    .AddSingleton(appSettings)
+                    .Configure<AppSettingsModel>(configRoot)
                     .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                     .AddSingleton<IRequestManager, RequestManager>()
                     .AddSingleton<IFileFilter, FileFilter>()
+                    .AddSingleton<IAppSettings, AppSettings>()
+                    .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
+                    .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
                     .AddSingleton<IVirtualItemFinder, VirtualItemFinder>()
                     .AddSingleton<IJsonSerializer, JsonSerializer>()
                     .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
@@ -87,12 +79,9 @@ public class Program
             .UseConfiguration(configRoot)
             .UseKestrel((ctx, options) =>
             {
-                var kestrelConfig = appSettings.KestrelConfig;
-                if (kestrelConfig != null)
-                    options.Configure(kestrelConfig);
+                options.Configure(configRoot.GetSection("Kestrel"), RELOAD_CONFIG_ON_CHANGE);
             })
             .UseStartup<Startup>();
-
 
         var webHost = webHostBuilder.Build();
 

@@ -1,77 +1,182 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Configuration;
+using System.Linq;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using TinfoilWebServer.Logging;
+using TinfoilWebServer.Settings.ConfigModels;
 
 namespace TinfoilWebServer.Settings;
 
-public class AppSettings : IAppSettings
+public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 {
-    public string[]? ServedDirectories { get; set; }
+    private readonly ILogger<AppSettings> _logger;
+    private readonly CacheExpirationSettings _cacheExpirationSettings = new();
+    private readonly AuthenticationSettings _authenticationSettings = new();
+    private string[] _servedDirectories;
+    private bool _stripDirectoryNames;
+    private bool _serveEmptyDirectories;
+    private string[] _allowedExt;
+    private string? _messageOfTheDay;
+    private string[] _extraRepositories;
 
-    string[] IAppSettings.ServedDirectories
+    public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel, ILogger<AppSettings> logger)
     {
-        get { return this.ServedDirectories ??= new[] { "." }; }
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        appSettingsModel = appSettingsModel ?? throw new ArgumentNullException(nameof(appSettingsModel));
+        InitializeFromModel(appSettingsModel.CurrentValue);
+
+        appSettingsModel.OnChange(InitializeFromModel);
+
+        LogSettings();
     }
 
-    public bool StripDirectoryNames { get; set; } = true;
-
-    public bool ServeEmptyDirectories { get; set; } = false;
-
-    public string[]? AllowedExt { get; set; }
-
-    string[] IAppSettings.AllowedExt
+    private void LogSettings()
     {
-        get { return this.AllowedExt ??= new[] { "xci", "nsz", "nsp" }; }
+        _logger.LogInformation($"Served directories:{ServedDirectories.ToMultilineString()}");
+
+        _logger.LogInformation($"Strip directory names:{LogUtil.MultilineLogSpacing}{StripDirectoryNames}");
+
+        _logger.LogInformation($"Serve empty directories:{LogUtil.MultilineLogSpacing}{ServeEmptyDirectories}");
+
+        _logger.LogInformation($"Allowed extensions:{AllowedExt.ToMultilineString()}");
+
+        _logger.LogInformation($"Extra repositories:{ExtraRepositories.ToMultilineString()}");
+
+        if (CacheExpiration.Enabled)
+            _logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Enabled: {CacheExpiration.ExpirationDelay}");
+        else
+            _logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Disabled");
+
+        var authenticationSettings = Authentication;
+        if (authenticationSettings.Enabled)
+            _logger.LogInformation($"Authentication:{LogUtil.MultilineLogSpacing}Enabled: {authenticationSettings.Users.Count} user(s) defined");
+        else
+            _logger.LogWarning($"Authentication:{LogUtil.MultilineLogSpacing}Disabled");
     }
 
-    public string? MessageOfTheDay { get; set; }
-
-    public string[]? ExtraRepositories { get; set; }
-
-    string[] IAppSettings.ExtraRepositories
+    private void InitializeFromModel(AppSettingsModel appSettingsModel)
     {
-        get { return this.ExtraRepositories ??= Array.Empty<string>(); }
+        var servedDirectories = appSettingsModel.ServedDirectories;
+        ServedDirectories = servedDirectories == null || servedDirectories.Length == 0 ? new[] { "." } : servedDirectories;
+        StripDirectoryNames = appSettingsModel.StripDirectoryNames ?? true;
+        ServeEmptyDirectories = appSettingsModel.ServeEmptyDirectories ?? true;
+
+        var allowedExt = appSettingsModel.AllowedExt;
+        AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp" } : allowedExt;
+        MessageOfTheDay = appSettingsModel.MessageOfTheDay;
+        ExtraRepositories = appSettingsModel.ExtraRepositories ?? Array.Empty<string>();
+
+        var cacheExpiration = appSettingsModel.CacheExpiration;
+        _cacheExpirationSettings.Enabled = cacheExpiration?.Enabled ?? true;
+        _cacheExpirationSettings.ExpirationDelay = cacheExpiration?.ExpirationDelay ?? TimeSpan.FromHours(1);
+
+        var authenticationSettings = appSettingsModel.Authentication;
+        _authenticationSettings.Enabled = authenticationSettings?.Enabled ?? false;
+        _authenticationSettings.Users = (authenticationSettings?.Users ?? Array.Empty<AllowedUserModel>()).Select(model =>
+            new AllowedUser
+            {
+                Name = model.Name ?? "",
+                Password = model.Pwd ?? ""
+            }).ToList();
     }
 
-    public IConfiguration? KestrelConfig { get; set; }
+    public string[] ServedDirectories
+    {
+        get => _servedDirectories;
+        private set => SetField(ref _servedDirectories, value);
+    }
 
-    public IConfiguration? LoggingConfig { get; set; }
+    public bool StripDirectoryNames
+    {
+        get => _stripDirectoryNames;
+        private set => SetField(ref _stripDirectoryNames, value);
+    }
 
-    public CacheExpirationSettings? CacheExpiration { get; set; }
+    public bool ServeEmptyDirectories
+    {
+        get => _serveEmptyDirectories;
+        private set => SetField(ref _serveEmptyDirectories, value);
+    }
 
-    ICacheExpirationSettings? IAppSettings.CacheExpiration => CacheExpiration;
+    public string[] AllowedExt
+    {
+        get => _allowedExt;
+        private set => SetField(ref _allowedExt, value);
+    }
 
-    public AuthenticationSettings? Authentication { get; set; }
+    public string? MessageOfTheDay
+    {
+        get => _messageOfTheDay;
+        private set => SetField(ref _messageOfTheDay, value);
+    }
 
-    IAuthenticationSettings? IAppSettings.Authentication => Authentication;
+    public string[] ExtraRepositories
+    {
+        get => _extraRepositories;
+        private set => SetField(ref _extraRepositories, value);
+    }
 
-}
+    public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;
 
-public class CacheExpirationSettings : ICacheExpirationSettings
-{
-    public bool Enabled { get; set; }
+    public IAuthenticationSettings Authentication => _authenticationSettings;
 
-    public TimeSpan ExpirationDelay { get; set; }
-}
+    private class CacheExpirationSettings : NotifyPropertyChangedBase, ICacheExpirationSettings
+    {
+        private bool _enabled;
+        private TimeSpan _expirationDelay;
 
-public class AuthenticationSettings : IAuthenticationSettings
-{
+        public bool Enabled
+        {
+            get => _enabled;
+            set => SetField(ref _enabled, value);
+        }
 
-    public bool Enabled { get; set; } = true;
+        public TimeSpan ExpirationDelay
+        {
+            get => _expirationDelay;
+            set => SetField(ref _expirationDelay, value);
+        }
+    }
 
-    public AllowedUser[]? Users { get; set; }
+    private class AuthenticationSettings : NotifyPropertyChangedBase, IAuthenticationSettings
+    {
+        private bool _enabled;
+        private IReadOnlyList<IAllowedUser> _users = new List<IAllowedUser>();
 
-    IReadOnlyList<IAllowedUser> IAuthenticationSettings.Users => Users ??= Array.Empty<AllowedUser>();
+        public bool Enabled
+        {
+            get => _enabled;
+            set => SetField(ref _enabled, value);
+        }
 
-}
+        public IReadOnlyList<IAllowedUser> Users
+        {
+            get => _users;
+            set => SetField(ref _users, value);
+        }
+    }
 
-public class AllowedUser : IAllowedUser
-{
-    public string? Name { get; set; }
+    private class AllowedUser : IAllowedUser
+    {
+        public string Name { get; set; } = "";
 
-    string IAllowedUser.Name => this.Name ??= "";
+        public string Password { get; set; } = "";
 
-    public string? Pwd { get; set; }
+        public override bool Equals(object? obj)
+        {
+            if(obj is not IAllowedUser other)
+                return false;
 
-    string IAllowedUser.Password => this.Pwd ??= "";
+            return Equals(other);
+        }
+
+        public bool Equals(IAllowedUser other)
+        {
+            return Name == other.Name && Password == other.Password;
+        }
+
+    }
+
+
 }

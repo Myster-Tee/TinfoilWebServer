@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using TinfoilWebServer.Services.VirtualFS;
@@ -20,14 +21,47 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
         _virtualFileSystemBuilder = virtualFileSystemBuilder ?? throw new ArgumentNullException(nameof(virtualFileSystemBuilder));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+        _appSettings.PropertyChanged += OnAppSettingsChanged;
+        _appSettings.CacheExpiration.PropertyChanged += OnCacheExpirationSettingsChanged;
     }
+
+    private void OnCacheExpirationSettingsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ICacheExpirationSettings.Enabled))
+        {
+            if (_appSettings.CacheExpiration.Enabled)
+                _logger.LogInformation($"Cache expiration enabled.");
+            else
+                _logger.LogInformation($"Cache expiration disabled.");
+        }
+        else if (e.PropertyName == nameof(ICacheExpirationSettings.ExpirationDelay))
+        {
+            _logger.LogInformation($"Cache expiration delay changed to {_appSettings.CacheExpiration.ExpirationDelay}.");
+        }
+
+    }
+
+    private void OnAppSettingsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IAppSettings.StripDirectoryNames) ||
+            e.PropertyName == nameof(IAppSettings.ServedDirectories) ||
+            e.PropertyName == nameof(IAppSettings.ServeEmptyDirectories)
+           )
+        {
+            _logger.LogInformation($"Served files cache needs to be updated due to configuration change.");
+
+            UpdateVirtualFileSystem();
+        }
+    }
+
 
     private bool IsCacheExpired
     {
         get
         {
             var cacheExpirationSettings = _appSettings.CacheExpiration;
-            if (cacheExpirationSettings == null || !cacheExpirationSettings.Enabled)
+            if (!cacheExpirationSettings.Enabled)
                 return false;
 
             if (_lastCacheCreationDate == null)
@@ -38,7 +72,6 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     }
 
     public VirtualFileSystemRoot Root => GetRoot();
-
 
     private VirtualFileSystemRoot GetRoot()
     {
@@ -55,7 +88,7 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
             _virtualFileSystemBuilder.BuildFlat(_appSettings.ServedDirectories) :
             _virtualFileSystemBuilder.BuildHierarchical(_appSettings.ServedDirectories, !_appSettings.ServeEmptyDirectories);
         var nbFilesServed = _root.GetDescendantFiles().Count();
-        _logger.LogInformation($"Served files cache updated ({nbFilesServed} files served).");
+        _logger.LogInformation($"Served files cache updated, {nbFilesServed} file(s) served.");
         _lastCacheCreationDate = DateTime.Now;
     }
 }

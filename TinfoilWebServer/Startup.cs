@@ -27,6 +27,8 @@ public class Startup
         var version = Assembly.GetExecutingAssembly().GetName().Version!;
 
         logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Build} (press CTRL+C to exit)");
+        logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
+
 
         var configFilePath = Program.ExpectedConfigFilePath;
         if (File.Exists(configFilePath))
@@ -34,33 +36,7 @@ public class Startup
         else
             logger.LogWarning($"Configuration file:{LogUtil.MultilineLogSpacing}\"{configFilePath}\" not found");
 
-        logger.LogInformation($"Server Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
-
-        logger.LogInformation($"Served directories:{appSettings.ServedDirectories.ToMultilineString()}");
-        
-        logger.LogInformation($"Strip directory names:{LogUtil.MultilineLogSpacing}{appSettings.StripDirectoryNames}");
-
-        logger.LogInformation($"Serve empty directories:{LogUtil.MultilineLogSpacing}{appSettings.ServeEmptyDirectories}");
-
-        logger.LogInformation($"Allowed extensions:{appSettings.AllowedExt.ToMultilineString()}");
-
-        logger.LogInformation($"Extra repositories:{appSettings.ExtraRepositories.ToMultilineString()}");
-
-        if (appSettings.CacheExpiration != null && appSettings.CacheExpiration.Enabled)
-            logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Enabled: {appSettings.CacheExpiration.ExpirationDelay}");
-        else
-            logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Disabled");
-        
-        var authenticationSettings = appSettings.Authentication;
-        if (authenticationSettings is { Enabled: true })
-        {
-            app.UseMiddleware<IBasicAuthMiddleware>();
-            logger.LogInformation($"Authentication:{LogUtil.MultilineLogSpacing}Enabled: {authenticationSettings.Users.Count} user(s) defined");
-        }
-        else
-        {
-            logger.LogWarning($"Authentication:{LogUtil.MultilineLogSpacing}Disabled");
-        }
+        app.UseMiddleware<IBasicAuthMiddleware>();
         app.Run(requestManager.OnRequest);
     }
 

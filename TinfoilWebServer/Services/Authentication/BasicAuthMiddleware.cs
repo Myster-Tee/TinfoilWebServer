@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Security.Principal;
@@ -13,33 +14,62 @@ namespace TinfoilWebServer.Services.Authentication;
 
 public class BasicAuthMiddleware : IBasicAuthMiddleware
 {
+    private readonly IAuthenticationSettings _authenticationSettings;
     private readonly ILogger<BasicAuthMiddleware> _logger;
     private static readonly Encoding _encoding = Encoding.GetEncoding("iso-8859-1");
     private readonly Dictionary<string, IAllowedUser> _allowedBase64Accounts = new();
 
-    public BasicAuthMiddleware(IAppSettings appSettings, ILogger<BasicAuthMiddleware> logger)
+    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger)
     {
-        if (appSettings == null)
-            throw new ArgumentNullException(nameof(appSettings));
+
+        _authenticationSettings = authenticationSettings ?? throw new ArgumentNullException(nameof(authenticationSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        var authenticationSettings = appSettings.Authentication;
+        _authenticationSettings.PropertyChanged += OnAuthenticationSettingsChanged;
 
-        if (authenticationSettings != null)
+        LoadAllowedUsers();
+    }
+
+    private void OnAuthenticationSettingsChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IAuthenticationSettings.Users))
         {
-            foreach (var allowedUser in authenticationSettings.Users)
-            {
-                var bytes = _encoding.GetBytes($"{allowedUser.Name}:{allowedUser.Password}");
-
-                var base64String = Convert.ToBase64String(bytes);
-                if (!_allowedBase64Accounts.TryAdd(base64String, allowedUser)) 
-                    _logger.LogWarning($"Duplicated User \"{allowedUser.Name}\" found in configuration file \"{Program.ExpectedConfigFilePath}\".");
-            }
+            LoadAllowedUsers();
         }
+        else if (e.PropertyName == nameof(IAuthenticationSettings.Enabled))
+        {
+            if (_authenticationSettings.Enabled)
+                _logger.LogInformation($"Authentication enabled.");
+            else
+                _logger.LogWarning($"Authentication disabled.");
+        }
+
+    }
+
+    private void LoadAllowedUsers()
+    {
+        _allowedBase64Accounts.Clear();
+
+        foreach (var allowedUser in _authenticationSettings.Users)
+        {
+            var bytes = _encoding.GetBytes($"{allowedUser.Name}:{allowedUser.Password}");
+
+            var base64String = Convert.ToBase64String(bytes);
+            if (!_allowedBase64Accounts.TryAdd(base64String, allowedUser))
+                _logger.LogWarning($"Duplicated user \"{allowedUser.Name}\" found in configuration file \"{Program.ExpectedConfigFilePath}\".");
+        }
+
+        _logger.LogInformation($"List of allowed users successfully loaded, {_allowedBase64Accounts.Count} user(s) found.");
     }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
+        if (!_authenticationSettings.Enabled)
+        {
+            await next.Invoke(context);
+            return;
+        }
+
         var headersAuthorization = context.Request.Headers.Authorization;
 
         var headerValue = headersAuthorization.FirstOrDefault();
