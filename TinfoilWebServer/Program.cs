@@ -29,17 +29,18 @@ public class Program
     {
         var currentAssemblyName = Assembly.GetExecutingAssembly().ManifestModule.Name;
         var currentAssemblyNameWithoutExt = Path.GetFileNameWithoutExtension(currentAssemblyName);
-        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{currentAssemblyNameWithoutExt}.config.json");
+        return Path.GetFullPath($"{currentAssemblyNameWithoutExt}.config.json");
     }
 
     public static void Main(string[] args)
     {
+        Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
         IConfigurationRoot configRoot;
         var configFilePath = ExpectedConfigFilePath;
         try
         {
             configRoot = new ConfigurationBuilder()
-                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
                 .AddJsonFile(configFilePath, optional: true, reloadOnChange: RELOAD_CONFIG_ON_CHANGE)
                 .Build();
         }
@@ -51,13 +52,25 @@ public class Program
         }
 
         var webHostBuilder = new WebHostBuilder();
-        webHostBuilder.SuppressStatusMessages(true)
+        webHostBuilder
+            .SuppressStatusMessages(true)
             .ConfigureLogging((hostingContext, loggingBuilder) =>
             {
                 loggingBuilder
                     .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(options => { })
                     .AddConfiguration(configRoot.GetSection("Logging"))
-                    .AddConsole(options => options.FormatterName = nameof(CustomConsoleFormatter));
+                    .AddConsole(options => options.FormatterName = nameof(CustomConsoleFormatter))
+                    .AddFile(configRoot.GetSection("Logging"), options =>
+                    {
+                        options.FormatLogEntry = message =>
+                        {
+                            var exceptionMessage = "";
+                            if (message.Exception != null) 
+                                exceptionMessage += $"{Environment.NewLine}StackTrace{Environment.NewLine}{message.Exception.StackTrace}";
+
+                            return $"{DateTime.Now}-{message.LogLevel}: {message.Message}{exceptionMessage}";
+                        } ;
+                    });
             })
             .ConfigureServices(services =>
             {

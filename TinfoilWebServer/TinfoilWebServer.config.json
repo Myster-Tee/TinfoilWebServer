@@ -15,6 +15,13 @@
   "Logging": {
     "LogLevel": {
       "Default": "Information"
+    },
+    "File": {
+      "Path": "TinfoilWebServer.log",
+      "Append": true,
+      "MinLevel": "Information",
+      "FileSizeLimitBytes": 1000000,
+      "MaxRollingFiles": 10
     }
   },
   "CacheExpiration": {
