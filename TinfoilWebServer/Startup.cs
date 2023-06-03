@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Services.Authentication;
@@ -21,8 +22,7 @@ public class Startup
     /// <param name="app"></param>
     /// <param name="requestManager"></param>
     /// <param name="logger"></param>
-    /// <param name="appSettings"></param>
-    public void Configure(IApplicationBuilder app, IRequestManager requestManager, ILogger<Startup> logger, IAppSettings appSettings)
+    public void Configure(IApplicationBuilder app, IRequestManager requestManager, ILogger<Startup> logger)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version!;
 
@@ -37,6 +37,7 @@ public class Startup
             logger.LogWarning($"Configuration file:{LogUtil.MultilineLogSpacing}\"{configFilePath}\" not found");
 
         app.UseMiddleware<IBasicAuthMiddleware>();
+        app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>(); //Just to force initialization of middleware without waiting for first request
         app.Run(requestManager.OnRequest);
     }
 

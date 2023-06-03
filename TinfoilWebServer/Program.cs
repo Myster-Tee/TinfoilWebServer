@@ -18,12 +18,8 @@ public class Program
 {
     private const bool RELOAD_CONFIG_ON_CHANGE = true;
 
-    public static string ExpectedConfigFilePath { get; }
+    public static string ExpectedConfigFilePath { get; private set; } = "";
 
-    static Program()
-    {
-        ExpectedConfigFilePath = InitExpectedConfigFilePath();
-    }
 
     private static string InitExpectedConfigFilePath()
     {
@@ -34,77 +30,70 @@ public class Program
 
     public static void Main(string[] args)
     {
-        Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
-
-        IConfigurationRoot configRoot;
-        var configFilePath = ExpectedConfigFilePath;
         try
         {
-            configRoot = new ConfigurationBuilder()
-                .AddJsonFile(configFilePath, optional: true, reloadOnChange: RELOAD_CONFIG_ON_CHANGE)
-                .Build();
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Failed to build configuration: {ex.Message}{Environment.NewLine}Is \"{configFilePath}\" a valid JSON file?");
-            Environment.ExitCode = 1;
-            return;
-        }
+            // Change current application directory so that paths of config file and log file are relative to application directory
+            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
 
-        var webHostBuilder = new WebHostBuilder();
-        webHostBuilder
-            .SuppressStatusMessages(true)
-            .ConfigureLogging((hostingContext, loggingBuilder) =>
-            {
-                loggingBuilder
-                    .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(options => { })
-                    .AddConfiguration(configRoot.GetSection("Logging"))
-                    .AddConsole(options => options.FormatterName = nameof(CustomConsoleFormatter))
-                    .AddFile(configRoot.GetSection("Logging"), options =>
-                    {
-                        options.FormatLogEntry = message =>
+            ExpectedConfigFilePath = InitExpectedConfigFilePath();
+
+
+            var webHostBuilder = new WebHostBuilder();
+            webHostBuilder
+                .SuppressStatusMessages(true)
+                .ConfigureAppConfiguration(builder =>
+                {
+                    builder.AddJsonFile(ExpectedConfigFilePath, optional: true, reloadOnChange: RELOAD_CONFIG_ON_CHANGE);
+                })
+                .ConfigureLogging((ctx, loggingBuilder) =>
+                {
+                    loggingBuilder
+                        .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(options => { })
+                        .AddConfiguration(ctx.Configuration.GetSection("Logging"))
+                        .AddConsole(options => options.FormatterName = nameof(CustomConsoleFormatter))
+                        .AddFile(ctx.Configuration.GetSection("Logging"), options =>
                         {
-                            var exceptionMessage = "";
-                            if (message.Exception != null) 
-                                exceptionMessage += $"{Environment.NewLine}StackTrace{Environment.NewLine}{message.Exception.StackTrace}";
+                            options.FormatLogEntry = message =>
+                            {
+                                var exceptionMessage = "";
+                                if (message.Exception != null)
+                                    exceptionMessage += $"{Environment.NewLine}StackTrace{Environment.NewLine}{message.Exception.StackTrace}";
 
-                            return $"{DateTime.Now}-{message.LogLevel}: {message.Message}{exceptionMessage}";
-                        } ;
-                    });
-            })
-            .ConfigureServices(services =>
-            {
-                services
-                    .Configure<AppSettingsModel>(configRoot)
-                    .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
-                    .AddSingleton<IRequestManager, RequestManager>()
-                    .AddSingleton<IFileFilter, FileFilter>()
-                    .AddSingleton<IAppSettings, AppSettings>()
-                    .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
-                    .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
-                    .AddSingleton<IVirtualItemFinder, VirtualItemFinder>()
-                    .AddSingleton<IJsonSerializer, JsonSerializer>()
-                    .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
-                    .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
-                    .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>();
+                                return $"{DateTime.Now}-{message.LogLevel}: {message.Message}{exceptionMessage}";
+                            };
+                        });
+                })
+                .ConfigureServices((ctx, services) =>
+                {
+                    services
+                        .Configure<AppSettingsModel>(ctx.Configuration)
+                        .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
+                        .AddSingleton<IRequestManager, RequestManager>()
+                        .AddSingleton<IFileFilter, FileFilter>()
+                        .AddSingleton<IAppSettings, AppSettings>()
+                        .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
+                        .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
+                        .AddSingleton<IVirtualItemFinder, VirtualItemFinder>()
+                        .AddSingleton<IJsonSerializer, JsonSerializer>()
+                        .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
+                        .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
+                        .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>();
 
-            })
-            .UseConfiguration(configRoot)
-            .UseKestrel((ctx, options) =>
-            {
-                options.Configure(configRoot.GetSection("Kestrel"), RELOAD_CONFIG_ON_CHANGE);
-            })
-            .UseStartup<Startup>();
+                })
+                .UseKestrel((ctx, options) =>
+                {
+                    options.Configure(ctx.Configuration.GetSection("Kestrel"), RELOAD_CONFIG_ON_CHANGE);
+                })
+                .UseStartup<Startup>();
 
-        var webHost = webHostBuilder.Build();
+            var webHost = webHostBuilder.Build();
 
-        try
-        {
+
             webHost.Run();
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Failed to run server: {ex.Message}");
+            Console.Error.WriteLine($"An unexpected exception occurred: {ex.Message}");
             Environment.ExitCode = 1;
             return;
         }
