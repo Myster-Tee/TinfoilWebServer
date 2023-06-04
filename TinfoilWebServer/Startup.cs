@@ -10,7 +10,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Services.Authentication;
-using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer;
 

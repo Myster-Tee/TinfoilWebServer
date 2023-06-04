@@ -23,13 +23,13 @@ public class Program
 
     private static string InitExpectedConfigFilePath()
     {
-        var currentAssemblyName = Assembly.GetExecutingAssembly().ManifestModule.Name;
-        var currentAssemblyNameWithoutExt = Path.GetFileNameWithoutExtension(currentAssemblyName);
-        return Path.GetFullPath($"{currentAssemblyNameWithoutExt}.config.json");
+        var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+        return Path.GetFullPath($"{assemblyName}.config.json");
     }
 
     public static void Main(string[] args)
     {
+        ILogger<Program>? logger = null;
         try
         {
             // Change current application directory so that paths of config file and log file are relative to application directory
@@ -56,8 +56,12 @@ public class Program
                             options.FormatLogEntry = message =>
                             {
                                 var exceptionMessage = "";
-                                if (message.Exception != null)
-                                    exceptionMessage += $"{Environment.NewLine}StackTrace{Environment.NewLine}{message.Exception.StackTrace}";
+                                var ex = message.Exception;
+                                if (ex != null)
+                                    exceptionMessage +=
+                                        $"{Environment.NewLine}" +
+                                        $"Exception Type: {ex.GetType().Name}{Environment.NewLine}" +
+                                        $"Stack Trace:{Environment.NewLine}{ex.StackTrace}";
 
                                 return $"{DateTime.Now}-{message.LogLevel}: {message.Message}{exceptionMessage}";
                             };
@@ -87,15 +91,22 @@ public class Program
                 .UseStartup<Startup>();
 
             var webHost = webHostBuilder.Build();
-
+            logger = webHost.Services.GetService<ILogger<Program>>();
 
             webHost.Run();
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"An unexpected exception occurred: {ex.Message}");
+            if (logger != null)
+                logger?.LogError(ex, $"An unexpected error occurred: {ex.Message}");
+            else
+                Console.Error.WriteLine(
+                    $"An unexpected error occurred: {ex.Message}{Environment.NewLine}" +
+                    $"Exception Type: {ex.GetType().Name}{Environment.NewLine}" +
+                    $"Stack Trace:{Environment.NewLine}" +
+                    $"{ex.StackTrace}"
+                    );
             Environment.ExitCode = 1;
-            return;
         }
 
     }
