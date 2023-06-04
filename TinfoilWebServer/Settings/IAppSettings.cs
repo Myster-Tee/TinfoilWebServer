@@ -64,8 +64,19 @@ public interface IAuthenticationSettings : INotifyPropertyChanged
 
 public interface IAllowedUser
 {
+    /// <summary>
+    /// Name of the user
+    /// </summary>
     public string Name { get; }
 
+    /// <summary>
+    /// The password of the allowed user
+    /// </summary>
     public string Password { get; }
+
+    /// <summary>
+    /// A unique user fingerprint on the system device
+    /// </summary>
+    public string[]? UIDs { get; }
 }
 

@@ -75,6 +75,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         var headerValue = headersAuthorization.FirstOrDefault();
         if (headerValue == null)
         {
+            _logger.LogDebug("Incoming request is missing authentication header.");
             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
             await context.Response.CompleteAsync();
             return;
@@ -84,6 +85,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
         if (strings.Length != 2)
         {
+            _logger.LogDebug("Authorization header invalid, space separator missing.");
             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
             await context.Response.CompleteAsync();
             return;
@@ -91,6 +93,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
         if (!string.Equals("Basic", strings[0], StringComparison.OrdinalIgnoreCase))
         {
+            _logger.LogDebug($"Authentication is not basic, found \"{strings[0]}\".");
             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
             await context.Response.CompleteAsync();
             return;
@@ -99,14 +102,30 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         var base64IncomingAccount = strings[1];
         if (!_allowedBase64Accounts.TryGetValue(base64IncomingAccount, out var allowedUser))
         {
+            _logger.LogDebug($"Login or password incorrect.");
             context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
             await context.Response.CompleteAsync();
             return;
         }
 
+        // Retrieves the UID of the Mariko account sent by Tinfoil
+        var uid = context.Request.Headers["UID"].ToString();
+
+        var allowedUids = allowedUser.UIDs;
+        if (allowedUids != null && allowedUids.Length > 0)
+        {
+            if (!allowedUids.Contains(uid))
+            {
+                _logger.LogDebug($"UID \"{uid}\" not accepted.");
+                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                await context.Response.CompleteAsync();
+                return;
+            }
+        }
+
         context.User = new GenericPrincipal(new GenericIdentity(allowedUser.Name), Array.Empty<string>());
 
-        _logger.LogInformation($"Incoming request from user \"{allowedUser.Name}\".");
+        _logger.LogInformation($"Incoming request from user \"{allowedUser.Name}\" with UID \"{uid}\".");
 
         await next.Invoke(context);
 

@@ -33,7 +33,8 @@
     "Users": [
       {
         "Name": "JohnDoe",
-        "Pwd": "123456"
+        "Pwd": "123456",
+        "UIDs": []
       }
     ]
   }

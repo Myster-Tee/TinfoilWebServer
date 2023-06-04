@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Settings.ConfigModels;
+using TinfoilWebServer.Utils;
 
 namespace TinfoilWebServer.Settings;
 
@@ -77,7 +78,8 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
             new AllowedUser
             {
                 Name = model.Name ?? "",
-                Password = model.Pwd ?? ""
+                Password = model.Pwd ?? "",
+                UIDs = model.UIDs
             }).ToList();
     }
 
@@ -163,9 +165,11 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         public string Password { get; set; } = "";
 
+        public string[]? UIDs { get; set; }
+
         public override bool Equals(object? obj)
         {
-            if(obj is not IAllowedUser other)
+            if (obj is not IAllowedUser other)
                 return false;
 
             return Equals(other);
@@ -173,10 +177,9 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         public bool Equals(IAllowedUser other)
         {
-            return Name == other.Name && Password == other.Password;
+            return Name == other.Name && Password == other.Password && EnumerableUtil.SequenceEqual(this.UIDs, other.UIDs);
         }
 
     }
-
 
 }
