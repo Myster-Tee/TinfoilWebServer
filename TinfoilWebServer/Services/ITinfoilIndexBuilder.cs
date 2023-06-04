@@ -6,13 +6,13 @@ namespace TinfoilWebServer.Services;
 
 public interface ITinfoilIndexBuilder
 {
-
     /// <summary>
     /// Builds a <see cref="TinfoilIndex"/> model from the specified VirtualDirectory
     /// </summary>
     /// <param name="virtualDirectory"></param>
+    /// <param name="userMessageOfTheDay"></param>
     /// <returns></returns>
     [Pure]
-    TinfoilIndex Build(VirtualDirectory virtualDirectory);
+    TinfoilIndex Build(VirtualDirectory virtualDirectory, string? userMessageOfTheDay);
 
 }

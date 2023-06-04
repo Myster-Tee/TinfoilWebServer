@@ -32,11 +32,11 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         }
     }
 
-    public TinfoilIndex Build(VirtualDirectory virtualDirectory)
+    public TinfoilIndex Build(VirtualDirectory virtualDirectory, string? userMessageOfTheDay)
     {
         var tinfoilIndex = new TinfoilIndex
         {
-            Success = _appSettings.MessageOfTheDay,
+            Success = userMessageOfTheDay ?? _appSettings.MessageOfTheDay,
             Files = virtualDirectory.GetDescendantFiles().Select(vf => new FileNfo { Size = vf.Size, Url = vf.BuildRelativeUrl(virtualDirectory) }).ToArray(),
             Directories = _appSettings.ExtraRepositories
         };

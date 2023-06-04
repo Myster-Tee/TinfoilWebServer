@@ -34,7 +34,8 @@
       {
         "Name": "JohnDoe",
         "Pwd": "123456",
-        "UIDs": []
+        "UIDs": [],
+        "MessageOfTheDay": "Hello JohnDoe!"
       }
     ]
   }

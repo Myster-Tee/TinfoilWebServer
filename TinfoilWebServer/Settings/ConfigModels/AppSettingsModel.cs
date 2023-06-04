@@ -48,4 +48,6 @@ public class AllowedUserModel
 
     public string[]? UIDs { get; set; }
 
+    public string? MessageOfTheDay { get; set; }
+
 }

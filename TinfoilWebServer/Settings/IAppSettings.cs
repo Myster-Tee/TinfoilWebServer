@@ -75,6 +75,11 @@ public interface IAllowedUser
     public string Password { get; }
 
     /// <summary>
+    /// A message of the day specific to this user
+    /// </summary>
+    public string? MessageOfTheDay { get; }
+
+    /// <summary>
     /// A unique user fingerprint on the system device
     /// </summary>
     public string[]? UIDs { get; }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
-using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -123,7 +122,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             }
         }
 
-        context.User = new GenericPrincipal(new GenericIdentity(allowedUser.Name), Array.Empty<string>());
+        context.User = new AuthenticatedUser(allowedUser);
 
         _logger.LogInformation($"Incoming request from user \"{allowedUser.Name}\" with UID \"{uid}\".");
 

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TinfoilWebServer.Properties;
 using TinfoilWebServer.Services;
+using TinfoilWebServer.Services.Authentication;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Utils;
 
@@ -44,7 +45,10 @@ public class RequestManager : IRequestManager
 
         if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualDirectory virtualDirectory)
         {
-            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory);
+
+            var userMessageOfTheDay  = (context.User as AuthenticatedUser)?.AllowedUser.MessageOfTheDay;
+
+            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory, userMessageOfTheDay);
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 
