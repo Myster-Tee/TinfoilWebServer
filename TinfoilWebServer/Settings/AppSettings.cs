@@ -79,7 +79,6 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
             {
                 Name = model.Name ?? "",
                 Password = model.Pwd ?? "",
-                UIDs = model.UIDs,
                 MessageOfTheDay = model.MessageOfTheDay,
             }).ToList();
     }
@@ -166,8 +165,6 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         public string Password { get; set; } = "";
 
-        public string[]? UIDs { get; set; }
-
         public string? MessageOfTheDay { get; set; }
 
         public override bool Equals(object? obj)
@@ -180,7 +177,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         public bool Equals(IAllowedUser other)
         {
-            return Name == other.Name && Password == other.Password && EnumerableUtil.SequenceEqual(this.UIDs, other.UIDs) && string.Equals(MessageOfTheDay, other.MessageOfTheDay);
+            return Name == other.Name && Password == other.Password && string.Equals(MessageOfTheDay, other.MessageOfTheDay);
         }
 
     }

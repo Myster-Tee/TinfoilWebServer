@@ -23,8 +23,8 @@ No requirements but heavyweight.
 ```jsonc
 {
   "ServedDirectories": ["dir1", "dir2", ...],   // ex: ["C:\\SomeDir\\DirWithPackages", "D:\\AnotherDir", "."] !!! Don't forget to escape backslashes with another one !!!
-  "ServeEmptyDirectories" : <boolean>,          // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»).
   "StripDirectoryNames" : <boolean>,            // «true» to remove directories names in URLs of served files, «false» otherwise.
+  "ServeEmptyDirectories" : <boolean>,          // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»).
   "AllowedExt": ["ext1", "ext2", ...],          // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ].
   "MessageOfTheDay": "SomeText",                // The welcome message displayed when Tinfoil successfully contacts the server.
   "ExtraRepositories": ["SomeRepo1", ...],      // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information).
@@ -49,7 +49,8 @@ No requirements but heavyweight.
     "Users": [                                  // List of allowed users.
       {
         "Name": "SomeUserName",
-        "Pwd": "SomePassword"
+        "Pwd": "SomePassword",
+        "MessageOfTheDay" : "Some Text"         // Custom message for the user
       },
       ...
     ]

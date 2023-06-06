@@ -26,14 +26,14 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
         _authenticationSettings.PropertyChanged += OnAuthenticationSettingsChanged;
 
-        LoadAllowedUsers();
+        LoadAllowedUsers(false);
     }
 
     private void OnAuthenticationSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(IAuthenticationSettings.Users))
         {
-            LoadAllowedUsers();
+            LoadAllowedUsers(true);
         }
         else if (e.PropertyName == nameof(IAuthenticationSettings.Enabled))
         {
@@ -45,7 +45,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
     }
 
-    private void LoadAllowedUsers()
+    private void LoadAllowedUsers(bool isReload)
     {
         _allowedBase64Accounts.Clear();
 
@@ -58,7 +58,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
                 _logger.LogWarning($"Duplicated user \"{allowedUser.Name}\" found in configuration file \"{Program.ExpectedConfigFilePath}\".");
         }
 
-        _logger.LogInformation($"List of allowed users successfully loaded, {_allowedBase64Accounts.Count} user(s) found.");
+        _logger.LogInformation($"List of allowed users successfully {(isReload ? "reloaded" : "loaded")}, {_allowedBase64Accounts.Count} user(s) found.");
     }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -107,24 +107,9 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             return;
         }
 
-        // Retrieves the UID of the Mariko account sent by Tinfoil
-        var uid = context.Request.Headers["UID"].ToString();
-
-        var allowedUids = allowedUser.UIDs;
-        if (allowedUids != null && allowedUids.Length > 0)
-        {
-            if (!allowedUids.Contains(uid))
-            {
-                _logger.LogDebug($"UID \"{uid}\" not accepted.");
-                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                await context.Response.CompleteAsync();
-                return;
-            }
-        }
-
         context.User = new AuthenticatedUser(allowedUser);
 
-        _logger.LogInformation($"Incoming request from user \"{allowedUser.Name}\" with UID \"{uid}\".");
+        _logger.LogInformation($"Incoming request from user \"{allowedUser.Name}\".");
 
         await next.Invoke(context);
 

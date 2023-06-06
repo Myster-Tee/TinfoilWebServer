@@ -79,9 +79,5 @@ public interface IAllowedUser
     /// </summary>
     public string? MessageOfTheDay { get; }
 
-    /// <summary>
-    /// A unique user fingerprint on the system device
-    /// </summary>
-    public string[]? UIDs { get; }
 }
 

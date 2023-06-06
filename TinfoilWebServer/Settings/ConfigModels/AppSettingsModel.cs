@@ -46,8 +46,6 @@ public class AllowedUserModel
 
     public string? Pwd { get; set; }
 
-    public string[]? UIDs { get; set; }
-
     public string? MessageOfTheDay { get; set; }
 
 }
