@@ -73,6 +73,11 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
 
     public VirtualFileSystemRoot Root => GetRoot();
 
+    public void Initialize()
+    {
+        GetRoot();
+    }
+
     private VirtualFileSystemRoot GetRoot()
     {
         if (_root == null || IsCacheExpired)

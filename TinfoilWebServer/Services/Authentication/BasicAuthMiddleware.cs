@@ -42,7 +42,6 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             else
                 _logger.LogWarning($"Authentication disabled.");
         }
-
     }
 
     private void LoadAllowedUsers(bool isReload)
@@ -58,7 +57,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
                 _logger.LogWarning($"Duplicated user \"{allowedUser.Name}\" found in configuration file \"{Program.ExpectedConfigFilePath}\".");
         }
 
-        _logger.LogInformation($"List of allowed users successfully {(isReload ? "reloaded" : "loaded")}, {_allowedBase64Accounts.Count} user(s) found.");
+        _logger.LogInformation($"List of allowed users successfully {(isReload ? "reloaded" : "loaded")}, {_allowedBase64Accounts.Count} user(s) found (authentication is {(_authenticationSettings.Enabled ? "enabled" : "disabled")}).");
     }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)

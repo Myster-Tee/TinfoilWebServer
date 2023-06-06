@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using TinfoilWebServer.Logging;
 using TinfoilWebServer.Settings.ConfigModels;
-using TinfoilWebServer.Utils;
 
 namespace TinfoilWebServer.Settings;
 
 public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 {
-    private readonly ILogger<AppSettings> _logger;
     private readonly CacheExpirationSettings _cacheExpirationSettings = new();
     private readonly AuthenticationSettings _authenticationSettings = new();
     private string[] _servedDirectories;
@@ -21,39 +17,12 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     private string? _messageOfTheDay;
     private string[] _extraRepositories;
 
-    public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel, ILogger<AppSettings> logger)
+    public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         appSettingsModel = appSettingsModel ?? throw new ArgumentNullException(nameof(appSettingsModel));
         InitializeFromModel(appSettingsModel.CurrentValue);
 
         appSettingsModel.OnChange(InitializeFromModel);
-
-        LogSettings();
-    }
-
-    private void LogSettings()
-    {
-        _logger.LogInformation($"Served directories:{ServedDirectories.ToMultilineString()}");
-
-        _logger.LogInformation($"Strip directory names:{LogUtil.MultilineLogSpacing}{StripDirectoryNames}");
-
-        _logger.LogInformation($"Serve empty directories:{LogUtil.MultilineLogSpacing}{ServeEmptyDirectories}");
-
-        _logger.LogInformation($"Allowed extensions:{AllowedExt.ToMultilineString()}");
-
-        _logger.LogInformation($"Extra repositories:{ExtraRepositories.ToMultilineString()}");
-
-        if (CacheExpiration.Enabled)
-            _logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Enabled: {CacheExpiration.ExpirationDelay}");
-        else
-            _logger.LogInformation($"Cache expiration:{LogUtil.MultilineLogSpacing}Disabled");
-
-        var authenticationSettings = Authentication;
-        if (authenticationSettings.Enabled)
-            _logger.LogInformation($"Authentication:{LogUtil.MultilineLogSpacing}Enabled: {authenticationSettings.Users.Count} user(s) defined");
-        else
-            _logger.LogWarning($"Authentication:{LogUtil.MultilineLogSpacing}Disabled");
     }
 
     private void InitializeFromModel(AppSettingsModel appSettingsModel)

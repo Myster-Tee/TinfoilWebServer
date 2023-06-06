@@ -10,5 +10,9 @@ public interface IVirtualFileSystemRootProvider
     /// </summary>
     VirtualFileSystemRoot Root { get; }
 
+    /// <summary>
+    /// Initializes cache
+    /// </summary>
+    void Initialize();
 
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.Authentication;
@@ -51,26 +52,13 @@ public class Program
                         .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(options => { })
                         .AddConfiguration(ctx.Configuration.GetSection("Logging"))
                         .AddConsole(options => options.FormatterName = nameof(CustomConsoleFormatter))
-                        .AddFile(ctx.Configuration.GetSection("Logging"), options =>
-                        {
-                            options.FormatLogEntry = message =>
-                            {
-                                var exceptionMessage = "";
-                                var ex = message.Exception;
-                                if (ex != null)
-                                    exceptionMessage +=
-                                        $"{Environment.NewLine}" +
-                                        $"Exception Type: {ex.GetType().Name}{Environment.NewLine}" +
-                                        $"Stack Trace:{Environment.NewLine}{ex.StackTrace}";
-
-                                return $"{DateTime.Now}-{message.LogLevel}: {message.Message}{exceptionMessage}";
-                            };
-                        });
+                        .AddFile(ctx.Configuration.GetSection("Logging"), options => options.FormatLogEntry = LogFileFormatter.FormatLogEntry);
                 })
                 .ConfigureServices((ctx, services) =>
                 {
                     services
                         .Configure<AppSettingsModel>(ctx.Configuration)
+                        .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
                         .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                         .AddSingleton<IRequestManager, RequestManager>()
                         .AddSingleton<IFileFilter, FileFilter>()
@@ -90,10 +78,26 @@ public class Program
                 })
                 .UseStartup<Startup>();
 
+            // Build Dependency Injection
             var webHost = webHostBuilder.Build();
-            logger = webHost.Services.GetService<ILogger<Program>>();
 
-            webHost.Run();
+            logger = webHost.Services.GetRequiredService<ILogger<Program>>();
+
+            var summaryInfoLogger = webHost.Services.GetRequiredService<ISummaryInfoLogger>();
+            summaryInfoLogger.LogWelcomeMessage();
+            summaryInfoLogger.LogRelevantSettings();
+            summaryInfoLogger.LogCurrentMachineInfo();
+
+            //===========================//
+            //===> Starts the server <===//
+            var runTask = webHost.RunAsync();
+            //===> Starts the server <===//
+            //===========================//
+
+            summaryInfoLogger.LogListenedHosts();
+
+            // Wait for server to shutdown
+            runTask.GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
@@ -110,6 +114,5 @@ public class Program
         }
 
     }
-
 
 }
