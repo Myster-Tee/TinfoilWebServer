@@ -6,14 +6,14 @@ Install your Nintendo Switch packages (NSP, NSZ, XCI, etc.) with [Tinfoil](https
 All served files must have "[titleid]" in the file name to be recognized by Tinfoil to show up in "New Games", "New DLC", and "New Updates".
 
 ## Download
-Releases page [here](https://github.com/Myster-Tee/TinfoilWebServer/releases/tag).
+Releases page [here](https://github.com/Myster-Tee/TinfoilWebServer/releases).
 
 ## Requirements
 
 The requirements depend on the version you choose to download.
 
 ### Framework-Dependent version (recommended)
-This version is lightweight but you'll need to install the [ASP.NET Core Runtime 6.X.X or more](https://dotnet.microsoft.com/download/dotnet/6.0) before running the server.
+This version is lightweight but you'll need to install the [ASP.NET Core Runtime 6.X.X](https://dotnet.microsoft.com/download/dotnet/6.0) before running the server.
 
 ### Framework-Dependent version
 No requirements but heavyweight.
@@ -59,6 +59,6 @@ No requirements but heavyweight.
 ```
 
 ### Default settings
-- When *"Kestrel"* configuration is omitted, server listens to *http://localhost:5000/*.
+- When *"Kestrel"* configuration is omitted, server listens to *http://localhost:5000/* and *https://localhost:5001*.
 - When *"ServedDirectories"* is omitted, current directory is used.
 - When *"AllowedExt"* is omitted, the following extensions *["xci", "nsz", "nsp"]* are used.
