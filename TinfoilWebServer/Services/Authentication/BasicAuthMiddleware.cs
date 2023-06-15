@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services.Authentication;
@@ -42,6 +43,13 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             else
                 _logger.LogWarning($"Authentication disabled.");
         }
+        else if (e.PropertyName == nameof(IAuthenticationSettings.WebBrowserAuthEnabled))
+        {
+            if (_authenticationSettings.WebBrowserAuthEnabled)
+                _logger.LogInformation($"Web browser authentication enabled.");
+            else
+                _logger.LogInformation($"Web browser authentication disabled.");
+        }
     }
 
     private void LoadAllowedUsers(bool isReload)
@@ -74,8 +82,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         if (headerValue == null)
         {
             _logger.LogDebug("Incoming request is missing authentication header.");
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-            await context.Response.CompleteAsync();
+            await RespondUnauthorized(context);
             return;
         }
 
@@ -84,16 +91,14 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         if (strings.Length != 2)
         {
             _logger.LogDebug("Authorization header invalid, space separator missing.");
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-            await context.Response.CompleteAsync();
+            await RespondUnauthorized(context);
             return;
         }
 
         if (!string.Equals("Basic", strings[0], StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogDebug($"Authentication is not basic, found \"{strings[0]}\".");
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-            await context.Response.CompleteAsync();
+            await RespondUnauthorized(context);
             return;
         }
 
@@ -101,8 +106,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         if (!_allowedBase64Accounts.TryGetValue(base64IncomingAccount, out var allowedUser))
         {
             _logger.LogDebug($"Login or password incorrect.");
-            context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-            await context.Response.CompleteAsync();
+            await RespondUnauthorized(context);
             return;
         }
 
@@ -114,4 +118,13 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
     }
 
+    private async Task RespondUnauthorized(HttpContext context)
+    {
+        context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+
+        if (this._authenticationSettings.WebBrowserAuthEnabled) 
+            context.Response.Headers.WWWAuthenticate = new StringValues("Basic");
+
+        await context.Response.CompleteAsync();
+    }
 }

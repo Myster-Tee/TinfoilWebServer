@@ -36,6 +36,8 @@ public class AuthenticationSettingsModel
 
     public bool? Enabled { get; set; } = true;
 
+    public bool WebBrowserAuthEnabled { get; set; } = false;
+
     public AllowedUserModel[]? Users { get; set; }
 
 }

@@ -5,6 +5,21 @@
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
   "ExtraRepositories": [],
+  "CacheExpiration": {
+    "Enabled": true,
+    "ExpirationDelay": "01:00:00"
+  },
+  "Authentication": {
+    "Enabled": false,
+    "WebBrowserAuthEnabled": true,
+    "Users": [
+      {
+        "Name": "JohnDoe",
+        "Pwd": "123456",
+        "MessageOfTheDay": "Hello JohnDoe!"
+      }
+    ]
+  },
   "Kestrel": {
     "Endpoints": {
       "Http": {
@@ -23,19 +38,5 @@
       "FileSizeLimitBytes": 1000000,
       "MaxRollingFiles": 10
     }
-  },
-  "CacheExpiration": {
-    "Enabled": true,
-    "ExpirationDelay": "01:00:00"
-  },
-  "Authentication": {
-    "Enabled": false,
-    "Users": [
-      {
-        "Name": "JohnDoe",
-        "Pwd": "123456",
-        "MessageOfTheDay": "Hello JohnDoe!"
-      }
-    ]
   }
 }

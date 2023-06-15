@@ -57,8 +57,20 @@ public interface ICacheExpirationSettings : INotifyPropertyChanged
 
 public interface IAuthenticationSettings : INotifyPropertyChanged
 {
+    /// <summary>
+    /// True to enable authentication, false otherwise
+    /// </summary>
     public bool Enabled { get; }
 
+    /// <summary>
+    /// When true, a native web browser authentication popup is displayed when the user is not authenticated.
+    /// Only effective if <see cref="Enabled"/> is true.
+    /// </summary>
+    public bool WebBrowserAuthEnabled { get; }
+
+    /// <summary>
+    /// The list of allowed users
+    /// </summary>
     public IReadOnlyList<IAllowedUser> Users { get; }
 }
 

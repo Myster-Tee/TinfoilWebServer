@@ -43,6 +43,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         var authenticationSettings = appSettingsModel.Authentication;
         _authenticationSettings.Enabled = authenticationSettings?.Enabled ?? false;
+        _authenticationSettings.WebBrowserAuthEnabled = authenticationSettings?.WebBrowserAuthEnabled ?? false;
         _authenticationSettings.Users = (authenticationSettings?.Users ?? Array.Empty<AllowedUserModel>()).Select(model =>
             new AllowedUser
             {
@@ -114,11 +115,18 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     {
         private bool _enabled;
         private IReadOnlyList<IAllowedUser> _users = new List<IAllowedUser>();
+        private bool _webBrowserAuthEnabled;
 
         public bool Enabled
         {
             get => _enabled;
             set => SetField(ref _enabled, value);
+        }
+
+        public bool WebBrowserAuthEnabled
+        {
+            get => _webBrowserAuthEnabled;
+            set => SetField(ref _webBrowserAuthEnabled, value);
         }
 
         public IReadOnlyList<IAllowedUser> Users

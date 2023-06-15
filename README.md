@@ -20,45 +20,45 @@ No requirements but heavyweight.
 
 ## TinfoilWebServer.config.json format
 
-```jsonc
+```js
 {
-  "ServedDirectories": ["dir1", "dir2", ...],   // ex: ["C:\\SomeDir\\DirWithPackages", "D:\\AnotherDir", "."] !!! Don't forget to escape backslashes with another one !!!
-  "StripDirectoryNames" : <boolean>,            // «true» to remove directories names in URLs of served files, «false» otherwise.
-  "ServeEmptyDirectories" : <boolean>,          // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»).
-  "AllowedExt": ["ext1", "ext2", ...],          // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ].
-  "MessageOfTheDay": "SomeText",                // The welcome message displayed when Tinfoil successfully contacts the server.
-  "ExtraRepositories": ["SomeRepo1", ...],      // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information).
-  "CacheExpiration": {
-    "Enable": boolean                           // «true» to enable cache expiration, «false» otherwise.
-    "ExpirationDelay" : "<duration>",           // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s.
+  "ServedDirectories" : string[],       // ex: ["C:\\SomeDir\\DirWithPackages", "D:\\AnotherDir", "."] !!! Don't forget to escape backslashes with another one !!!
+  "StripDirectoryNames" : boolean,      // «true» to remove directories names in URLs of served files, «false» otherwise
+  "ServeEmptyDirectories" : boolean,    // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
+  "AllowedExt" : string[],              // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
+  "MessageOfTheDay" : string,           // The welcome message displayed when Tinfoil successfully contacts the server
+  "ExtraRepositories" : string[],       // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information)
+  "CacheExpiration" : {
+    "Enable" : boolean ,                // «true» to enable cache expiration, «false» otherwise
+    "ExpirationDelay" : string,         // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s
   },
-  "Kestrel": {                                  // HTTP server configuration see «https://docs.microsoft.com/fr-fr/aspnet/core/fundamentals/servers/kestrel?view=aspnetcore-5.0#configureiconfiguration» for more information.
-    "Endpoints": {
-      "Http": {
-        "Url": "http://0.0.0.0:80"
+  "Authentication" : {
+    "Enabled" : boolean,                // «true» to enable authentication, «false» otherwise
+    "WebBrowserAuthEnabled" : boolean,  // «true» to enable the native Web Browser login prompt when not authenticated (has no effect when "Authentication.Enabled" is «false»)
+    "Users" : [                         // List of allowed users (use a comma as separator for declaring multiple users)
+      {
+        "Name" : string,                // The user name
+        "Pwd" : string,                 // The password
+        "MessageOfTheDay" : string      // Custom message for the user
+      }
+    ]
+  },
+  "Kestrel" : {                         // HTTP server configuration see «https://docs.microsoft.com/fr-fr/aspnet/core/fundamentals/servers/kestrel?view=aspnetcore-6.0#configureiconfiguration» for more information
+    "Endpoints" : {
+      "Http" : {
+        "Url" : string                  // The IP addresses or host addresses with ports and protocols that the server should listen, ex: "http://0.0.0.0:80"
       }
     }
   },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information"                  // See «https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-5.0» for more information.
+  "Logging" : {                         // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
+    "LogLevel" : {
+      "Default" : string                // Can be one of "Trace", "Debug", "Information", "Warning", "Error", "Critical", or "None"
     }
-  }
-  "Authentication": {
-    "Enabled": <boolean>                        // «true» to enable authentication, «false» otherwise.
-    "Users": [                                  // List of allowed users.
-      {
-        "Name": "SomeUserName",
-        "Pwd": "SomePassword",
-        "MessageOfTheDay" : "Some Text"         // Custom message for the user
-      },
-      ...
-    ]
   }
 }
 ```
 
 ### Default settings
 - When *"Kestrel"* configuration is omitted, server listens to *http://localhost:5000/* and *https://localhost:5001*.
-- When *"ServedDirectories"* is omitted, current directory is used.
+- When *"ServedDirectories"* is omitted, program directory is used.
 - When *"AllowedExt"* is omitted, the following extensions *["xci", "nsz", "nsp"]* are used.
