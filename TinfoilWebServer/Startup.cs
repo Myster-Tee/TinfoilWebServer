@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.Authentication;
 
@@ -15,7 +14,7 @@ public class Startup
     /// <param name="app"></param>
     /// <param name="requestManager"></param>
     /// <param name="logger"></param>
-    public void Configure(IApplicationBuilder app, IRequestManager requestManager, ILogger<Startup> logger)
+    public void Configure(IApplicationBuilder app, IRequestManager requestManager)
     {
         app.UseMiddleware<IBasicAuthMiddleware>();
         app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();             //Just to force initialization without waiting for first request
