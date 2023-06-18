@@ -51,7 +51,11 @@ public class Program
                     loggingBuilder
                         .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(options => { })
                         .AddConfiguration(ctx.Configuration.GetSection("Logging"))
-                        .AddConsole(options => options.FormatterName = nameof(CustomConsoleFormatter))
+                        .AddConsole(options =>
+                        {
+                            if (options.FormatterName == null) // NOTE: not null when formatter name is specified in config file
+                                options.FormatterName = nameof(CustomConsoleFormatter);
+                        })
                         .AddFile(ctx.Configuration.GetSection("Logging"), options => options.FormatLogEntry = LogFileFormatter.FormatLogEntry);
                 })
                 .ConfigureServices((ctx, services) =>
