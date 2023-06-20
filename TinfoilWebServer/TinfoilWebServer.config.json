@@ -31,6 +31,11 @@
     "LogLevel": {
       "Default": "Information"
     },
+    "Console": {
+      "LogLevel": {
+        "Default": "Information"
+      }
+    },
     "File": {
       "Path": "TinfoilWebServer.log",
       "Append": true,
