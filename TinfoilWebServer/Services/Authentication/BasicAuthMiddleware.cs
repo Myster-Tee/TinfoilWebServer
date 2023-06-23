@@ -70,6 +70,8 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
+        _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" from IP Address \"{context.Connection.RemoteIpAddress}\".");
+
         if (!_authenticationSettings.Enabled)
         {
             await next.Invoke(context);
@@ -81,7 +83,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         var headerValue = headersAuthorization.FirstOrDefault();
         if (headerValue == null)
         {
-            _logger.LogDebug("Incoming request is missing authentication header.");
+            _logger.LogDebug($"Incoming request \"{context.TraceIdentifier}\" is missing authentication header.");
             await RespondUnauthorized(context);
             return;
         }
@@ -90,14 +92,14 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
         if (strings.Length != 2)
         {
-            _logger.LogDebug("Authorization header invalid, space separator missing.");
+            _logger.LogDebug($"Incoming request \"{context.TraceIdentifier}\" authorization header invalid, space separator missing.");
             await RespondUnauthorized(context);
             return;
         }
 
         if (!string.Equals("Basic", strings[0], StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogDebug($"Authentication is not basic, found \"{strings[0]}\".");
+            _logger.LogDebug($"Incoming request \"{context.TraceIdentifier}\" authentication header is not basic, found \"{strings[0]}\".");
             await RespondUnauthorized(context);
             return;
         }
@@ -105,14 +107,14 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         var base64IncomingAccount = strings[1];
         if (!_allowedBase64Accounts.TryGetValue(base64IncomingAccount, out var allowedUser))
         {
-            _logger.LogDebug($"Login or password incorrect.");
+            _logger.LogDebug($"Incoming request \"{context.TraceIdentifier}\" login or password incorrect.");
             await RespondUnauthorized(context);
             return;
         }
 
         context.User = new AuthenticatedUser(allowedUser);
 
-        _logger.LogInformation($"Incoming request from user \"{allowedUser.Name}\".");
+        _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" from user \"{allowedUser.Name}\".");
 
         await next.Invoke(context);
 
@@ -122,7 +124,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
     {
         context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-        if (this._authenticationSettings.WebBrowserAuthEnabled) 
+        if (this._authenticationSettings.WebBrowserAuthEnabled)
             context.Response.Headers.WWWAuthenticate = new StringValues("Basic");
 
         await context.Response.CompleteAsync();

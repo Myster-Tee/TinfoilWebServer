@@ -13,7 +13,6 @@ public class Startup
     /// </summary>
     /// <param name="app"></param>
     /// <param name="requestManager"></param>
-    /// <param name="logger"></param>
     public void Configure(IApplicationBuilder app, IRequestManager requestManager)
     {
         app.UseMiddleware<IBasicAuthMiddleware>();
