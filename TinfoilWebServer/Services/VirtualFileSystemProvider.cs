@@ -30,6 +30,7 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     {
         if (e.PropertyName == nameof(ICacheExpirationSettings.Enabled))
         {
+            _lastCacheCreationDate = null;
             if (_appSettings.CacheExpiration.Enabled)
                 _logger.LogInformation($"Cache expiration enabled.");
             else
