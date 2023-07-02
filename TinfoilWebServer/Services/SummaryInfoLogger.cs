@@ -36,50 +36,47 @@ public class SummaryInfoLogger : ISummaryInfoLogger
 
     public void LogRelevantSettings()
     {
-
         var configFilePath = Program.ExpectedConfigFilePath;
         if (File.Exists(configFilePath))
-            _logger.LogInformation($"Configuration file:{LogUtil.MultilineLogSpacing}\"{configFilePath}\" found");
+            _logger.LogInformation($"Configuration file found at location \"{configFilePath}\".");
         else
-            _logger.LogWarning($"Configuration file:{LogUtil.MultilineLogSpacing}\"{configFilePath}\" not found");
+            _logger.LogWarning($"Configuration file not found at location \"{configFilePath}\".");
+
 
         var sb = new StringBuilder();
         sb.AppendLine($"Current configuration:");
+
         sb.AppendLine();
 
         sb.AppendLine($"- Served directories:{_appSettings.ServedDirectories.ToMultilineString()}");
 
-        sb.AppendLine($"- Strip directory names:{LogUtil.MultilineLogSpacing}{_appSettings.StripDirectoryNames}");
+        sb.AppendLine($"- Strip directory names: {_appSettings.StripDirectoryNames}");
 
-        sb.AppendLine($"- Serve empty directories:{LogUtil.MultilineLogSpacing}{_appSettings.ServeEmptyDirectories}");
+        sb.AppendLine($"- Serve empty directories: {_appSettings.ServeEmptyDirectories}");
 
         sb.AppendLine($"- Allowed extensions:{_appSettings.AllowedExt.ToMultilineString()}");
 
-        sb.AppendLine($"- Message of the day:{LogUtil.MultilineLogSpacing}{_appSettings.MessageOfTheDay}");
+        sb.AppendLine($"- Message of the day:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}{_appSettings.MessageOfTheDay}");
 
         sb.AppendLine($"- Extra repositories:{_appSettings.ExtraRepositories.ToMultilineString()}");
 
-        if (_appSettings.CacheExpiration.Enabled)
-            sb.AppendLine($"- Cache expiration:{LogUtil.MultilineLogSpacing}Enabled: {_appSettings.CacheExpiration.ExpirationDelay}");
-        else
-            sb.AppendLine($"- Cache expiration:{LogUtil.MultilineLogSpacing}Disabled");
+        var cacheExpiration = _appSettings.CacheExpiration;
+        sb.AppendLine($"- Cache expiration:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {cacheExpiration.Enabled}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Expiration delay: {cacheExpiration.ExpirationDelay}");
 
-        var authenticationSettings = _appSettings.Authentication;
-        if (authenticationSettings.Enabled)
-            sb.AppendLine($"- Authentication:{LogUtil.MultilineLogSpacing}Enabled: {authenticationSettings.Users.Count} user(s) defined");
-        else
-            sb.AppendLine($"- Authentication:{LogUtil.MultilineLogSpacing}Disabled");
+        var authentication = _appSettings.Authentication;
+        sb.AppendLine($"- Authentication:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {authentication.Enabled}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Web browser auth enabled: {authentication.WebBrowserAuthEnabled}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Nb allowed users: {authentication.Users.Count}");
 
-        var blacklistSettings = _appSettings.BlacklistSettings;
-        if (blacklistSettings.Enabled)
-        {
-            sb.AppendLine($"- Blacklist:" +
-                          $"{LogUtil.MultilineLogSpacing}Enabled" +
-                          $"{LogUtil.MultilineLogSpacing}Maximum consecutive failed authentication(s): {blacklistSettings.MaxConsecutiveFailedAuth}" +
-                          $"{LogUtil.MultilineLogSpacing}File path: {blacklistSettings.FilePath}");
-        }
-        else
-            sb.AppendLine($"- Blacklist:{LogUtil.MultilineLogSpacing}Disabled");
+        var blacklist = _appSettings.BlacklistSettings;
+        sb.AppendLine($"- Blacklist:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {blacklist.Enabled}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Maximum consecutive failed authentication(s): {blacklist.MaxConsecutiveFailedAuth}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}File path: {blacklist.FilePath}");
 
         _logger.LogInformation(sb.ToString());
     }

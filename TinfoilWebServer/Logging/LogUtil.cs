@@ -6,11 +6,11 @@ namespace TinfoilWebServer.Logging;
 
 public static class LogUtil
 {
-    public static readonly string MultilineLogSpacing = $"{Environment.NewLine}        ";
+    public const string INDENT_SPACES = $"        ";
 
     public static string ToMultilineString(this IEnumerable<string> lines)
     {
-        return string.Join("", lines.Select(loadingError => $"{MultilineLogSpacing}{loadingError}"));
+        return string.Join("", lines.Select(loadingError => $"{Environment.NewLine}{INDENT_SPACES}{loadingError}"));
     }
 
 }

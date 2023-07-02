@@ -39,9 +39,9 @@ public class BlacklistManager : IBlacklistManager, IDisposable
         if (e.PropertyName == nameof(IBlacklistSettings.Enabled))
         {
             if (_blacklistSettings.Enabled)
-                _logger.LogInformation("Blacklist system enabled.");
+                _logger.LogInformation("Blacklist feature enabled.");
             else
-                _logger.LogWarning("Blacklist system disabled.");
+                _logger.LogWarning("Blacklist feature disabled.");
 
             SafeInitializeInternal(true);
         }
