@@ -22,8 +22,9 @@
   },
   "Blacklist": {
     "Enabled": true,
-    "FilePath" :  "blacklist.txt",
-    "MaxConsecutiveFailedAuth" :  3
+    "FilePath": "blacklist.txt",
+    "MaxConsecutiveFailedAuth": 3,
+    "IsBehindProxy": false
   },
   "Kestrel": {
     "Endpoints": {

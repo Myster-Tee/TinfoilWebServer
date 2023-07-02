@@ -26,8 +26,6 @@ public class AppSettingsModel
     public BlacklistSettingsModel? Blacklist { get; set; }
 }
 
-
-
 public class CacheExpirationSettingsModel
 {
     public bool? Enabled { get; set; }
@@ -43,7 +41,6 @@ public class AuthenticationSettingsModel
     public bool WebBrowserAuthEnabled { get; set; } = false;
 
     public AllowedUserModel[]? Users { get; set; }
-
 }
 
 public class AllowedUserModel
@@ -53,7 +50,6 @@ public class AllowedUserModel
     public string? Pwd { get; set; }
 
     public string? MessageOfTheDay { get; set; }
-
 }
 
 public class BlacklistSettingsModel
@@ -63,4 +59,6 @@ public class BlacklistSettingsModel
     public string? FilePath { get; set; }
 
     public int? MaxConsecutiveFailedAuth { get; set; }
+
+    public bool? IsBehindProxy { get; set; }
 }

@@ -115,4 +115,11 @@ public interface IBlacklistSettings : INotifyPropertyChanged
     /// </summary>
     public int MaxConsecutiveFailedAuth { get; }
 
+    /// <summary>
+    /// When True, indicates that the server is reached from a reverse proxy, in this case the
+    /// incoming IP address will be taken from proxy "X-Forwarded-For" header if present.
+    /// When False, the incoming ÏP address is taken from TCP/IP protocol.
+    /// </summary>
+    public bool IsBehindProxy { get; }
+
 }

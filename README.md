@@ -43,6 +43,12 @@ No requirements but heavyweight.
       }
     ]
   },
+  "Blacklist": {
+    "Enabled": boolean,                 // Enable or disable the IP blacklisting feature
+    "FilePath": string,                 // The path of the file where to save blacklisted IPs
+    "MaxConsecutiveFailedAuth": number, // The number of consecutived unauthenticated requests to reach for blacklisting an IP
+    "IsBehindProxy": boolean            // When set to true, incoming IP address will be taken from "X-Forwarded-For" header otherwise it will be taken from TCP/IP protocol
+  },
   "Kestrel" : {                         // HTTP server configuration see «https://docs.microsoft.com/fr-fr/aspnet/core/fundamentals/servers/kestrel?view=aspnetcore-6.0#configureiconfiguration» for more information
     "Endpoints" : {
       "Http" : {
@@ -53,6 +59,18 @@ No requirements but heavyweight.
   "Logging" : {                         // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
     "LogLevel" : {
       "Default" : string                // Can be one of "Trace", "Debug", "Information", "Warning", "Error", "Critical", or "None"
+    }
+    "Console": {                        // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
+      "LogLevel": {
+        "Default": "Information"
+      }
+    },
+    "File": {                           // See https://github.com/nreco/logging#how-to-use for more information
+      "Path": string,   
+      "Append": boolean,
+      "MinLevel": string,
+      "FileSizeLimitBytes": number,
+      "MaxRollingFiles": number
     }
   }
 }

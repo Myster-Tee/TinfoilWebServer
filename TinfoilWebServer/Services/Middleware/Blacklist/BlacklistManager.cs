@@ -59,7 +59,6 @@ public class BlacklistManager : IBlacklistManager, IDisposable
         SafeLoadBlacklistedIps();
     }
 
-
     public bool IsIpBlacklisted(IPAddress ipAddress)
     {
         if (!_blacklistSettings.Enabled)
@@ -106,7 +105,6 @@ public class BlacklistManager : IBlacklistManager, IDisposable
 
         try
         {
-
             HashSet<IPAddress> blacklistedIpsCopy;
             lock (_lock)
             {

@@ -75,8 +75,9 @@ public class SummaryInfoLogger : ISummaryInfoLogger
         var blacklist = _appSettings.BlacklistSettings;
         sb.AppendLine($"- Blacklist:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {blacklist.Enabled}");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}Maximum consecutive failed authentication(s): {blacklist.MaxConsecutiveFailedAuth}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}File path: {blacklist.FilePath}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Maximum consecutive failed authentication(s): {blacklist.MaxConsecutiveFailedAuth}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Is behind proxy: {blacklist.IsBehindProxy}");
 
         _logger.LogInformation(sb.ToString());
     }

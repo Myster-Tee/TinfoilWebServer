@@ -57,7 +57,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         _blacklistSettings.Enabled = blacklistSettings?.Enabled ?? true;
         _blacklistSettings.FilePath = blacklistSettings?.FilePath ?? "IpBlacklist.txt";
         _blacklistSettings.MaxConsecutiveFailedAuth = blacklistSettings?.MaxConsecutiveFailedAuth ?? 3;
-
+        _blacklistSettings.IsBehindProxy = blacklistSettings?.IsBehindProxy ?? false;
     }
 
     public string[] ServedDirectories
@@ -175,6 +175,7 @@ public class BlacklistSettings : NotifyPropertyChangedBase, IBlacklistSettings
     private bool _enabled;
     private string _filePath = "";
     private int _maxConsecutiveFailedAuth;
+    private bool _isBehindProxy;
 
     public bool Enabled
     {
@@ -192,5 +193,11 @@ public class BlacklistSettings : NotifyPropertyChangedBase, IBlacklistSettings
     {
         get => _maxConsecutiveFailedAuth;
         set => SetField(ref _maxConsecutiveFailedAuth, value);
+    }
+
+    public bool IsBehindProxy
+    {
+        get => _isBehindProxy;
+        set => SetField(ref _isBehindProxy, value);
     }
 }
