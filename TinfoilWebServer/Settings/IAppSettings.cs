@@ -46,6 +46,11 @@ public interface IAppSettings : INotifyPropertyChanged
     /// </summary>
     IAuthenticationSettings Authentication { get; }
 
+    /// <summary>
+    /// Blacklist settings
+    /// </summary>
+    IBlacklistSettings BlacklistSettings { get; }
+
 }
 
 public interface ICacheExpirationSettings : INotifyPropertyChanged
@@ -93,3 +98,21 @@ public interface IAllowedUser
 
 }
 
+public interface IBlacklistSettings : INotifyPropertyChanged
+{
+    /// <summary>
+    /// True if blacklist middleware is enabled, false otherwise
+    /// </summary>
+    public bool Enabled { get; }
+
+    /// <summary>
+    /// The file path of blacklisted IP addresses
+    /// </summary>
+    public string FilePath { get; }
+
+    /// <summary>
+    /// The maximum number of consecutive failed authentication to reacj
+    /// </summary>
+    public int MaxConsecutiveFailedAuth { get; }
+
+}

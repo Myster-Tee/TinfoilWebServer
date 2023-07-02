@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace TinfoilWebServer.Services.Authentication;
+namespace TinfoilWebServer.Services.Middleware.Authentication;
 
 public interface IBasicAuthMiddleware : IMiddleware
 {

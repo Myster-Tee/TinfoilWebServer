@@ -10,7 +10,7 @@
     "ExpirationDelay": "01:00:00"
   },
   "Authentication": {
-    "Enabled": false,
+    "Enabled": true,
     "WebBrowserAuthEnabled": true,
     "Users": [
       {
@@ -19,6 +19,11 @@
         "MessageOfTheDay": "Hello JohnDoe!"
       }
     ]
+  },
+  "Blacklist": {
+    "Enabled": true,
+    "FilePath" :  "Test/bl.txt",
+    "MaxConsecutiveFailedAuth" :  3
   },
   "Kestrel": {
     "Endpoints": {

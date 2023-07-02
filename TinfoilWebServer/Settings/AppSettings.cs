@@ -10,6 +10,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 {
     private readonly CacheExpirationSettings _cacheExpirationSettings = new();
     private readonly AuthenticationSettings _authenticationSettings = new();
+    private readonly BlacklistSettings _blacklistSettings = new();
     private string[] _servedDirectories;
     private bool _stripDirectoryNames;
     private bool _serveEmptyDirectories;
@@ -51,6 +52,12 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
                 Password = model.Pwd ?? "",
                 MessageOfTheDay = model.MessageOfTheDay,
             }).ToList();
+
+        var blacklistSettings = appSettingsModel.Blacklist;
+        _blacklistSettings.Enabled = blacklistSettings?.Enabled ?? true;
+        _blacklistSettings.FilePath = blacklistSettings?.FilePath ?? "IpBlacklist.txt";
+        _blacklistSettings.MaxConsecutiveFailedAuth = blacklistSettings?.MaxConsecutiveFailedAuth ?? 3;
+
     }
 
     public string[] ServedDirectories
@@ -92,6 +99,8 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;
 
     public IAuthenticationSettings Authentication => _authenticationSettings;
+
+    public IBlacklistSettings BlacklistSettings => _blacklistSettings;
 
     private class CacheExpirationSettings : NotifyPropertyChangedBase, ICacheExpirationSettings
     {
@@ -159,4 +168,29 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
     }
 
+}
+
+public class BlacklistSettings : NotifyPropertyChangedBase, IBlacklistSettings
+{
+    private bool _enabled;
+    private string _filePath = "";
+    private int _maxConsecutiveFailedAuth;
+
+    public bool Enabled
+    {
+        get => _enabled;
+        set => SetField(ref _enabled, value);
+    }
+
+    public string FilePath
+    {
+        get => _filePath;
+        set => SetField(ref _filePath, value);
+    }
+
+    public int MaxConsecutiveFailedAuth
+    {
+        get => _maxConsecutiveFailedAuth;
+        set => SetField(ref _maxConsecutiveFailedAuth, value);
+    }
 }

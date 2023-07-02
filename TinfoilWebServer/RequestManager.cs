@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using TinfoilWebServer.Properties;
 using TinfoilWebServer.Services;
-using TinfoilWebServer.Services.Authentication;
+using TinfoilWebServer.Services.Middleware.Authentication;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Utils;
 

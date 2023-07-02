@@ -70,6 +70,17 @@ public class SummaryInfoLogger : ISummaryInfoLogger
         else
             sb.AppendLine($"- Authentication:{LogUtil.MultilineLogSpacing}Disabled");
 
+        var blacklistSettings = _appSettings.BlacklistSettings;
+        if (blacklistSettings.Enabled)
+        {
+            sb.AppendLine($"- Blacklist:" +
+                          $"{LogUtil.MultilineLogSpacing}Enabled" +
+                          $"{LogUtil.MultilineLogSpacing}Maximum consecutive failed authentication(s): {blacklistSettings.MaxConsecutiveFailedAuth}" +
+                          $"{LogUtil.MultilineLogSpacing}File path: {blacklistSettings.FilePath}");
+        }
+        else
+            sb.AppendLine($"- Blacklist:{LogUtil.MultilineLogSpacing}Disabled");
+
         _logger.LogInformation(sb.ToString());
     }
 

@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using TinfoilWebServer.Settings;
 
-namespace TinfoilWebServer.Services.Authentication;
+namespace TinfoilWebServer.Services.Middleware.Authentication;
 
 public class AuthenticatedUser : ClaimsPrincipal
 {

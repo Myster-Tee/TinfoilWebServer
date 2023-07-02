@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using TinfoilWebServer.Settings;
 
-namespace TinfoilWebServer.Services.Authentication;
+namespace TinfoilWebServer.Services.Middleware.Authentication;
 
 public class BasicAuthMiddleware : IBasicAuthMiddleware
 {
@@ -70,8 +70,6 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" from IP Address \"{context.Connection.RemoteIpAddress}\".");
-
         if (!_authenticationSettings.Enabled)
         {
             await next.Invoke(context);
@@ -124,7 +122,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
     {
         context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-        if (this._authenticationSettings.WebBrowserAuthEnabled)
+        if (_authenticationSettings.WebBrowserAuthEnabled)
             context.Response.Headers.WWWAuthenticate = new StringValues("Basic");
 
         await context.Response.CompleteAsync();

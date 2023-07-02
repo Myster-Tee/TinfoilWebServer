@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using TinfoilWebServer.Services;
-using TinfoilWebServer.Services.Authentication;
+using TinfoilWebServer.Services.Middleware.Authentication;
+using TinfoilWebServer.Services.Middleware.BlackList;
 
 namespace TinfoilWebServer;
 
@@ -15,9 +16,11 @@ public class Startup
     /// <param name="requestManager"></param>
     public void Configure(IApplicationBuilder app, IRequestManager requestManager)
     {
+        app.UseMiddleware<IBlacklistMiddleware>();
         app.UseMiddleware<IBasicAuthMiddleware>();
-        app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();             //Just to force initialization without waiting for first request
-        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().Initialize();   //Just to force initialization without waiting for first request
+        app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();                         //Just to force initialization without waiting for first request
+        app.ApplicationServices.GetRequiredService<IBlacklistManager>().Initialize();
+        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().Initialize();  //Just to force initialization without waiting for first request
         app.Run(requestManager.OnRequest);
     }
 

@@ -22,7 +22,11 @@ public class AppSettingsModel
     public CacheExpirationSettingsModel? CacheExpiration { get; set; }
 
     public AuthenticationSettingsModel? Authentication { get; set; }
+
+    public BlacklistSettingsModel? Blacklist { get; set; }
 }
+
+
 
 public class CacheExpirationSettingsModel
 {
@@ -50,4 +54,13 @@ public class AllowedUserModel
 
     public string? MessageOfTheDay { get; set; }
 
+}
+
+public class BlacklistSettingsModel
+{
+    public bool? Enabled { get; set; }
+
+    public string? FilePath { get; set; }
+
+    public int? MaxConsecutiveFailedAuth { get; set; }
 }

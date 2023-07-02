@@ -8,7 +8,8 @@ using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
-using TinfoilWebServer.Services.Authentication;
+using TinfoilWebServer.Services.Middleware.Authentication;
+using TinfoilWebServer.Services.Middleware.BlackList;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 using TinfoilWebServer.Settings.ConfigModels;
@@ -62,18 +63,26 @@ public class Program
                 {
                     services
                         .Configure<AppSettingsModel>(ctx.Configuration)
+
+                        .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
+                        .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
+                        .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().BlacklistSettings)
+
                         .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
+                        .AddSingleton<IBlacklistMiddleware, BlacklistMiddleware>()
                         .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
+                        .AddSingleton<IBlacklistManager, BlacklistManager>()
+                        .AddSingleton<IBlacklistSerializer, BlacklistSerializer>()
                         .AddSingleton<IRequestManager, RequestManager>()
                         .AddSingleton<IFileFilter, FileFilter>()
                         .AddSingleton<IAppSettings, AppSettings>()
-                        .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
-                        .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
                         .AddSingleton<IVirtualItemFinder, VirtualItemFinder>()
                         .AddSingleton<IJsonSerializer, JsonSerializer>()
                         .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
                         .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
-                        .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>();
+                        .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
+
+                        .AddTransient<IFileChangeHelper, FileChangeHelper>();
 
                 })
                 .UseKestrel((ctx, options) =>
@@ -86,6 +95,12 @@ public class Program
             var webHost = webHostBuilder.Build();
 
             logger = webHost.Services.GetRequiredService<ILogger<Program>>();
+
+            AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
+            {
+                var ex = eventArgs.ExceptionObject as Exception;
+                logger.LogError(ex, $"An unhandled exception occurred: {ex?.Message ?? eventArgs.ExceptionObject}");
+            };
 
             var summaryInfoLogger = webHost.Services.GetRequiredService<ISummaryInfoLogger>();
             summaryInfoLogger.LogWelcomeMessage();
@@ -106,7 +121,7 @@ public class Program
         catch (Exception ex)
         {
             if (logger != null)
-                logger?.LogError(ex, $"An unexpected error occurred: {ex.Message}");
+                logger.LogError(ex, $"An unexpected error occurred: {ex.Message}");
             else
                 Console.Error.WriteLine(
                     $"An unexpected error occurred: {ex.Message}{Environment.NewLine}" +
@@ -116,7 +131,6 @@ public class Program
                     );
             Environment.ExitCode = 1;
         }
-
     }
 
 }
