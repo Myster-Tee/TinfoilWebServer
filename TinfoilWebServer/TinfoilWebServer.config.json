@@ -22,7 +22,7 @@
   },
   "Blacklist": {
     "Enabled": true,
-    "FilePath" :  "Test/bl.txt",
+    "FilePath" :  "blacklist.txt",
     "MaxConsecutiveFailedAuth" :  3
   },
   "Kestrel": {
