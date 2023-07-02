@@ -46,7 +46,7 @@ public class BlacklistMiddleware : IBlacklistMiddleware
 
         if (_blacklistManager.IsIpBlacklisted(remoteIpAddress))
         {
-            _logger.LogWarning($"Incoming request \"{context.TraceIdentifier}\" rejected, IP address \"{remoteIpAddress}\" blacklisted.");
+            _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" rejected, IP address \"{remoteIpAddress}\" blacklisted.");
             await RespondUnauthorized(context);
             return;
         }
