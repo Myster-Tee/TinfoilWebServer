@@ -33,7 +33,18 @@ if (Test-Path ${OutDirRoot}) {
 
 dotnet clean "TinfoilWebServer/TinfoilWebServer.csproj"
 
-#=== Framework Dependent Windows
+#Framework Dependent Portable
+$PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-portable"
+
+dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
+    --self-contained false `
+    -c Release `
+    -o $PublishDir
+
+Compress-Archive -Path $PublishDir -DestinationPath "${PublishDir}.zip"
+Remove-Item ${PublishDir} -Recurse
+
+#=== Framework Dependent win-x64
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-win-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -47,7 +58,21 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "$PublishDir.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#Framework Dependent Linux
+#Framework Independent win-x64
+$PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Independent-win-x64"
+
+dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
+    --self-contained true `
+    -c Release `
+    -r win-x64 `
+    -p:PublishSingleFile=true `
+    -p:IncludeNativeLibrariesForSelfExtract=true `
+    -o $PublishDir
+
+Compress-Archive -Path $PublishDir -DestinationPath "${PublishDir}.zip"
+Remove-Item ${PublishDir} -Recurse
+
+#Framework Dependent linux-x64
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-linux-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -61,7 +86,21 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "$PublishDir.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#Framework Dependent OSX
+#Framework Independent linux-x64
+$PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Independent-linux-x64"
+
+dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
+    --self-contained true `
+    -c Release `
+    -r linux-x64 `
+    -p:PublishSingleFile=true `
+    -p:IncludeNativeLibrariesForSelfExtract=true `
+    -o $PublishDir
+
+Compress-Archive -Path $PublishDir -DestinationPath "$PublishDir.zip"
+Remove-Item ${PublishDir} -Recurse
+
+#Framework Dependent osx-x64
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-osx-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -75,24 +114,13 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "${PublishDir}.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#Framework Dependent Portable
-$PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-portable"
-
-dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
-    --self-contained false `
-    -c Release `
-    -o $PublishDir
-
-Compress-Archive -Path $PublishDir -DestinationPath "${PublishDir}.zip"
-Remove-Item ${PublishDir} -Recurse
-
-#Framework Independent Portable
-$PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Independent-win-x64"
+#Framework Independent osx-x64
+$PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Independent-osx-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
     --self-contained true `
     -c Release `
-    -r win-x64 `
+    -r osx-x64 `
     -p:PublishSingleFile=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
     -o $PublishDir
