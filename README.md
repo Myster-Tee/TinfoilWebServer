@@ -79,7 +79,7 @@ dotnet TinfoilWebServer.dll
         "Url": string                   // The HTTP host (or IP address) and port that the server should listen to (ex: "http://0.0.0.0:80", "http://*:80/", "http://somedomain.com")
       },
       "HttpsInlineCertAndKeyFile": {    // See https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-6.0 for more examples and possibilities
-        "Url": string,                  // The HTTPS host (or IP address) and port that the server should listen to  (ex: "https://somedomain.com", "https://somedomain.com:8081")
+        "Url": string,                  // The HTTPS host (or IP address) and port that the server should listen to (ex: "https://somedomain.com", "https://somedomain.com:8081")
         "Certificate": {
           "Path": string,               // The path to the certificate file (ex: "MyCertificate.cer")
           "KeyPath": string             // The path to the private key file (ex: "MyPrivateKey.key")
@@ -97,7 +97,7 @@ dotnet TinfoilWebServer.dll
       }
     },
     "File": {                           // See https://github.com/nreco/logging#how-to-use for more information
-      "Path": string,   
+      "Path": string,
       "Append": boolean,
       "MinLevel": string,
       "FileSizeLimitBytes": number,
@@ -112,7 +112,7 @@ dotnet TinfoilWebServer.dll
 - When *"AllowedExt"* is omitted, the following extensions *["xci", "nsz", "nsp"]* are used.
 
 
-## Security considerations and recommandations
+## Security considerations and recommendations
 
 If you plan to open your server to the Internet network (WAN) instead of local network (LAN) only, I would highly recommend you to:
 
