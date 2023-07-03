@@ -22,24 +22,24 @@ No requirements but heavyweight.
 
 ```js
 {
-  "ServedDirectories" : string[],       // ex: ["C:\\SomeDir\\DirWithPackages", "D:\\AnotherDir", "."] !!! Don't forget to escape backslashes with another one !!!
-  "StripDirectoryNames" : boolean,      // «true» to remove directories names in URLs of served files, «false» otherwise
-  "ServeEmptyDirectories" : boolean,    // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
-  "AllowedExt" : string[],              // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
-  "MessageOfTheDay" : string,           // The welcome message displayed when Tinfoil successfully contacts the server
-  "ExtraRepositories" : string[],       // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information)
-  "CacheExpiration" : {
-    "Enable" : boolean ,                // «true» to enable cache expiration, «false» otherwise
-    "ExpirationDelay" : string,         // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s
+  "ServedDirectories": string[],        // ex: ["C:\\SomeDir\\DirWithPackages", "D:\\AnotherDir", "."] !!! Don't forget to escape backslashes with another one !!!
+  "StripDirectoryNames": boolean,       // «true» to remove directories names in URLs of served files, «false» otherwise
+  "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
+  "AllowedExt": string[],               // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
+  "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
+  "ExtraRepositories": string[],        // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information)
+  "CacheExpiration": {
+    "Enable": boolean ,                 // «true» to enable cache expiration, «false» otherwise
+    "ExpirationDelay": string,          // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s
   },
-  "Authentication" : {
-    "Enabled" : boolean,                // «true» to enable authentication, «false» otherwise
-    "WebBrowserAuthEnabled" : boolean,  // «true» to enable the native Web Browser login prompt when not authenticated (has no effect when "Authentication.Enabled" is «false»)
-    "Users" : [                         // List of allowed users (use a comma as separator for declaring multiple users)
+  "Authentication": {
+    "Enabled": boolean,                 // «true» to enable authentication, «false» otherwise
+    "WebBrowserAuthEnabled": boolean,   // «true» to enable the native Web Browser login prompt when not authenticated (has no effect when "Authentication.Enabled" is «false»)
+    "Users": [                          // List of allowed users (use a comma as separator for declaring multiple users)
       {
-        "Name" : string,                // The user name
-        "Pwd" : string,                 // The password
-        "MessageOfTheDay" : string      // Custom message for the user
+        "Name": string,                 // The user name
+        "Pwd": string,                  // The password
+        "MessageOfTheDay": string       // Custom message for the user
       }
     ]
   },
@@ -49,20 +49,27 @@ No requirements but heavyweight.
     "MaxConsecutiveFailedAuth": number, // The number of consecutived unauthenticated requests to reach for blacklisting an IP
     "IsBehindProxy": boolean            // When set to true, incoming IP address will be taken from "X-Forwarded-For" header otherwise it will be taken from TCP/IP protocol
   },
-  "Kestrel" : {                         // HTTP server configuration see «https://docs.microsoft.com/fr-fr/aspnet/core/fundamentals/servers/kestrel?view=aspnetcore-6.0#configureiconfiguration» for more information
-    "Endpoints" : {
-      "Http" : {
-        "Url" : string                  // The IP addresses or host addresses with ports and protocols that the server should listen, ex: "http://0.0.0.0:80"
+  "Kestrel": {                          // Web server configuration, see https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-6.0 for more information
+    "Endpoints": {
+      "Http": {
+        "Url": string                   // The HTTP host (or IP address) and port that the server should listen to (ex: "http://0.0.0.0:80", "http://*:80/", "http://somedomain.com")
+      },
+      "HttpsInlineCertAndKeyFile": {    // See https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-6.0 for more examples and possibilities
+        "Url": string,                  // The HTTPS host (or IP address) and port that the server should listen to  (ex: "https://somedomain.com", "https://somedomain.com:8081")
+        "Certificate": {
+          "Path": string,               // The path to the certificate file (ex: "MyCertificate.cer")
+          "KeyPath": string             // The path to the private key file (ex: "MyPrivateKey.key")
+        }
       }
     }
   },
-  "Logging" : {                         // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
-    "LogLevel" : {
-      "Default" : string                // Can be one of "Trace", "Debug", "Information", "Warning", "Error", "Critical", or "None"
-    }
+  "Logging": {                          // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
+    "LogLevel": {
+      "Default": string                 // The global log level, can be one of "Trace", "Debug", "Information", "Warning", "Error", "Critical", or "None"
+    },
     "Console": {                        // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
       "LogLevel": {
-        "Default": "Information"
+        "Default": string
       }
     },
     "File": {                           // See https://github.com/nreco/logging#how-to-use for more information
