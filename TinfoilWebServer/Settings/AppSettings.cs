@@ -29,7 +29,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     private void InitializeFromModel(AppSettingsModel appSettingsModel)
     {
         var servedDirectories = appSettingsModel.ServedDirectories;
-        ServedDirectories = servedDirectories == null || servedDirectories.Length == 0 ? new[] { "." } : servedDirectories;
+        ServedDirectories = servedDirectories ?? Array.Empty<string>();
         StripDirectoryNames = appSettingsModel.StripDirectoryNames ?? true;
         ServeEmptyDirectories = appSettingsModel.ServeEmptyDirectories ?? true;
 

@@ -90,9 +90,14 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     [MemberNotNull(nameof(_root))]
     private void UpdateVirtualFileSystem()
     {
+        var servedDirectories = _appSettings.ServedDirectories;
+        if(servedDirectories.Length <= 0)
+            _logger.LogWarning($"No served directory defined in configuration file \"{Program.ExpectedConfigFilePath}\".");
+
         _root = _appSettings.StripDirectoryNames ?
-            _virtualFileSystemBuilder.BuildFlat(_appSettings.ServedDirectories) :
-            _virtualFileSystemBuilder.BuildHierarchical(_appSettings.ServedDirectories, !_appSettings.ServeEmptyDirectories);
+            _virtualFileSystemBuilder.BuildFlat(servedDirectories) :
+            _virtualFileSystemBuilder.BuildHierarchical(servedDirectories, !_appSettings.ServeEmptyDirectories);
+
         var nbFilesServed = _root.GetDescendantFiles().Count();
         _logger.LogInformation($"Served files cache updated, {nbFilesServed} file(s) served.");
         _lastCacheCreationDate = DateTime.Now;
