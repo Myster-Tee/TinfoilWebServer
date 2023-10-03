@@ -42,6 +42,18 @@ Run
 dotnet TinfoilWebServer.dll
 ```
 
+## Setting up Tinfoil on your Switch
+
+1. Launch **Tinfoil**
+1. Go to **File Browser**
+1. Press **[-]** button to add a new server
+1. Set **Protocol** to HTTP or HTTPS according to the server configuration
+1. Set **Host** to any host pointing to your server (or the server IP address)  
+*The server IP address is logged at server startup*
+1. If authentication is enabled, set **Username** and **Password** to one of the allowed users
+1. Set **Title** to a name of your choice
+
+
 ## TinfoilWebServer.config.json format
 
 ```js
@@ -71,7 +83,7 @@ dotnet TinfoilWebServer.dll
     "Enabled": boolean,                 // Enable or disable the IP blacklisting feature
     "FilePath": string,                 // The path of the file where to save blacklisted IPs
     "MaxConsecutiveFailedAuth": number, // The number of consecutived unauthenticated requests to reach for blacklisting an IP
-    "IsBehindProxy": boolean            // When set to true, incoming IP address will be taken from "X-Forwarded-For" header otherwise it will be taken from TCP/IP protocol
+    "IsBehindProxy": boolean            // When set to true, incoming IP address will be taken fromFo "X-Forwarded-For" header otherwise it will be taken from TCP/IP protocol
   },
   "Kestrel": {                          // Web server configuration, see https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-6.0 for more information
     "Endpoints": {
