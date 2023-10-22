@@ -9,6 +9,7 @@ using System.Text;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.Booting;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Settings;
 
@@ -19,12 +20,14 @@ public class SummaryInfoLogger : ISummaryInfoLogger
     private readonly ILogger<SummaryInfoLogger> _logger;
     private readonly IAppSettings _appSettings;
     private readonly IServer _server;
+    private readonly IBootInfo _bootInfo;
 
-    public SummaryInfoLogger(ILogger<SummaryInfoLogger> logger, IAppSettings appSettings, IServer server)
+    public SummaryInfoLogger(ILogger<SummaryInfoLogger> logger, IAppSettings appSettings, IServer server, IBootInfo bootInfo)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _server = server ?? throw new ArgumentNullException(nameof(server));
+        _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
     }
 
     public void LogWelcomeMessage()
@@ -36,7 +39,7 @@ public class SummaryInfoLogger : ISummaryInfoLogger
 
     public void LogRelevantSettings()
     {
-        var configFilePath = Program.ExpectedConfigFilePath;
+        var configFilePath = _bootInfo.ConfigFileFullPath;
         if (File.Exists(configFilePath))
             _logger.LogInformation($"Configuration file found at location \"{configFilePath}\".");
         else

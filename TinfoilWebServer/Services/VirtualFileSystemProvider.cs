@@ -3,6 +3,7 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using TinfoilWebServer.Booting;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
@@ -13,14 +14,16 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     private readonly IVirtualFileSystemBuilder _virtualFileSystemBuilder;
     private readonly IAppSettings _appSettings;
     private readonly ILogger<VirtualFileSystemRootProvider> _logger;
+    private readonly IBootInfo _bootInfo;
     private VirtualFileSystemRoot? _root;
     private DateTime? _lastCacheCreationDate;
 
-    public VirtualFileSystemRootProvider(IVirtualFileSystemBuilder virtualFileSystemBuilder, IAppSettings appSettings, ILogger<VirtualFileSystemRootProvider> logger)
+    public VirtualFileSystemRootProvider(IVirtualFileSystemBuilder virtualFileSystemBuilder, IAppSettings appSettings, ILogger<VirtualFileSystemRootProvider> logger, IBootInfo bootInfo)
     {
         _virtualFileSystemBuilder = virtualFileSystemBuilder ?? throw new ArgumentNullException(nameof(virtualFileSystemBuilder));
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
 
         _appSettings.PropertyChanged += OnAppSettingsChanged;
         _appSettings.CacheExpiration.PropertyChanged += OnCacheExpirationSettingsChanged;
@@ -91,8 +94,8 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     private void UpdateVirtualFileSystem()
     {
         var servedDirectories = _appSettings.ServedDirectories;
-        if(servedDirectories.Length <= 0)
-            _logger.LogWarning($"No served directory defined in configuration file \"{Program.ExpectedConfigFilePath}\".");
+        if (servedDirectories.Length <= 0)
+            _logger.LogWarning($"No served directory defined in configuration file \"{_bootInfo.ConfigFileFullPath}\".");
 
         _root = _appSettings.StripDirectoryNames ?
             _virtualFileSystemBuilder.BuildFlat(servedDirectories) :

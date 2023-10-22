@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using TinfoilWebServer.Booting;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services.Middleware.Authentication;
@@ -16,14 +17,16 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 {
     private readonly IAuthenticationSettings _authenticationSettings;
     private readonly ILogger<BasicAuthMiddleware> _logger;
+    private readonly IBootInfo _bootInfo;
     private static readonly Encoding _encoding = Encoding.GetEncoding("iso-8859-1");
     private readonly Dictionary<string, IAllowedUser> _allowedBase64Accounts = new();
 
-    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger)
+    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger, IBootInfo bootInfo)
     {
 
         _authenticationSettings = authenticationSettings ?? throw new ArgumentNullException(nameof(authenticationSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
 
         _authenticationSettings.PropertyChanged += OnAuthenticationSettingsChanged;
 
@@ -62,7 +65,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
             var base64String = Convert.ToBase64String(bytes);
             if (!_allowedBase64Accounts.TryAdd(base64String, allowedUser))
-                _logger.LogWarning($"Duplicated user \"{allowedUser.Name}\" found in configuration file \"{Program.ExpectedConfigFilePath}\".");
+                _logger.LogWarning($"Duplicated user \"{allowedUser.Name}\" found in configuration file \"{_bootInfo.ConfigFileFullPath}\".");
         }
 
         _logger.LogInformation($"List of allowed users successfully {(isReload ? "reloaded" : "loaded")}, {_allowedBase64Accounts.Count} user(s) found (authentication is {(_authenticationSettings.Enabled ? "enabled" : "disabled")}).");

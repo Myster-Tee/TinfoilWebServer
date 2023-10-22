@@ -1,10 +1,12 @@
 using System;
 using System.IO;
 using System.Reflection;
+using CommandLine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.Booting;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
@@ -20,38 +22,50 @@ public class Program
 {
     private const bool RELOAD_CONFIG_ON_CHANGE = true;
 
-    public static string ExpectedConfigFilePath { get; private set; } = "";
 
-
-    private static string InitExpectedConfigFilePath()
+    private static IBootInfo BuildBootInfo(CmdOptions cmdOptions)
     {
-        var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-        return Path.GetFullPath($"{assemblyName}.config.json");
+        string configFilePathRaw;
+        if (cmdOptions.ConfigFilePath != null)
+        {
+            configFilePathRaw = cmdOptions.ConfigFilePath;
+        }
+        else
+        {
+            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+            configFilePathRaw = $"{assemblyName}.config.json";
+        }
+
+        return new BootInfo
+        {
+            CmdOptions = cmdOptions,
+            ConfigFileFullPath = Path.GetFullPath(configFilePathRaw)
+        };
     }
 
-    public static void Main(string[] args)
+    public static int Main(string[] args)
     {
         ILogger<Program>? logger = null;
         try
         {
-            // Change current application directory so that paths of config file and log file are relative to application directory
-            Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            var parserResult = Parser.Default.ParseArguments<CmdOptions>(args).WithParsed(_ => { });
+            if (parserResult.Tag == ParserResultType.NotParsed)
+                return 2;
 
-            ExpectedConfigFilePath = InitExpectedConfigFilePath();
-
+            var bootInfo = BuildBootInfo(parserResult.Value);
 
             var webHostBuilder = new WebHostBuilder();
             webHostBuilder
                 .SuppressStatusMessages(true)
                 .ConfigureAppConfiguration(builder =>
                 {
-                    builder.AddJsonFile(ExpectedConfigFilePath, optional: true, reloadOnChange: RELOAD_CONFIG_ON_CHANGE);
+                    builder.AddJsonFile(bootInfo.ConfigFileFullPath, optional: true, reloadOnChange: RELOAD_CONFIG_ON_CHANGE);
                 })
                 .ConfigureLogging((ctx, loggingBuilder) =>
                 {
                     loggingBuilder
-                        .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(options => { })
                         .AddConfiguration(ctx.Configuration.GetSection("Logging"))
+                        .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(_ => { })
                         .AddConsole(options =>
                         {
                             if (options.FormatterName == null) // NOTE: not null when formatter name is specified in config file
@@ -63,7 +77,7 @@ public class Program
                 {
                     services
                         .Configure<AppSettingsModel>(ctx.Configuration)
-
+                        .AddSingleton<IBootInfo>(_ => bootInfo)
                         .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
                         .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
                         .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().BlacklistSettings)
@@ -83,7 +97,6 @@ public class Program
                         .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
 
                         .AddTransient<IFileChangeHelper, FileChangeHelper>();
-
                 })
                 .UseKestrel((ctx, options) =>
                 {
@@ -117,6 +130,8 @@ public class Program
 
             // Wait for server to shutdown
             runTask.GetAwaiter().GetResult();
+
+            return 0;
         }
         catch (Exception ex)
         {
@@ -129,8 +144,12 @@ public class Program
                     $"Stack Trace:{Environment.NewLine}" +
                     $"{ex.StackTrace}"
                     );
-            Environment.ExitCode = 1;
+            return 1;
         }
     }
 
+
+
+
 }
+

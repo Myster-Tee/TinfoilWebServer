@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using TinfoilWebServer.Booting;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services.Middleware.BlackList;
@@ -15,6 +16,7 @@ public class BlacklistManager : IBlacklistManager, IDisposable
     private readonly IBlacklistSerializer _blacklistSerializer;
     private readonly IFileChangeHelper _fileChangeHelper;
     private readonly ILogger<BlacklistManager> _logger;
+    private readonly IBootInfo _bootInfo;
 
     private readonly object _lock = new();
     private readonly HashSet<IPAddress> _blacklistedIps = new();
@@ -23,12 +25,13 @@ public class BlacklistManager : IBlacklistManager, IDisposable
     private string? _blacklistFullFilePath;
 
 
-    public BlacklistManager(IBlacklistSettings blacklistSettings, IBlacklistSerializer blacklistSerializer, IFileChangeHelper fileChangeHelper, ILogger<BlacklistManager> logger)
+    public BlacklistManager(IBlacklistSettings blacklistSettings, IBlacklistSerializer blacklistSerializer, IFileChangeHelper fileChangeHelper, ILogger<BlacklistManager> logger, IBootInfo bootInfo)
     {
         _blacklistSettings = blacklistSettings ?? throw new ArgumentNullException(nameof(blacklistSettings));
         _blacklistSerializer = blacklistSerializer ?? throw new ArgumentNullException(nameof(blacklistSerializer));
         _fileChangeHelper = fileChangeHelper ?? throw new ArgumentNullException(nameof(fileChangeHelper));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
 
         _blacklistSettings.PropertyChanged += OnBlacklistSettingsChanged;
         _fileChangeHelper.FileChanged += OnBlacklistFileChanged;
@@ -160,7 +163,7 @@ public class BlacklistManager : IBlacklistManager, IDisposable
             if (blacklistFilePath.Length == 0)
             {
                 if (_blacklistSettings.Enabled)
-                    _logger.LogWarning($"IP blacklisting is enabled but blacklist file path is empty in configuration file \"{Program.ExpectedConfigFilePath}\", blacklisted IPs won't be saved.");
+                    _logger.LogWarning($"IP blacklisting is enabled but blacklist file path is empty in configuration file \"{_bootInfo.ConfigFileFullPath}\", blacklisted IPs won't be saved.");
             }
             else
             {
