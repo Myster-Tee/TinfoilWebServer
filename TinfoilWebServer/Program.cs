@@ -20,32 +20,12 @@ namespace TinfoilWebServer;
 
 public class Program
 {
-    private const bool RELOAD_CONFIG_ON_CHANGE = true;
-
-
-    private static IBootInfo BuildBootInfo(CmdOptions cmdOptions)
-    {
-        string configFilePathRaw;
-        if (cmdOptions.ConfigFilePath != null)
-        {
-            configFilePathRaw = cmdOptions.ConfigFilePath;
-        }
-        else
-        {
-            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
-            configFilePathRaw = $"{assemblyName}.config.json";
-        }
-
-        return new BootInfo
-        {
-            CmdOptions = cmdOptions,
-            ConfigFileFullPath = Path.GetFullPath(configFilePathRaw)
-        };
-    }
 
     public static int Main(string[] args)
     {
+        const bool RELOAD_CONFIG_ON_CHANGE = true;
         ILogger<Program>? logger = null;
+
         try
         {
             var parserResult = Parser.Default.ParseArguments<CmdOptions>(args).WithParsed(_ => { });
@@ -148,8 +128,25 @@ public class Program
         }
     }
 
+    private static IBootInfo BuildBootInfo(CmdOptions cmdOptions)
+    {
+        string configFilePathRaw;
+        if (cmdOptions.ConfigFilePath != null)
+        {
+            configFilePathRaw = cmdOptions.ConfigFilePath;
+        }
+        else
+        {
+            var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
+            configFilePathRaw = $"{assemblyName}.config.json";
+        }
 
-
+        return new BootInfo
+        {
+            CmdOptions = cmdOptions,
+            ConfigFileFullPath = Path.GetFullPath(configFilePathRaw)
+        };
+    }
 
 }
 
