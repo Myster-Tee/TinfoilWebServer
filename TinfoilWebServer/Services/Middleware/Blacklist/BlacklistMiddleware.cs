@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Settings;
 
-namespace TinfoilWebServer.Services.Middleware.BlackList;
+namespace TinfoilWebServer.Services.Middleware.Blacklist;
 
 public class BlacklistMiddleware : IBlacklistMiddleware
 {

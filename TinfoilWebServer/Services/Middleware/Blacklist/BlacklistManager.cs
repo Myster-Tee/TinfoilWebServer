@@ -1,14 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
+using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Booting;
 using TinfoilWebServer.Settings;
 
-namespace TinfoilWebServer.Services.Middleware.BlackList;
+namespace TinfoilWebServer.Services.Middleware.Blacklist;
 
 public class BlacklistManager : IBlacklistManager, IDisposable
 {

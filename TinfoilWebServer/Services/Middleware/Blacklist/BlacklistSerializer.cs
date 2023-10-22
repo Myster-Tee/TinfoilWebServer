@@ -5,7 +5,7 @@ using System.Net;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
-namespace TinfoilWebServer.Services.Middleware.BlackList;
+namespace TinfoilWebServer.Services.Middleware.Blacklist;
 
 public class BlacklistSerializer : IBlacklistSerializer
 {

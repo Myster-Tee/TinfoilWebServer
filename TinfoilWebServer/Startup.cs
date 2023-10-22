@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.Middleware.Authentication;
-using TinfoilWebServer.Services.Middleware.BlackList;
+using TinfoilWebServer.Services.Middleware.Blacklist;
 
 namespace TinfoilWebServer;
 

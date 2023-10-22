@@ -11,7 +11,7 @@ using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.Middleware.Authentication;
-using TinfoilWebServer.Services.Middleware.BlackList;
+using TinfoilWebServer.Services.Middleware.Blacklist;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 using TinfoilWebServer.Settings.ConfigModels;
