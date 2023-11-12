@@ -42,6 +42,14 @@ Run
 dotnet TinfoilWebServer.dll
 ```
 
+#### Command line options
+
+```
+  -c, --config    Custom location of the configuration file.
+  --help          Display this help screen.
+  --version       Display version information.
+```
+
 ## Setting up Tinfoil on your Switch
 
 1. Launch **Tinfoil**
