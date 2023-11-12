@@ -27,16 +27,6 @@ public interface IAppSettings : INotifyPropertyChanged
     string[] AllowedExt { get; }
 
     /// <summary>
-    /// The message displayed by Tinfoil at startup
-    /// </summary>
-    string? MessageOfTheDay { get; }
-
-    /// <summary>
-    /// A set of extra repositories sent to Tinfoil for scanning
-    /// </summary>
-    string[] ExtraRepositories { get; }
-
-    /// <summary>
     /// Cache expiration settings
     /// </summary>
     ICacheExpirationSettings CacheExpiration { get; }
@@ -50,6 +40,11 @@ public interface IAppSettings : INotifyPropertyChanged
     /// Blacklist settings
     /// </summary>
     IBlacklistSettings BlacklistSettings { get; }
+
+    /// <summary>
+    /// The path to a custom JSON index file
+    /// </summary>
+    string? CustomIndexPath { get; }
 
 }
 

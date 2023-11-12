@@ -1,9 +1,10 @@
 ﻿using System.Diagnostics.Contracts;
+using System.Text.Json.Nodes;
 
 namespace TinfoilWebServer.Services;
 
 public interface IJsonSerializer
 {
     [Pure]
-    string Serialize(object obj);
+    string Serialize(JsonObject obj);
 }

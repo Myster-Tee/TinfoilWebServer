@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Linq;
+using System.IO;
+using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
-using TinfoilWebServer.Models;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
@@ -22,26 +22,62 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
 
     private void OnAppSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(IAppSettings.MessageOfTheDay))
+        if (e.PropertyName == nameof(IAppSettings.CustomIndexPath))
         {
-            _logger.LogInformation("Message of the day updated.");
-        }
-        else if (e.PropertyName == nameof(IAppSettings.ExtraRepositories))
-        {
-            _logger.LogInformation("List of extra repositories updated.");
+            _logger.LogInformation("Custom index updated.");
         }
     }
 
-    public TinfoilIndex Build(VirtualDirectory virtualDirectory, string? userMessageOfTheDay)
+    public JsonObject Build(VirtualDirectory virtualDirectory, string? userMessageOfTheDay)
     {
-        var tinfoilIndex = new TinfoilIndex
-        {
-            Success = userMessageOfTheDay ?? _appSettings.MessageOfTheDay,
-            Files = virtualDirectory.GetDescendantFiles().Select(vf => new FileNfo { Size = vf.Size, Url = vf.BuildRelativeUrl(virtualDirectory) }).ToArray(),
-            Directories = _appSettings.ExtraRepositories
-        };
 
-        return tinfoilIndex;
+        JsonObject indexJsonObject;
+
+        using var fileStream = File.Open(_appSettings.CustomIndexPath, FileMode.Open);
+        var jsonNode = JsonNode.Parse(fileStream);
+        if (jsonNode is JsonObject jsonObject)
+        {
+            indexJsonObject = jsonObject;
+        }
+        else
+        {
+            indexJsonObject = new JsonObject();
+        }
+
+        JsonArray jsonFiles;
+        if (indexJsonObject.TryGetPropertyValue("files", out var filesJsonNode))
+        {
+            if (filesJsonNode is JsonArray jsonArray)
+                jsonFiles = jsonArray;
+            else
+            {
+                // TODO: loguer un message
+                jsonFiles = new JsonArray();
+                indexJsonObject["files"] = jsonFiles;
+            }
+        }
+        else
+        {
+            jsonFiles = new JsonArray();
+            indexJsonObject.Add("files", jsonFiles);
+        }
+
+        foreach (var vf in virtualDirectory.GetDescendantFiles())
+        {
+            jsonFiles.Add(new JsonObject
+            {
+                {"url", JsonValue.Create( vf.BuildRelativeUrl(virtualDirectory))},
+                {"size", JsonValue.Create(vf.Size)}
+            });
+        }
+
+        if (userMessageOfTheDay != null)
+        {
+            indexJsonObject["success"] = userMessageOfTheDay;
+        }
+
+
+        return indexJsonObject;
     }
 
 }

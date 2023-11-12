@@ -59,11 +59,6 @@ public class SummaryInfoLogger : ISummaryInfoLogger
 
         sb.AppendLine($"- Allowed extensions:{_appSettings.AllowedExt.ToMultilineString()}");
 
-        sb.AppendLine($"- Message of the day:");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}{_appSettings.MessageOfTheDay}");
-
-        sb.AppendLine($"- Extra repositories:{_appSettings.ExtraRepositories.ToMultilineString()}");
-
         var cacheExpiration = _appSettings.CacheExpiration;
         sb.AppendLine($"- Cache expiration:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {cacheExpiration.Enabled}");

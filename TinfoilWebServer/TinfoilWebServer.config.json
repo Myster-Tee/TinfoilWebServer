@@ -3,8 +3,7 @@
   "StripDirectoryNames": true,
   "ServeEmptyDirectories": false,
   "AllowedExt": [ "nsp", "nsz", "xci" ],
-  "MessageOfTheDay": "Hello World!",
-  "ExtraRepositories": [],
+  "CustomIndexPath": "CustomIndex.json",
   "CacheExpiration": {
     "Enabled": true,
     "ExpirationDelay": "01:00:00"

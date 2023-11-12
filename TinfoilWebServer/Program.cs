@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text.Json.Nodes;
 using CommandLine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -126,6 +127,12 @@ public class Program
                     );
             return 1;
         }
+    }
+
+    private static JsonObject Cc(IConfigurationSection getSection)
+    {
+
+        return new JsonObject();
     }
 
     private static IBootInfo BuildBootInfo(CmdOptions cmdOptions)

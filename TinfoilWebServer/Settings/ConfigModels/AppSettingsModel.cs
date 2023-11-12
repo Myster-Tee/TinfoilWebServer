@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.Configuration;
 
 namespace TinfoilWebServer.Settings.ConfigModels;
 
@@ -24,7 +28,11 @@ public class AppSettingsModel
     public AuthenticationSettingsModel? Authentication { get; set; }
 
     public BlacklistSettingsModel? Blacklist { get; set; }
+
+    public string? CustomIndexPath { get; set; }
 }
+
+
 
 public class CacheExpirationSettingsModel
 {

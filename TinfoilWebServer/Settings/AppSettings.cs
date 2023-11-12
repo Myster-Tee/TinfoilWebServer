@@ -11,12 +11,11 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     private readonly CacheExpirationSettings _cacheExpirationSettings = new();
     private readonly AuthenticationSettings _authenticationSettings = new();
     private readonly BlacklistSettings _blacklistSettings = new();
-    private string[] _servedDirectories;
+    private string[] _servedDirectories = null!;
     private bool _stripDirectoryNames;
     private bool _serveEmptyDirectories;
-    private string[] _allowedExt;
-    private string? _messageOfTheDay;
-    private string[] _extraRepositories;
+    private string[] _allowedExt = null!;
+    private string? _customIndexPath;
 
     public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel)
     {
@@ -35,8 +34,6 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         var allowedExt = appSettingsModel.AllowedExt;
         AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp" } : allowedExt;
-        MessageOfTheDay = appSettingsModel.MessageOfTheDay;
-        ExtraRepositories = appSettingsModel.ExtraRepositories ?? Array.Empty<string>();
 
         var cacheExpiration = appSettingsModel.CacheExpiration;
         _cacheExpirationSettings.Enabled = cacheExpiration?.Enabled ?? true;
@@ -58,6 +55,8 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         _blacklistSettings.FilePath = blacklistSettings?.FilePath ?? "IpBlacklist.txt";
         _blacklistSettings.MaxConsecutiveFailedAuth = blacklistSettings?.MaxConsecutiveFailedAuth ?? 3;
         _blacklistSettings.IsBehindProxy = blacklistSettings?.IsBehindProxy ?? false;
+
+        CustomIndexPath = appSettingsModel.CustomIndexPath;
     }
 
     public string[] ServedDirectories
@@ -84,23 +83,17 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _allowedExt, value);
     }
 
-    public string? MessageOfTheDay
-    {
-        get => _messageOfTheDay;
-        private set => SetField(ref _messageOfTheDay, value);
-    }
-
-    public string[] ExtraRepositories
-    {
-        get => _extraRepositories;
-        private set => SetField(ref _extraRepositories, value);
-    }
-
     public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;
 
     public IAuthenticationSettings Authentication => _authenticationSettings;
 
     public IBlacklistSettings BlacklistSettings => _blacklistSettings;
+
+    public string? CustomIndexPath
+    {
+        get => _customIndexPath;
+        private set => SetField(ref _customIndexPath, value);
+    }
 
     private class CacheExpirationSettings : NotifyPropertyChangedBase, ICacheExpirationSettings
     {
