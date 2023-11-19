@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.Contracts;
 using System.Text.Json.Nodes;
 
-namespace TinfoilWebServer.Services;
+namespace TinfoilWebServer.Services.JSON;
 
 public interface IJsonSerializer
 {

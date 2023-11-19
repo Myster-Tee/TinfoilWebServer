@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
-namespace TinfoilWebServer.Services;
+namespace TinfoilWebServer.Services.JSON;
 
 public class JsonSerializer : IJsonSerializer
 {
