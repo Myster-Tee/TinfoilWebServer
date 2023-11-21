@@ -47,7 +47,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
             {
                 Name = model.Name ?? "",
                 Password = model.Pwd ?? "",
-                MessageOfTheDay = model.MessageOfTheDay,
+                CustomIndexPath = model.CustomIndexPath,
             }).ToList();
 
         var blacklistSettings = appSettingsModel.Blacklist;
@@ -144,7 +144,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         public string Password { get; set; } = "";
 
-        public string? MessageOfTheDay { get; set; }
+        public string? CustomIndexPath { get; set; }
 
         public override bool Equals(object? obj)
         {
@@ -156,7 +156,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         public bool Equals(IAllowedUser other)
         {
-            return Name == other.Name && Password == other.Password && string.Equals(MessageOfTheDay, other.MessageOfTheDay);
+            return Name == other.Name && Password == other.Password && string.Equals(CustomIndexPath, other.CustomIndexPath);
         }
 
     }

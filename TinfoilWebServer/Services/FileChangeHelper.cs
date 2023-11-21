@@ -27,11 +27,11 @@ public sealed class FileChangeHelper : IFileChangeHelper
             throw new ArgumentNullException(nameof(fullFilePath));
 
         if (!Path.IsPathRooted(fullFilePath))
-            throw new ArgumentException($"The path of file to watch \"{fullFilePath}\" should be rooted.", nameof(fullFilePath));
+            throw new ArgumentException($@"The path of file to watch ""{fullFilePath}"" should be rooted.", nameof(fullFilePath));
 
         var directoryPath = Path.GetDirectoryName(fullFilePath);
         if (directoryPath == null)
-            throw new ArgumentException($"The directory of file to watch \"{fullFilePath}\" can't be determined.", nameof(fullFilePath));
+            throw new ArgumentException($@"The directory of file to watch ""{fullFilePath}"" can't be determined.", nameof(fullFilePath));
 
         StopWatching();
 
@@ -85,7 +85,9 @@ public sealed class FileChangeHelper : IFileChangeHelper
         }
         catch
         {
+            // ignored
         }
+
         fileSystemWatcher = null;
     }
 

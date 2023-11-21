@@ -57,7 +57,7 @@ public class AllowedUserModel
 
     public string? Pwd { get; set; }
 
-    public string? MessageOfTheDay { get; set; }
+    public string? CustomIndexPath { get; set; }
 }
 
 public class BlacklistSettingsModel

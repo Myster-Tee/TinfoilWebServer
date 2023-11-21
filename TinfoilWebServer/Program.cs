@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Reflection;
-using System.Text.Json.Nodes;
 using CommandLine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -61,6 +60,8 @@ public class Program
                     services
                         .Configure<AppSettingsModel>(ctx.Configuration)
                         .AddSingleton<IBootInfo>(_ => bootInfo)
+
+                        .AddSingleton<IAppSettings, AppSettings>()
                         .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
                         .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
                         .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().BlacklistSettings)
@@ -73,12 +74,12 @@ public class Program
                         .AddSingleton<IRequestManager, RequestManager>()
                         .AddSingleton<IJsonMerger, JsonMerger>()
                         .AddSingleton<IFileFilter, FileFilter>()
-                        .AddSingleton<IAppSettings, AppSettings>()
                         .AddSingleton<IVirtualItemFinder, VirtualItemFinder>()
                         .AddSingleton<IJsonSerializer, JsonSerializer>()
                         .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
                         .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
                         .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
+                        .AddSingleton<ICustomIndexManager, CustomIndexManager>()
 
                         .AddTransient<IFileChangeHelper, FileChangeHelper>();
                 })
@@ -130,12 +131,6 @@ public class Program
                     );
             return 1;
         }
-    }
-
-    private static JsonObject Cc(IConfigurationSection getSection)
-    {
-
-        return new JsonObject();
     }
 
     private static IBootInfo BuildBootInfo(CmdOptions cmdOptions)

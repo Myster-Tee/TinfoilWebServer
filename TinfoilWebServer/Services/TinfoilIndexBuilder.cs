@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
-using System.IO;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.Services.JSON;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 
@@ -11,11 +11,15 @@ namespace TinfoilWebServer.Services;
 public class TinfoilIndexBuilder : ITinfoilIndexBuilder
 {
     private readonly IAppSettings _appSettings;
+    private readonly ICustomIndexManager _customIndexManager;
+    private readonly IJsonMerger _jsonMerger;
     private readonly ILogger<TinfoilIndexBuilder> _logger;
 
-    public TinfoilIndexBuilder(IAppSettings appSettings, ILogger<TinfoilIndexBuilder> logger)
+    public TinfoilIndexBuilder(IAppSettings appSettings, ICustomIndexManager customIndexManager, IJsonMerger jsonMerger, ILogger<TinfoilIndexBuilder> logger)
     {
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
+        _customIndexManager = customIndexManager;
+        _jsonMerger = jsonMerger ?? throw new ArgumentNullException(nameof(jsonMerger));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _appSettings.PropertyChanged += OnAppSettingsChanged;
     }
@@ -28,40 +32,9 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         }
     }
 
-    public JsonObject Build(VirtualDirectory virtualDirectory, string? userMessageOfTheDay)
+    public JsonObject Build(VirtualDirectory virtualDirectory, string? userName)
     {
-
-        JsonObject indexJsonObject;
-
-        using var fileStream = File.Open(_appSettings.CustomIndexPath, FileMode.Open);
-        var jsonNode = JsonNode.Parse(fileStream);
-        if (jsonNode is JsonObject jsonObject)
-        {
-            indexJsonObject = jsonObject;
-        }
-        else
-        {
-            indexJsonObject = new JsonObject();
-        }
-
-        JsonArray jsonFiles;
-        if (indexJsonObject.TryGetPropertyValue("files", out var filesJsonNode))
-        {
-            if (filesJsonNode is JsonArray jsonArray)
-                jsonFiles = jsonArray;
-            else
-            {
-                // TODO: loguer un message
-                jsonFiles = new JsonArray();
-                indexJsonObject["files"] = jsonFiles;
-            }
-        }
-        else
-        {
-            jsonFiles = new JsonArray();
-            indexJsonObject.Add("files", jsonFiles);
-        }
-
+        var jsonFiles = new JsonArray();
         foreach (var vf in virtualDirectory.GetDescendantFiles())
         {
             jsonFiles.Add(new JsonObject
@@ -71,13 +44,14 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
             });
         }
 
-        if (userMessageOfTheDay != null)
+        var baseIndex = new JsonObject
         {
-            indexJsonObject["success"] = userMessageOfTheDay;
-        }
+            { "files", jsonFiles }
+        };
 
+        var mergedIndex = _jsonMerger.Merge(baseIndex, _customIndexManager.GetDefaultIndex(), _customIndexManager.GetUserIndex(userName));
 
-        return indexJsonObject;
+        return mergedIndex;
     }
 
 }

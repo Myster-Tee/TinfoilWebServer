@@ -10,9 +10,9 @@ public interface ITinfoilIndexBuilder
     /// Builds a Tinfoil index (https://blawar.github.io/tinfoil/custom_index/) from the specified VirtualDirectory
     /// </summary>
     /// <param name="virtualDirectory"></param>
-    /// <param name="userMessageOfTheDay"></param>
+    /// <param name="userName"></param>
     /// <returns></returns>
     [Pure]
-    JsonObject Build(VirtualDirectory virtualDirectory, string? userMessageOfTheDay);
+    JsonObject Build(VirtualDirectory virtualDirectory, string? userName);
 
 }

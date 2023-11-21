@@ -87,9 +87,9 @@ public interface IAllowedUser
     public string Password { get; }
 
     /// <summary>
-    /// A message of the day specific to this user
+    /// The path to a custom JSON index file
     /// </summary>
-    public string? MessageOfTheDay { get; }
+    string? CustomIndexPath { get; }
 
 }
 
