@@ -1,53 +1,65 @@
 # TinfoilWebServer
 
 ## Description
+
 Install your Nintendo Switch packages (NSP, NSZ, XCI, etc.) with [Tinfoil](https://tinfoil.io/Download) from your own server.
 
 All served files must have "[titleid]" in the file name to be recognized by Tinfoil to show up in "New Games", "New DLC", and "New Updates". Official Tinfoil documentation [here](https://blawar.github.io/tinfoil/network/).
 
 ## Download
+
 Releases page [here](https://github.com/Myster-Tee/TinfoilWebServer/releases).
+
+If you're downloading using macOS Safari, download your desired package by right-clicking on the link and selecting "Download Linked File", so Safari doesn't unzip the package automatically. Then you can unzip it afterwards using macOS's built-in Archive Utility.
 
 ## Requirements
 
 The requirements depend on the version you choose to download.
 
 ### Framework-Dependent version
+
 This version is lightweight but you'll need to install the [ASP.NET Core Runtime 6.X.X](https://dotnet.microsoft.com/download/dotnet/6.0) before running the server.
 
 ### Framework-Independent version
+
 No requirements but heavyweight.
 
 ## Running the server
 
 1. Unzip the desired distribution to a location of your choice
-1. Edit the configuration file *TinfoilWebServer.config.json* according to your needs
+1. Edit the configuration file _TinfoilWebServer.config.json_ according to your needs
 1. Start the server according to the chosen distribution
 
 ### Windows
+
 Run
-```
+
+```sh
 TinfoilWebServer.exe
 ```
 
-### Linux and OSX
+### Linux and macOS
+
 Run
-```
-TinfoilWebServer
+
+```sh
+./TinfoilWebServer
 ```
 
-### Portable version - Windows, Linux and OSX (Framework required)
+### Portable version - Windows, Linux and macOS (Framework required)
+
 Run
-```
+
+```sh
 dotnet TinfoilWebServer.dll
 ```
 
 #### Command line options
 
-```
-  -c, --config    Custom location of the configuration file.
-  --help          Display this help screen.
-  --version       Display version information.
+```txt
+-c, --config    Custom location of the configuration file.
+--help          Display this help screen.
+--version       Display version information.
 ```
 
 ## Setting up Tinfoil on your Switch
@@ -56,17 +68,16 @@ dotnet TinfoilWebServer.dll
 1. Go to **File Browser**
 1. Press **[-]** button to add a new server
 1. Set **Protocol** to HTTP or HTTPS according to the server configuration
-1. Set **Host** to any host pointing to your server (or the server IP address)  
-*The server IP address is logged at server startup*
+1. Set **Host** to any host pointing to your server (or the server IP address)
+   _The server IP address is logged at server startup_
 1. If authentication is enabled, set **Username** and **Password** to one of the allowed users
 1. Set **Title** to a name of your choice
-
 
 ## TinfoilWebServer.config.json format
 
 ```js
 {
-  "ServedDirectories": string[],        // ex: ["C:\\SomeDir\\WindowsDirWithPackages", "/dev/sda1/LinuxDirWithPackages", "."] !!! Don't forget to escape backslashes with another one !!!
+  "ServedDirectories": string[],        // ex: ["C:\\SomeDir\\WindowsDirWithPackages", "/dev/sda1/LinuxDirWithPackages", ".", "/Users/yourname/Documents/macOSDirWithPackages"] !!! Don't forget to escape backslashes with another one !!! No need to escape spaces
   "StripDirectoryNames": boolean,       // «true» to remove directories names in URLs of served files, «false» otherwise
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
   "AllowedExt": string[],               // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
@@ -128,9 +139,9 @@ dotnet TinfoilWebServer.dll
 ```
 
 #### Default settings
-- When *"Kestrel"* configuration is omitted, server listens to *http://localhost:5000/* and *https://localhost:5001*.
-- When *"AllowedExt"* is omitted, the following extensions *["xci", "nsz", "nsp"]* are used.
 
+- When _"Kestrel"_ configuration is omitted, server listens to _http://localhost:5000/_ and _https://localhost:5001_.
+- When _"AllowedExt"_ is omitted, the following extensions _["xci", "nsz", "nsp"]_ are used.
 
 ## Security considerations and recommendations
 
@@ -140,5 +151,5 @@ If you plan to open your server to the Internet network (WAN) instead of local n
 1. Enable authentication to restrict access to some specific users
 1. Serving directories with only Switch packages (without personal data)
 1. Serve only Switch packages file extensions
-1. Setup *StripDirectoryNames* setting to *true* to hide your personal folder tree organization
+1. Setup _StripDirectoryNames_ setting to _true_ to hide your personal folder tree organization
 1. Enable IP blacklistng feature
