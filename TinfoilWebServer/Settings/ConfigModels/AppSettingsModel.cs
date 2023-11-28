@@ -21,8 +21,6 @@ public class AppSettingsModel
 
     public string? MessageOfTheDay { get; set; }
 
-    public string[]? ExtraRepositories { get; set; }
-
     public CacheExpirationSettingsModel? CacheExpiration { get; set; }
 
     public AuthenticationSettingsModel? Authentication { get; set; }

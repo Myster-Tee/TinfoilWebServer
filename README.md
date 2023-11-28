@@ -71,7 +71,6 @@ dotnet TinfoilWebServer.dll
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
   "AllowedExt": string[],               // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
   "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
-  "ExtraRepositories": string[],        // A set of extra repositories sent to Tinfoil for scanning (see https://blawar.github.io/tinfoil/custom_index/ for more information)
   "CacheExpiration": {
     "Enable": boolean ,                 // «true» to enable cache expiration, «false» otherwise
     "ExpirationDelay": string,          // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s
@@ -90,7 +89,7 @@ dotnet TinfoilWebServer.dll
   "Blacklist": {
     "Enabled": boolean,                 // Enable or disable the IP blacklisting feature
     "FilePath": string,                 // The path of the file where to save blacklisted IPs
-    "MaxConsecutiveFailedAuth": number, // The number of consecutived unauthenticated requests to reach for blacklisting an IP
+    "MaxConsecutiveFailedAuth": number, // The maximum number of consecutive unauthenticated requests to reach for blacklisting an IP
     "IsBehindProxy": boolean            // When set to true, incoming IP address will be taken fromFo "X-Forwarded-For" header otherwise it will be taken from TCP/IP protocol
   },
   "Kestrel": {                          // Web server configuration, see https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-6.0 for more information
