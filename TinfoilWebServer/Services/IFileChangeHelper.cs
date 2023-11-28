@@ -1,12 +1,27 @@
-﻿namespace TinfoilWebServer.Services;
+﻿using System;
+using System.IO;
+
+namespace TinfoilWebServer.Services;
 
 
 /// <summary>
-/// Helper for tracking all changes of a file
+/// Helper for tracking all changes of a file for a given path
 /// </summary>
 public interface IFileChangeHelper
 {
 
+    /// <summary>
+    /// Starts to watch file changes.
+    /// The directory of the specified file should exist
+    /// </summary>
+    /// <param name="filePath">The path of the file to watch</param>
+    /// <param name="enableFileChangedEvent"></param>
+    IWatchedFile WatchFile(string filePath, bool enableFileChangedEvent = true);
+
+}
+
+public interface IWatchedFile : IDisposable
+{
     /// <summary>
     /// Triggered when the watched file needs to be reloaded or when the file doesn't exist anymore
     /// </summary>
@@ -15,26 +30,12 @@ public interface IFileChangeHelper
     /// <summary>
     /// True to enable <see cref="FileChanged"/> events, false otherwise
     /// </summary>
-    public bool EnableFileChangedEvent { get; set; }
+    public bool FileChangedEventEnabled { get; set; }
 
     /// <summary>
-    /// The full path of the watched file (<see cref="WatchFile"/>)
+    /// The path of the watched file
     /// </summary>
-    public string? WatchedFileFullPath { get; }
-
-    /// <summary>
-    /// Starts to watch file changes.
-    /// The directory of the specified file should exist
-    /// </summary>
-    /// <param name="fullFilePath">The rooted path of the file to watch</param>
-    /// <param name="enableFileChangedEvent"></param>
-    void WatchFile(string fullFilePath, bool enableFileChangedEvent);
-
-    /// <summary>
-    /// Stops watching the file
-    /// </summary>
-    /// <returns></returns>
-    bool StopWatching();
+    public string WatchedFilePath { get; }
 
 }
 
@@ -43,10 +44,14 @@ public delegate void FileChangedEventHandler(object sender, FileChangedEventHand
 
 public class FileChangedEventHandlerArgs
 {
-    public FileChangedEventHandlerArgs(string watchedFileFullPath)
-    {
-        WatchedFileFullPath = watchedFileFullPath;
-    }
+    public FileSystemEventArgs SystemEventArgs { get; }
 
     public string WatchedFileFullPath { get; private set; }
+
+    public FileChangedEventHandlerArgs(string watchedFileFullPath, FileSystemEventArgs fileSystemEventArgs)
+    {
+        SystemEventArgs = fileSystemEventArgs ?? throw new ArgumentNullException(nameof(fileSystemEventArgs));
+        WatchedFileFullPath = watchedFileFullPath ?? throw new ArgumentNullException(nameof(watchedFileFullPath));
+    }
+
 }

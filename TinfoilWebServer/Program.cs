@@ -80,8 +80,7 @@ public class Program
                         .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
                         .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
                         .AddSingleton<ICustomIndexManager, CustomIndexManager>()
-
-                        .AddTransient<IFileChangeHelper, FileChangeHelper>();
+                        .AddSingleton<IFileChangeHelper, FileChangeHelper>();
                 })
                 .UseKestrel((ctx, options) =>
                 {

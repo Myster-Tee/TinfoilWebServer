@@ -74,7 +74,7 @@ public interface IAuthenticationSettings : INotifyPropertyChanged
     public IReadOnlyList<IAllowedUser> Users { get; }
 }
 
-public interface IAllowedUser
+public interface IUserInfo
 {
     /// <summary>
     /// Name of the user
@@ -82,14 +82,18 @@ public interface IAllowedUser
     public string Name { get; }
 
     /// <summary>
-    /// The password of the allowed user
-    /// </summary>
-    public string Password { get; }
-
-    /// <summary>
     /// The path to a custom JSON index file
     /// </summary>
     string? CustomIndexPath { get; }
+}
+
+public interface IAllowedUser : IUserInfo
+{
+
+    /// <summary>
+    /// The password of the allowed user
+    /// </summary>
+    public string Password { get; }
 
 }
 

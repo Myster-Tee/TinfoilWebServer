@@ -14,8 +14,8 @@ public interface ICustomIndexManager
     /// <summary>
     /// Provides the JSON object corresponding to <see cref="IAllowedUser.CustomIndexPath"/> if defined.
     /// </summary>
-    /// <param name="userName"></param>
+    /// <param name="user"></param>
     /// <returns></returns>
-    JsonObject? GetUserIndex(string? userName);
+    JsonObject? GetUserIndex(IUserInfo? user);
 
 }

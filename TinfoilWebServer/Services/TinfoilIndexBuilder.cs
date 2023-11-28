@@ -32,7 +32,7 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         }
     }
 
-    public JsonObject Build(VirtualDirectory virtualDirectory, string? userName)
+    public JsonObject Build(VirtualDirectory virtualDirectory, IUserInfo? user)
     {
         var jsonFiles = new JsonArray();
         foreach (var vf in virtualDirectory.GetDescendantFiles())
@@ -49,7 +49,7 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
             { "files", jsonFiles }
         };
 
-        var mergedIndex = _jsonMerger.Merge(baseIndex, _customIndexManager.GetDefaultIndex(), _customIndexManager.GetUserIndex(userName));
+        var mergedIndex = _jsonMerger.Merge(baseIndex, _customIndexManager.GetDefaultIndex(), _customIndexManager.GetUserIndex(user));
 
         return mergedIndex;
     }

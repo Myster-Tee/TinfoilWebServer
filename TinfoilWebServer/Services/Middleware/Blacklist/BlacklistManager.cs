@@ -23,6 +23,7 @@ public class BlacklistManager : IBlacklistManager, IDisposable
 
     private readonly Dictionary<IPAddress, int> _consecutiveUnauthorizedPerIp = new();
     private string? _blacklistFullFilePath;
+    private IWatchedFile? _watchedFile;
 
 
     public BlacklistManager(IBlacklistSettings blacklistSettings, IBlacklistSerializer blacklistSerializer, IFileChangeHelper fileChangeHelper, ILogger<BlacklistManager> logger, IBootInfo bootInfo)
@@ -34,7 +35,6 @@ public class BlacklistManager : IBlacklistManager, IDisposable
         _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
 
         _blacklistSettings.PropertyChanged += OnBlacklistSettingsChanged;
-        _fileChangeHelper.FileChanged += OnBlacklistFileChanged;
     }
 
     private void OnBlacklistSettingsChanged(object? sender, PropertyChangedEventArgs e)
@@ -104,7 +104,8 @@ public class BlacklistManager : IBlacklistManager, IDisposable
 
     private void SafeSaveBlacklistedIps()
     {
-        _fileChangeHelper.EnableFileChangedEvent = false;
+        if (_watchedFile != null)
+            _watchedFile.FileChangedEventEnabled = false;
 
         try
         {
@@ -122,7 +123,8 @@ public class BlacklistManager : IBlacklistManager, IDisposable
             _logger.LogError(ex, $"Failed to save blacklisted IPs to \"{_blacklistFullFilePath}\": {ex.Message}");
         }
 
-        _fileChangeHelper.EnableFileChangedEvent = true;
+        if (_watchedFile != null)
+            _watchedFile.FileChangedEventEnabled = true;
     }
 
     public void ReportIpAuthorized(IPAddress ipAddress)
@@ -185,15 +187,22 @@ public class BlacklistManager : IBlacklistManager, IDisposable
 
     private void SafeInitializeBlacklistFileChangeDetection()
     {
-        _fileChangeHelper.StopWatching();
+        _watchedFile?.Dispose();
+
+        var blacklistFullFilePath = _blacklistFullFilePath;
+
+        if (string.IsNullOrWhiteSpace(blacklistFullFilePath))
+            return;
+
         try
         {
-            if (_blacklistFullFilePath != null)
-                _fileChangeHelper.WatchFile(_blacklistFullFilePath, true);
+            _watchedFile = _fileChangeHelper.WatchFile(blacklistFullFilePath);
+            _watchedFile.FileChanged += OnBlacklistFileChanged;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to watch changes of file \"{_blacklistFullFilePath}\": {ex.Message}");
+            _logger.LogError(ex, $"Failed to watch changes of file \"{blacklistFullFilePath}\": {ex.Message}");
+            _watchedFile?.Dispose();
         }
     }
 
@@ -228,6 +237,6 @@ public class BlacklistManager : IBlacklistManager, IDisposable
 
     public void Dispose()
     {
-        _fileChangeHelper.StopWatching();
+        _watchedFile?.Dispose();
     }
 }

@@ -46,9 +46,9 @@ public class RequestManager : IRequestManager
 
         if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualDirectory virtualDirectory)
         {
-            var userName  = (context.User as AuthenticatedUser)?.AllowedUser.Name;
+            var authenticatedUser  = context.User as AuthenticatedUser;
 
-            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory, userName);
+            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory, authenticatedUser);
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 

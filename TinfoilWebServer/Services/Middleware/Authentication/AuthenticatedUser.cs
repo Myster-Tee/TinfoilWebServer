@@ -5,14 +5,18 @@ using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services.Middleware.Authentication;
 
-public class AuthenticatedUser : ClaimsPrincipal
+public class AuthenticatedUser : ClaimsPrincipal, IUserInfo
 {
-    public AuthenticatedUser(IAllowedUser allowedUser)
+    private readonly IUserInfo _userInfo;
+
+    public AuthenticatedUser(IUserInfo userInfo)
     {
-        AllowedUser = allowedUser ?? throw new ArgumentNullException(nameof(allowedUser));
+        _userInfo = userInfo ?? throw new ArgumentNullException(nameof(userInfo));
     }
 
-    public override IIdentity? Identity => new GenericIdentity(AllowedUser.Name);
+    public override IIdentity? Identity => new GenericIdentity(_userInfo.Name);
 
-    public IAllowedUser AllowedUser { get; }
+    public string Name => _userInfo.Name;
+
+    public string? CustomIndexPath => _userInfo.CustomIndexPath;
 }
