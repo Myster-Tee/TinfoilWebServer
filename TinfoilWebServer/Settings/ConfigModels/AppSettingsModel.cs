@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using Microsoft.Extensions.Configuration;
 
 namespace TinfoilWebServer.Settings.ConfigModels;
+
+//TODO: check null deserialization
 
 /// <summary>
 /// Model of the JSON settings automatically deserialized by ASP.NET configuration system
@@ -29,8 +27,6 @@ public class AppSettingsModel
 
     public string? CustomIndexPath { get; set; }
 }
-
-
 
 public class CacheExpirationSettingsModel
 {

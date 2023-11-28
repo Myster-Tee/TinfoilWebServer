@@ -15,6 +15,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     private bool _stripDirectoryNames;
     private bool _serveEmptyDirectories;
     private string[] _allowedExt = null!;
+    private string? _messageOfTheDay;
     private string? _customIndexPath;
 
     public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel)
@@ -34,6 +35,8 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         var allowedExt = appSettingsModel.AllowedExt;
         AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp" } : allowedExt;
+
+        MessageOfTheDay = string.IsNullOrEmpty(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
 
         var cacheExpiration = appSettingsModel.CacheExpiration;
         _cacheExpirationSettings.Enabled = cacheExpiration?.Enabled ?? true;
@@ -81,6 +84,12 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     {
         get => _allowedExt;
         private set => SetField(ref _allowedExt, value);
+    }
+
+    public string? MessageOfTheDay
+    {
+        get => _messageOfTheDay;
+        private set => SetField(ref _messageOfTheDay, value);
     }
 
     public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;

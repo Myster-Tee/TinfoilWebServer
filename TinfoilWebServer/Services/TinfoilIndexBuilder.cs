@@ -26,7 +26,11 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
 
     private void OnAppSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(IAppSettings.CustomIndexPath))
+        if (e.PropertyName == nameof(IAppSettings.MessageOfTheDay))
+        {
+            _logger.LogInformation("Message of the day updated.");
+        }
+        else if (e.PropertyName == nameof(IAppSettings.CustomIndexPath))
         {
             _logger.LogInformation("Custom index updated.");
         }
@@ -46,10 +50,12 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
 
         var baseIndex = new JsonObject
         {
-            { "files", jsonFiles }
+            { "files", jsonFiles },
+            { "success", _appSettings.MessageOfTheDay }
         };
 
         var mergedIndex = _jsonMerger.Merge(baseIndex, _customIndexManager.GetDefaultIndex(), _customIndexManager.GetUserIndex(user));
+
 
         return mergedIndex;
     }

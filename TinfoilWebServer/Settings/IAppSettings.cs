@@ -27,6 +27,11 @@ public interface IAppSettings : INotifyPropertyChanged
     string[] AllowedExt { get; }
 
     /// <summary>
+    /// The message of the day
+    /// </summary>
+    string? MessageOfTheDay { get; }
+
+    /// <summary>
     /// Cache expiration settings
     /// </summary>
     ICacheExpirationSettings CacheExpiration { get; }
