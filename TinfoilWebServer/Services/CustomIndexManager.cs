@@ -78,7 +78,6 @@ public class CustomIndexManager : ICustomIndexManager
         }
     }
 
-
     private readonly IAuthenticationSettings _authenticationSettings;
     private readonly IAppSettings _appSettings;
     private readonly IFileChangeHelper _fileChangeHelper;
@@ -163,9 +162,8 @@ public class CustomIndexManager : ICustomIndexManager
         }
     }
 
-    public JsonObject? GetDefaultIndex()
+    public JsonObject? GetCustomIndex(string? customIndexPath)
     {
-        var customIndexPath = _appSettings.CustomIndexPath;
         if (string.IsNullOrWhiteSpace(customIndexPath))
             return null;
 
@@ -175,18 +173,4 @@ public class CustomIndexManager : ICustomIndexManager
         return cachedData.CustomIndex;
     }
 
-    public JsonObject? GetUserIndex(IUserInfo? user)
-    {
-        if (user == null)
-            return null;
-
-        var customIndexPath = user.CustomIndexPath;
-        if (string.IsNullOrWhiteSpace(customIndexPath))
-            return null;
-
-        if (!_cachedDataPerPath.TryGetValue(customIndexPath, out var cachedData))
-            return null;
-
-        return cachedData.CustomIndex;
-    }
 }

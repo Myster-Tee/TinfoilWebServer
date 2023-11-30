@@ -19,4 +19,6 @@ public class AuthenticatedUser : ClaimsPrincipal, IUserInfo
     public string Name => _userInfo.Name;
 
     public string? CustomIndexPath => _userInfo.CustomIndexPath;
+
+    public string? MessageOfTheDay => _userInfo.MessageOfTheDay;
 }

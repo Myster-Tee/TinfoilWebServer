@@ -1,21 +1,17 @@
 ﻿using System.Text.Json.Nodes;
-using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services;
 
+/// <summary>
+/// Provides all Custom Indexes which are referenced in settings
+/// </summary>
 public interface ICustomIndexManager
 {
     /// <summary>
-    /// Provides the JSON object corresponding to <see cref="IAppSettings.CustomIndexPath"/> if defined.
+    /// The raw path of the custom index as written in settings files
     /// </summary>
+    /// <param name="customIndexPath"></param>
     /// <returns></returns>
-    JsonObject? GetDefaultIndex();
-
-    /// <summary>
-    /// Provides the JSON object corresponding to <see cref="IAllowedUser.CustomIndexPath"/> if defined.
-    /// </summary>
-    /// <param name="user"></param>
-    /// <returns></returns>
-    JsonObject? GetUserIndex(IUserInfo? user);
+    JsonObject? GetCustomIndex(string? customIndexPath);
 
 }

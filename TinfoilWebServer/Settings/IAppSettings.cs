@@ -90,6 +90,12 @@ public interface IUserInfo
     /// The path to a custom JSON index file
     /// </summary>
     string? CustomIndexPath { get; }
+
+    /// <summary>
+    /// Message of the day for the user
+    /// </summary>
+    string? MessageOfTheDay { get; }
+
 }
 
 public interface IAllowedUser : IUserInfo

@@ -43,18 +43,22 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         {
             jsonFiles.Add(new JsonObject
             {
-                {"url", JsonValue.Create( vf.BuildRelativeUrl(virtualDirectory))},
-                {"size", JsonValue.Create(vf.Size)}
+                { "url", JsonValue.Create( vf.BuildRelativeUrl(virtualDirectory)) },
+                { "size", JsonValue.Create(vf.Size) }
             });
         }
 
         var baseIndex = new JsonObject
         {
             { "files", jsonFiles },
-            { "success", _appSettings.MessageOfTheDay }
+            { "success", user?.MessageOfTheDay ??  _appSettings.MessageOfTheDay }
         };
 
-        var mergedIndex = _jsonMerger.Merge(baseIndex, _customIndexManager.GetDefaultIndex(), _customIndexManager.GetUserIndex(user));
+        var defaultCustomIndex = _customIndexManager.GetCustomIndex(_appSettings.CustomIndexPath);
+
+        var userCustomIndex = _customIndexManager.GetCustomIndex(user?.CustomIndexPath);
+
+        var mergedIndex = _jsonMerger.Merge(baseIndex, defaultCustomIndex, userCustomIndex);
 
 
         return mergedIndex;

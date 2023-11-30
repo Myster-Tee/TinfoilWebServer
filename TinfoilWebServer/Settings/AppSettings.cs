@@ -26,6 +26,10 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         appSettingsModel.OnChange(InitializeFromModel);
     }
 
+    /// <summary>
+    /// Called when settings file is updated
+    /// </summary>
+    /// <param name="appSettingsModel"></param>
     private void InitializeFromModel(AppSettingsModel appSettingsModel)
     {
         var servedDirectories = appSettingsModel.ServedDirectories;
@@ -36,7 +40,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         var allowedExt = appSettingsModel.AllowedExt;
         AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp" } : allowedExt;
 
-        MessageOfTheDay = string.IsNullOrEmpty(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
+        MessageOfTheDay = string.IsNullOrWhiteSpace(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
 
         var cacheExpiration = appSettingsModel.CacheExpiration;
         _cacheExpirationSettings.Enabled = cacheExpiration?.Enabled ?? true;
@@ -45,17 +49,18 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         var authenticationSettings = appSettingsModel.Authentication;
         _authenticationSettings.Enabled = authenticationSettings?.Enabled ?? false;
         _authenticationSettings.WebBrowserAuthEnabled = authenticationSettings?.WebBrowserAuthEnabled ?? false;
-        _authenticationSettings.Users = (authenticationSettings?.Users ?? Array.Empty<AllowedUserModel>()).Select(model =>
+        _authenticationSettings.Users = (authenticationSettings?.Users ?? Array.Empty<AllowedUserModel>()).Select(allowedUserModel =>
             new AllowedUser
             {
-                Name = model.Name ?? "",
-                Password = model.Pwd ?? "",
-                CustomIndexPath = model.CustomIndexPath,
+                Name = allowedUserModel.Name ?? "",
+                Password = allowedUserModel.Pwd ?? "",
+                CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath) ? null : allowedUserModel.CustomIndexPath,
+                MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay) ? null : allowedUserModel.MessageOfTheDay
             }).ToList();
 
         var blacklistSettings = appSettingsModel.Blacklist;
         _blacklistSettings.Enabled = blacklistSettings?.Enabled ?? true;
-        _blacklistSettings.FilePath = blacklistSettings?.FilePath ?? "IpBlacklist.txt";
+        _blacklistSettings.FilePath = string.IsNullOrWhiteSpace(blacklistSettings?.FilePath) ? "IpBlacklist.txt" : blacklistSettings.FilePath;
         _blacklistSettings.MaxConsecutiveFailedAuth = blacklistSettings?.MaxConsecutiveFailedAuth ?? 3;
         _blacklistSettings.IsBehindProxy = blacklistSettings?.IsBehindProxy ?? false;
 
@@ -149,25 +154,13 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
     private class AllowedUser : IAllowedUser
     {
-        public string Name { get; set; } = "";
+        public string Name { get; init; } = "";
 
-        public string Password { get; set; } = "";
+        public string Password { get; init; } = "";
 
-        public string? CustomIndexPath { get; set; }
+        public string? CustomIndexPath { get; init; }
 
-        public override bool Equals(object? obj)
-        {
-            if (obj is not IAllowedUser other)
-                return false;
-
-            return Equals(other);
-        }
-
-        public bool Equals(IAllowedUser other)
-        {
-            return Name == other.Name && Password == other.Password && string.Equals(CustomIndexPath, other.CustomIndexPath);
-        }
-
+        public string? MessageOfTheDay { get; init; }
     }
 
 }

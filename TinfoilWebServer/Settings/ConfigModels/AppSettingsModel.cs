@@ -2,8 +2,6 @@
 
 namespace TinfoilWebServer.Settings.ConfigModels;
 
-//TODO: check null deserialization
-
 /// <summary>
 /// Model of the JSON settings automatically deserialized by ASP.NET configuration system
 /// </summary>
@@ -52,6 +50,8 @@ public class AllowedUserModel
     public string? Pwd { get; set; }
 
     public string? CustomIndexPath { get; set; }
+
+    public string? MessageOfTheDay { get; set; }
 }
 
 public class BlacklistSettingsModel
