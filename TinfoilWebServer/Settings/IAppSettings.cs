@@ -27,14 +27,14 @@ public interface IAppSettings : INotifyPropertyChanged
     string[] AllowedExt { get; }
 
     /// <summary>
-    /// The message displayed by Tinfoil at startup
+    /// The message of the day
     /// </summary>
     string? MessageOfTheDay { get; }
 
     /// <summary>
-    /// A set of extra repositories sent to Tinfoil for scanning
+    /// The path to a custom JSON index file
     /// </summary>
-    string[] ExtraRepositories { get; }
+    string? CustomIndexPath { get; }
 
     /// <summary>
     /// Cache expiration settings
@@ -79,7 +79,7 @@ public interface IAuthenticationSettings : INotifyPropertyChanged
     public IReadOnlyList<IAllowedUser> Users { get; }
 }
 
-public interface IAllowedUser
+public interface IUserInfo
 {
     /// <summary>
     /// Name of the user
@@ -87,14 +87,24 @@ public interface IAllowedUser
     public string Name { get; }
 
     /// <summary>
+    /// The path to a custom JSON index file
+    /// </summary>
+    string? CustomIndexPath { get; }
+
+    /// <summary>
+    /// Message of the day for the user
+    /// </summary>
+    string? MessageOfTheDay { get; }
+
+}
+
+public interface IAllowedUser : IUserInfo
+{
+
+    /// <summary>
     /// The password of the allowed user
     /// </summary>
     public string Password { get; }
-
-    /// <summary>
-    /// A message of the day specific to this user
-    /// </summary>
-    public string? MessageOfTheDay { get; }
 
 }
 

@@ -4,7 +4,7 @@
   "ServeEmptyDirectories": false,
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
-  "ExtraRepositories": [],
+  "CustomIndexPath": null,
   "CacheExpiration": {
     "Enabled": true,
     "ExpirationDelay": "01:00:00"
@@ -16,7 +16,8 @@
       {
         "Name": "JohnDoe",
         "Pwd": "123456",
-        "MessageOfTheDay": "Hello JohnDoe!"
+        "MessageOfTheDay": "Hello JohnDoe!",
+        "CustomIndexPath": null
       }
     ]
   },

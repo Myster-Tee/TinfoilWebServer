@@ -1,18 +1,20 @@
 ﻿using System.Diagnostics.Contracts;
-using TinfoilWebServer.Models;
+using System.Text.Json.Nodes;
 using TinfoilWebServer.Services.VirtualFS;
+using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services;
 
 public interface ITinfoilIndexBuilder
 {
+
     /// <summary>
-    /// Builds a <see cref="TinfoilIndex"/> model from the specified VirtualDirectory
+    /// Builds a Tinfoil index (https://blawar.github.io/tinfoil/custom_index/) from the specified VirtualDirectory
     /// </summary>
     /// <param name="virtualDirectory"></param>
-    /// <param name="userMessageOfTheDay"></param>
+    /// <param name="user"></param>
     /// <returns></returns>
     [Pure]
-    TinfoilIndex Build(VirtualDirectory virtualDirectory, string? userMessageOfTheDay);
+    JsonObject Build(VirtualDirectory virtualDirectory, IUserInfo? user);
 
 }

@@ -6,120 +6,118 @@ namespace TinfoilWebServer.Services;
 
 public sealed class FileChangeHelper : IFileChangeHelper
 {
-    private readonly ILogger<FileChangeHelper> _logger;
-    private FileSystemWatcher? _fileSystemWatcher;
+    private readonly ILogger<WatchedFile> _logger;
 
 
-    public FileChangeHelper(ILogger<FileChangeHelper> logger)
+    public FileChangeHelper(ILogger<WatchedFile> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
+    public IWatchedFile WatchFile(string filePath, bool enableFileChangedEvent = true)
+    {
+        return new WatchedFile(filePath, enableFileChangedEvent, _logger);
+    }
+
+}
+
+public class WatchedFile : IWatchedFile
+{
+    private readonly ILogger<WatchedFile> _logger;
+    private readonly FileSystemWatcher _fileSystemWatcher;
+
     public event FileChangedEventHandler? FileChanged;
 
-    public bool EnableFileChangedEvent { get; set; }
-
-    public string? WatchedFileFullPath { get; private set; }
-
-    public void WatchFile(string fullFilePath, bool enableFileChangedEvent)
+    public bool FileChangedEventEnabled
     {
-        if (fullFilePath == null)
-            throw new ArgumentNullException(nameof(fullFilePath));
+        get => _fileSystemWatcher.EnableRaisingEvents;
+        set => _fileSystemWatcher.EnableRaisingEvents = value;
+    }
 
-        if (!Path.IsPathRooted(fullFilePath))
-            throw new ArgumentException($"The path of file to watch \"{fullFilePath}\" should be rooted.", nameof(fullFilePath));
+    public string WatchedFilePath { get; }
 
-        var directoryPath = Path.GetDirectoryName(fullFilePath);
-        if (directoryPath == null)
-            throw new ArgumentException($"The directory of file to watch \"{fullFilePath}\" can't be determined.", nameof(fullFilePath));
+    public WatchedFile(string filePath, bool enableFileChangedEvent, ILogger<WatchedFile> logger)
+    {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        StopWatching();
+        if (filePath == null)
+            throw new ArgumentNullException(nameof(filePath));
+
+        var fullFilePath = Path.GetFullPath(filePath);
+
+        var fullDirPath = Path.GetDirectoryName(fullFilePath);
+        if (fullDirPath == null)
+            throw new ArgumentException($@"The directory of file to watch ""{filePath}"" can't be determined.", nameof(filePath));
+
+        var fileName = Path.GetFileName(filePath);
+
+        WatchedFilePath = filePath;
 
         try
         {
-            WatchedFileFullPath = fullFilePath;
-
-            _fileSystemWatcher = new FileSystemWatcher();
-            _fileSystemWatcher.BeginInit();
-            _fileSystemWatcher.Path = directoryPath;
-            _fileSystemWatcher.Filter = Path.GetFileName(fullFilePath);
+            _fileSystemWatcher = new FileSystemWatcher(fullDirPath, fileName);
             _fileSystemWatcher.IncludeSubdirectories = false;
-            _fileSystemWatcher.EnableRaisingEvents = true;
             _fileSystemWatcher.Changed += OnWatchedFileChanged;
             _fileSystemWatcher.Created += OnWatchedFileCreated;
             _fileSystemWatcher.Deleted += OnWatchedFileDeleted;
             _fileSystemWatcher.Renamed += OnWatchedFileRenamed;
             _fileSystemWatcher.Error += OnWatchedFileError;
-            _fileSystemWatcher.EndInit();
-
-            EnableFileChangedEvent = enableFileChangedEvent;
+            _fileSystemWatcher.EnableRaisingEvents = enableFileChangedEvent;
         }
         catch
         {
-            StopWatching();
+            Dispose();
             throw;
         }
     }
 
-    public bool StopWatching()
+    public void Dispose()
     {
-        var wasWatching = _fileSystemWatcher != null;
-        DisposeFileSystemWatcher(ref _fileSystemWatcher);
-        WatchedFileFullPath = null;
-        return wasWatching;
-    }
-
-    private void DisposeFileSystemWatcher(ref FileSystemWatcher? fileSystemWatcher)
-    {
-        if (fileSystemWatcher == null)
-            return;
-
         try
         {
-            fileSystemWatcher.Changed -= OnWatchedFileChanged;
-            fileSystemWatcher.Created -= OnWatchedFileCreated;
-            fileSystemWatcher.Deleted -= OnWatchedFileDeleted;
-            fileSystemWatcher.Renamed -= OnWatchedFileRenamed;
-            fileSystemWatcher.Error -= OnWatchedFileError;
-            fileSystemWatcher.Dispose();
+            _fileSystemWatcher.Changed -= OnWatchedFileChanged;
+            _fileSystemWatcher.Created -= OnWatchedFileCreated;
+            _fileSystemWatcher.Deleted -= OnWatchedFileDeleted;
+            _fileSystemWatcher.Renamed -= OnWatchedFileRenamed;
+            _fileSystemWatcher.Error -= OnWatchedFileError;
+            _fileSystemWatcher.Dispose();
         }
         catch
         {
+            //ignore
         }
-        fileSystemWatcher = null;
     }
 
     private void OnWatchedFileError(object sender, ErrorEventArgs e)
     {
         var ex = e.GetException();
-        _logger.LogError(ex, $"Change detection of file \"{WatchedFileFullPath}\" deactivated due to an unexpected failure: {ex.Message}");
-
-        StopWatching();
+        _logger.LogError(ex, $"An error occurred while watching changes of file \"{WatchedFilePath}\": {ex.Message}");
     }
 
     private void OnWatchedFileRenamed(object sender, RenamedEventArgs e)
     {
-        NotifyFileChanged();
+        NotifyFileChanged(e);
     }
 
     private void OnWatchedFileDeleted(object sender, FileSystemEventArgs e)
     {
-        NotifyFileChanged();
+        NotifyFileChanged(e);
     }
 
     private void OnWatchedFileCreated(object sender, FileSystemEventArgs e)
     {
-        NotifyFileChanged();
+        NotifyFileChanged(e);
     }
 
     private void OnWatchedFileChanged(object sender, FileSystemEventArgs e)
     {
-        NotifyFileChanged();
+        NotifyFileChanged(e);
     }
 
-    private void NotifyFileChanged()
+    private void NotifyFileChanged(FileSystemEventArgs e)
     {
-        if (EnableFileChangedEvent)
-            FileChanged?.Invoke(this, new FileChangedEventHandlerArgs(this.WatchedFileFullPath!));
+        if (FileChangedEventEnabled)
+            FileChanged?.Invoke(this, new FileChangedEventHandlerArgs(this.WatchedFilePath, e));
     }
+
 }

@@ -11,12 +11,12 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     private readonly CacheExpirationSettings _cacheExpirationSettings = new();
     private readonly AuthenticationSettings _authenticationSettings = new();
     private readonly BlacklistSettings _blacklistSettings = new();
-    private string[] _servedDirectories;
+    private string[] _servedDirectories = null!;
     private bool _stripDirectoryNames;
     private bool _serveEmptyDirectories;
-    private string[] _allowedExt;
+    private string[] _allowedExt = null!;
     private string? _messageOfTheDay;
-    private string[] _extraRepositories;
+    private string? _customIndexPath;
 
     public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel)
     {
@@ -26,6 +26,10 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         appSettingsModel.OnChange(InitializeFromModel);
     }
 
+    /// <summary>
+    /// Called when settings file is updated
+    /// </summary>
+    /// <param name="appSettingsModel"></param>
     private void InitializeFromModel(AppSettingsModel appSettingsModel)
     {
         var servedDirectories = appSettingsModel.ServedDirectories;
@@ -35,8 +39,8 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         var allowedExt = appSettingsModel.AllowedExt;
         AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp" } : allowedExt;
-        MessageOfTheDay = appSettingsModel.MessageOfTheDay;
-        ExtraRepositories = appSettingsModel.ExtraRepositories ?? Array.Empty<string>();
+
+        MessageOfTheDay = string.IsNullOrWhiteSpace(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
 
         var cacheExpiration = appSettingsModel.CacheExpiration;
         _cacheExpirationSettings.Enabled = cacheExpiration?.Enabled ?? true;
@@ -45,19 +49,22 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         var authenticationSettings = appSettingsModel.Authentication;
         _authenticationSettings.Enabled = authenticationSettings?.Enabled ?? false;
         _authenticationSettings.WebBrowserAuthEnabled = authenticationSettings?.WebBrowserAuthEnabled ?? false;
-        _authenticationSettings.Users = (authenticationSettings?.Users ?? Array.Empty<AllowedUserModel>()).Select(model =>
+        _authenticationSettings.Users = (authenticationSettings?.Users ?? Array.Empty<AllowedUserModel>()).Select(allowedUserModel =>
             new AllowedUser
             {
-                Name = model.Name ?? "",
-                Password = model.Pwd ?? "",
-                MessageOfTheDay = model.MessageOfTheDay,
+                Name = allowedUserModel.Name ?? "",
+                Password = allowedUserModel.Pwd ?? "",
+                CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath) ? null : allowedUserModel.CustomIndexPath,
+                MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay) ? null : allowedUserModel.MessageOfTheDay
             }).ToList();
 
         var blacklistSettings = appSettingsModel.Blacklist;
         _blacklistSettings.Enabled = blacklistSettings?.Enabled ?? true;
-        _blacklistSettings.FilePath = blacklistSettings?.FilePath ?? "IpBlacklist.txt";
+        _blacklistSettings.FilePath = string.IsNullOrWhiteSpace(blacklistSettings?.FilePath) ? "IpBlacklist.txt" : blacklistSettings.FilePath;
         _blacklistSettings.MaxConsecutiveFailedAuth = blacklistSettings?.MaxConsecutiveFailedAuth ?? 3;
         _blacklistSettings.IsBehindProxy = blacklistSettings?.IsBehindProxy ?? false;
+
+        CustomIndexPath = appSettingsModel.CustomIndexPath;
     }
 
     public string[] ServedDirectories
@@ -90,10 +97,10 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _messageOfTheDay, value);
     }
 
-    public string[] ExtraRepositories
+    public string? CustomIndexPath
     {
-        get => _extraRepositories;
-        private set => SetField(ref _extraRepositories, value);
+        get => _customIndexPath;
+        private set => SetField(ref _customIndexPath, value);
     }
 
     public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;
@@ -147,25 +154,13 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
     private class AllowedUser : IAllowedUser
     {
-        public string Name { get; set; } = "";
+        public string Name { get; init; } = "";
 
-        public string Password { get; set; } = "";
+        public string Password { get; init; } = "";
 
-        public string? MessageOfTheDay { get; set; }
+        public string? CustomIndexPath { get; init; }
 
-        public override bool Equals(object? obj)
-        {
-            if (obj is not IAllowedUser other)
-                return false;
-
-            return Equals(other);
-        }
-
-        public bool Equals(IAllowedUser other)
-        {
-            return Name == other.Name && Password == other.Password && string.Equals(MessageOfTheDay, other.MessageOfTheDay);
-        }
-
+        public string? MessageOfTheDay { get; init; }
     }
 
 }

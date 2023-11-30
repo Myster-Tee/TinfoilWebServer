@@ -10,6 +10,7 @@ using TinfoilWebServer.Booting;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
+using TinfoilWebServer.Services.JSON;
 using TinfoilWebServer.Services.Middleware.Authentication;
 using TinfoilWebServer.Services.Middleware.Blacklist;
 using TinfoilWebServer.Services.VirtualFS;
@@ -23,6 +24,7 @@ public class Program
 
     public static int Main(string[] args)
     {
+
         const bool RELOAD_CONFIG_ON_CHANGE = true;
         ILogger<Program>? logger = null;
 
@@ -58,6 +60,8 @@ public class Program
                     services
                         .Configure<AppSettingsModel>(ctx.Configuration)
                         .AddSingleton<IBootInfo>(_ => bootInfo)
+
+                        .AddSingleton<IAppSettings, AppSettings>()
                         .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
                         .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
                         .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().BlacklistSettings)
@@ -68,15 +72,15 @@ public class Program
                         .AddSingleton<IBlacklistManager, BlacklistManager>()
                         .AddSingleton<IBlacklistSerializer, BlacklistSerializer>()
                         .AddSingleton<IRequestManager, RequestManager>()
+                        .AddSingleton<IJsonMerger, JsonMerger>()
                         .AddSingleton<IFileFilter, FileFilter>()
-                        .AddSingleton<IAppSettings, AppSettings>()
                         .AddSingleton<IVirtualItemFinder, VirtualItemFinder>()
                         .AddSingleton<IJsonSerializer, JsonSerializer>()
                         .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
                         .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
                         .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
-
-                        .AddTransient<IFileChangeHelper, FileChangeHelper>();
+                        .AddSingleton<ICustomIndexManager, CustomIndexManager>()
+                        .AddSingleton<IFileChangeHelper, FileChangeHelper>();
                 })
                 .UseKestrel((ctx, options) =>
                 {

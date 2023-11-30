@@ -17,7 +17,7 @@ public class AppSettingsModel
 
     public string? MessageOfTheDay { get; set; }
 
-    public string[]? ExtraRepositories { get; set; }
+    public string? CustomIndexPath { get; set; }
 
     public CacheExpirationSettingsModel? CacheExpiration { get; set; }
 
@@ -48,6 +48,8 @@ public class AllowedUserModel
     public string? Name { get; set; }
 
     public string? Pwd { get; set; }
+
+    public string? CustomIndexPath { get; set; }
 
     public string? MessageOfTheDay { get; set; }
 }
