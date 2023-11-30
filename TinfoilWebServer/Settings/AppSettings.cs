@@ -97,17 +97,17 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _messageOfTheDay, value);
     }
 
-    public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;
-
-    public IAuthenticationSettings Authentication => _authenticationSettings;
-
-    public IBlacklistSettings BlacklistSettings => _blacklistSettings;
-
     public string? CustomIndexPath
     {
         get => _customIndexPath;
         private set => SetField(ref _customIndexPath, value);
     }
+
+    public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;
+
+    public IAuthenticationSettings Authentication => _authenticationSettings;
+
+    public IBlacklistSettings BlacklistSettings => _blacklistSettings;
 
     private class CacheExpirationSettings : NotifyPropertyChangedBase, ICacheExpirationSettings
     {

@@ -17,13 +17,13 @@ public class AppSettingsModel
 
     public string? MessageOfTheDay { get; set; }
 
+    public string? CustomIndexPath { get; set; }
+
     public CacheExpirationSettingsModel? CacheExpiration { get; set; }
 
     public AuthenticationSettingsModel? Authentication { get; set; }
 
     public BlacklistSettingsModel? Blacklist { get; set; }
-
-    public string? CustomIndexPath { get; set; }
 }
 
 public class CacheExpirationSettingsModel

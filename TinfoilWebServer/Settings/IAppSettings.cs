@@ -32,6 +32,11 @@ public interface IAppSettings : INotifyPropertyChanged
     string? MessageOfTheDay { get; }
 
     /// <summary>
+    /// The path to a custom JSON index file
+    /// </summary>
+    string? CustomIndexPath { get; }
+
+    /// <summary>
     /// Cache expiration settings
     /// </summary>
     ICacheExpirationSettings CacheExpiration { get; }
@@ -45,11 +50,6 @@ public interface IAppSettings : INotifyPropertyChanged
     /// Blacklist settings
     /// </summary>
     IBlacklistSettings BlacklistSettings { get; }
-
-    /// <summary>
-    /// The path to a custom JSON index file
-    /// </summary>
-    string? CustomIndexPath { get; }
 
 }
 

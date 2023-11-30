@@ -16,7 +16,8 @@
       {
         "Name": "JohnDoe",
         "Pwd": "123456",
-        "MessageOfTheDay": "Hello JohnDoe!"
+        "MessageOfTheDay": "Hello JohnDoe!",
+        "CustomIndexPath": null
       }
     ]
   },
