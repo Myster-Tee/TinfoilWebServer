@@ -10,7 +10,7 @@ All served files must have "[titleid]" in the file name to be recognized by Tinf
 
 Releases page [here](https://github.com/Myster-Tee/TinfoilWebServer/releases).
 
-If you're downloading using macOS Safari, download your desired package by right-clicking on the link and selecting "Download Linked File", so Safari doesn't unzip the package automatically. Then you can unzip it afterwards using macOS's built-in Archive Utility.
+** If you're downloading using macOS Safari, download your desired package by right-clicking on the link and selecting "Download Linked File", so Safari doesn't unzip the package automatically. Then you can unzip it afterwards using macOS's built-in Archive Utility.*
 
 ## Requirements
 
@@ -82,6 +82,7 @@ dotnet TinfoilWebServer.dll
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
   "AllowedExt": string[],               // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
   "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
+  "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "CacheExpiration": {
     "Enable": boolean ,                 // «true» to enable cache expiration, «false» otherwise
     "ExpirationDelay": string,          // Index cache expiration time, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s
@@ -137,10 +138,20 @@ dotnet TinfoilWebServer.dll
 }
 ```
 
-#### Default settings
+### Default settings
 
 - When _"Kestrel"_ configuration is omitted, server listens to _http://localhost:5000/_ and _https://localhost:5001_.
 - When _"AllowedExt"_ is omitted, the following extensions _["xci", "nsz", "nsp"]_ are used.
+
+### Custom Index
+
+Specifying a custom index in the configuration file allows to set (or combine) any extra property described in [Tinfoil Custom Index documentation](https://blawar.github.io/tinfoil/custom_index/).  
+For example, using the JSON below, it is possible to enrich the served files with custom files **out of served directories**.
+```
+{
+  "files": ["https://some/other/url1", "https://some/other/url2"] // Will be combined with served files
+}
+```
 
 ## Security considerations and recommendations
 
