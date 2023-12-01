@@ -84,14 +84,12 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     /// Add the specified file to the virtual parent directory and ensure the uniqueness of the mapped key
     /// </summary>
     /// <param name="parent"></param>
-    /// <param name="subFilePath"></param>
-    private void SafePopulateFile(VirtualDirectory parent, string subFilePath)
+    /// <param name="subFile"></param>
+    private void SafePopulateFile(VirtualDirectory parent, FileInfo subFile)
     {
         try
         {
-            var fileInfo = new FileInfo(subFilePath);
-
-            var keyGenerator = new KeyGenerator(fileInfo.Name);
+            var keyGenerator = new KeyGenerator(subFile.Name);
 
             string key;
             do
@@ -99,11 +97,11 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
                 key = keyGenerator.GetNextKey();
             } while (parent.ChildExists(key));
 
-            parent.AddFile(new VirtualFile(key, subFilePath, fileInfo.Length)); // Length property can throw when file doesn't exist anymore
+            parent.AddFile(new VirtualFile(key, subFile.FullName, subFile.Length)); // Length property can throw when file doesn't exist anymore
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to populate file \"{subFilePath}\" to served files.");
+            _logger.LogError(ex, $"Failed to populate file \"{subFile}\" to served files.");
         }
     }
 
@@ -112,49 +110,50 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     {
         var virtualFileSystemRoot = new VirtualFileSystemRoot();
 
-        var remainingDirsToBrowse = new List<string>();
+        var remainingDirsToBrowse = new List<DirectoryInfo>();
 
         foreach (var servedDirectoryFullPath in servedDirectories.Select(ToFullPath))
         {
-            if (Directory.Exists(servedDirectoryFullPath))
-                remainingDirsToBrowse.Add(servedDirectoryFullPath);
+            var directory = new DirectoryInfo(servedDirectoryFullPath);
+            if (directory.Exists)
+                remainingDirsToBrowse.Add(directory);
             else
                 _logger.LogError($"Served directory \"{servedDirectoryFullPath}\" not found (or access denied).");
         }
 
-        while (remainingDirsToBrowse.TryRemoveFirst(out var dirPath))
+        while (remainingDirsToBrowse.TryRemoveFirst(out var dir))
         {
-            string[]? subFilePaths = null;
+            FileInfo[]? subFiles = null;
             try
             {
-                subFilePaths = Directory.GetFiles(dirPath);
+                subFiles = dir.GetFiles();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to list files of \"{dirPath}\": {ex.Message}");
+                _logger.LogError(ex, $"Failed to list files of \"{dir}\": {ex.Message}");
             }
 
-            if (subFilePaths != null)
+            if (subFiles != null)
             {
-                foreach (var subFilePath in subFilePaths)
+                foreach (var subFile in subFiles)
                 {
-                    if (_fileFilter.IsFileAllowed(subFilePath))
-                        SafePopulateFile(virtualFileSystemRoot, subFilePath);
+                    if (_fileFilter.IsFileAllowed(subFile.Name))
+                        SafePopulateFile(virtualFileSystemRoot, subFile);
                 }
             }
 
-            string[]? subDirectoryPaths = null;
+            DirectoryInfo[]? subDirs = null;
             try
             {
-                subDirectoryPaths = Directory.GetDirectories(dirPath);
+                subDirs = dir.GetDirectories();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to list directories of \"{dirPath}\": {ex.Message}");
+                _logger.LogError(ex, $"Failed to list directories of \"{dir}\": {ex.Message}");
             }
 
-            if (subDirectoryPaths != null)
-                remainingDirsToBrowse.AddRange(subDirectoryPaths);
+            if (subDirs != null)
+                remainingDirsToBrowse.AddRange(subDirs);
         }
 
         return virtualFileSystemRoot;
@@ -200,22 +199,22 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
                 remainingDirsToBrowse.AddRange(virtualDir.Directories);
             }
 
-            string[]? subFilePaths = null;
+            FileInfo[]? subFiles = null;
             try
             {
-                subFilePaths = Directory.GetFiles(virtualDir.FullLocalPath);
+                subFiles = new DirectoryInfo(virtualDir.FullLocalPath).GetFiles();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Failed to list files of \"{virtualDir.FullLocalPath}\": {ex.Message}");
             }
 
-            if (subFilePaths != null)
+            if (subFiles != null)
             {
-                foreach (var subFilePath in subFilePaths)
+                foreach (var subFile in subFiles)
                 {
-                    if (_fileFilter.IsFileAllowed(subFilePath))
-                        SafePopulateFile(virtualDir, subFilePath);
+                    if (_fileFilter.IsFileAllowed(subFile.Name))
+                        SafePopulateFile(virtualDir, subFile);
                 }
             }
         }

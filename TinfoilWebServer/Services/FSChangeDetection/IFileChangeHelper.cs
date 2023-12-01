@@ -14,9 +14,9 @@ public interface IFileChangeHelper
     /// Starts to watch file changes.
     /// The directory of the specified file should exist
     /// </summary>
-    /// <param name="filePath">The path of the file to watch</param>
+    /// <param name="file">The file to watch</param>
     /// <param name="enableChangeEvent"></param>
-    IWatchedFile WatchFile(string filePath, bool enableChangeEvent = true);
+    IWatchedFile WatchFile(FileInfo file, bool enableChangeEvent = true);
 
 }
 
@@ -35,7 +35,7 @@ public interface IWatchedFile : IDisposable
     /// <summary>
     /// The path of the watched file
     /// </summary>
-    public string WatchedFilePath { get; }
+    public FileInfo File { get; }
 
 }
 
@@ -46,11 +46,11 @@ public class FileChangedEventHandlerArgs
 {
     public FileSystemEventArgs SystemEventArgs { get; }
 
-    public string WatchedFilePath { get; private set; }
+    public FileInfo File { get; private set; }
 
-    public FileChangedEventHandlerArgs(string watchedFilePath, FileSystemEventArgs fileSystemEventArgs)
+    public FileChangedEventHandlerArgs(FileInfo watchedFile, FileSystemEventArgs fileSystemEventArgs)
     {
         SystemEventArgs = fileSystemEventArgs ?? throw new ArgumentNullException(nameof(fileSystemEventArgs));
-        WatchedFilePath = watchedFilePath ?? throw new ArgumentNullException(nameof(watchedFilePath));
+        File = watchedFile ?? throw new ArgumentNullException(nameof(watchedFile));
     }
 }

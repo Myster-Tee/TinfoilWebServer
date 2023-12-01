@@ -16,23 +16,20 @@ public class WatchedFile : WatchedPathFiltered, IWatchedFile
         set => _fileSystemWatcher.EnableRaisingEvents = value;
     }
 
-    public string WatchedFilePath { get; }
+    public FileInfo File { get; }
 
-    public WatchedFile(string filePath, bool enableChangeEvent, ILogger<WatchedFile> logger) : base(logger)
+    public WatchedFile(FileInfo file, bool enableChangeEvent, ILogger<WatchedFile> logger) : base(logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        WatchedFilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+        File = file ?? throw new ArgumentNullException(nameof(file));
 
-        var fullFilePath = Path.GetFullPath(filePath);
 
-        var fullDirPath = Path.GetDirectoryName(fullFilePath);
-        if (fullDirPath == null)
-            throw new ArgumentException($@"The directory of file to watch ""{filePath}"" can't be determined.", nameof(filePath));
+        var fileDirectory =  file.Directory;
+        if (fileDirectory == null)
+            throw new ArgumentException($@"The directory of file to watch ""{file}"" can't be determined.", nameof(file));
 
-        var fileName = Path.GetFileName(filePath);
-
-        _fileSystemWatcher.Path = fullDirPath;
-        _fileSystemWatcher.Filter = fileName;
+        _fileSystemWatcher.Path = fileDirectory.FullName;
+        _fileSystemWatcher.Filter = file.Name;
         _fileSystemWatcher.IncludeSubdirectories = false;
         _fileSystemWatcher.EnableRaisingEvents = enableChangeEvent;
     }
@@ -40,13 +37,13 @@ public class WatchedFile : WatchedPathFiltered, IWatchedFile
     protected override void OnError(ErrorEventArgs e)
     {
         var ex = e.GetException();
-        _logger.LogError(ex, $"An error occurred while watching changes of file \"{WatchedFilePath}\": {ex.Message}");
+        _logger.LogError(ex, $"An error occurred while watching changes of file \"{File}\": {ex.Message}");
     }
 
     protected override void OnChange(FileSystemEventArgs e)
     {
         if (FileChangedEventEnabled)
-            FileChanged?.Invoke(this, new FileChangedEventHandlerArgs(WatchedFilePath, e));
+            FileChanged?.Invoke(this, new FileChangedEventHandlerArgs(File, e));
     }
 
 

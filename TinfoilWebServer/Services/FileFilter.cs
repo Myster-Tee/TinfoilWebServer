@@ -14,12 +14,12 @@ public class FileFilter : IFileFilter
         _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
     }
 
-    public bool IsFileAllowed(string? filePath)
+    public bool IsFileAllowed(string? file)
     {
-        if (filePath == null)
+        if (file == null)
             return false;
 
-        var currentExtension = Path.GetExtension(filePath).TrimStart('.');
+        var currentExtension = Path.GetExtension(file).TrimStart('.');
         var ext = _appSettings.AllowedExt.FirstOrDefault(allowedExtension => string.Equals(allowedExtension, currentExtension, StringComparison.OrdinalIgnoreCase));
         return ext != null;
     }

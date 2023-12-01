@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Microsoft.Extensions.Logging;
 
 namespace TinfoilWebServer.Services.FSChangeDetection;
@@ -13,9 +14,9 @@ public class FileChangeHelper : IFileChangeHelper
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public IWatchedFile WatchFile(string filePath, bool enableChangeEvent = true)
+    public IWatchedFile WatchFile(FileInfo file, bool enableChangeEvent = true)
     {
-        return new WatchedFile(filePath, enableChangeEvent, _logger);
+        return new WatchedFile(file, enableChangeEvent, _logger);
     }
 
 }

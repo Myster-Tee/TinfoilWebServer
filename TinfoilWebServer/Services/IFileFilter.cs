@@ -6,5 +6,5 @@ public interface IFileFilter
 {
 
     [Pure]
-    bool IsFileAllowed(string? filePath);
+    bool IsFileAllowed(string? file);
 }

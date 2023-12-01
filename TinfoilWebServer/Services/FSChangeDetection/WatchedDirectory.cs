@@ -6,6 +6,7 @@ namespace TinfoilWebServer.Services.FSChangeDetection;
 
 public class WatchedDirectory : WatchedPathFiltered, IWatchedDirectory
 {
+
     private readonly ILogger<WatchedDirectory> _logger;
 
     public event DirectoryChangedEventHandler? DirectoryChanged;
