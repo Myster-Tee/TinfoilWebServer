@@ -20,7 +20,7 @@ public class Startup
         app.UseMiddleware<IBasicAuthMiddleware>();
         app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();                         //Just to force initialization without waiting for first request
         app.ApplicationServices.GetRequiredService<IBlacklistManager>().Initialize();
-        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().Initialize();  //Just to force initialization without waiting for first request
+        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().Refresh();  //Just to force initialization without waiting for first request
         app.Run(requestManager.OnRequest);
     }
 

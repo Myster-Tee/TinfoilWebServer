@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace TinfoilWebServer.Services;
+namespace TinfoilWebServer.Services.FSChangeDetection;
 
 
 /// <summary>
@@ -15,8 +15,8 @@ public interface IFileChangeHelper
     /// The directory of the specified file should exist
     /// </summary>
     /// <param name="filePath">The path of the file to watch</param>
-    /// <param name="enableFileChangedEvent"></param>
-    IWatchedFile WatchFile(string filePath, bool enableFileChangedEvent = true);
+    /// <param name="enableChangeEvent"></param>
+    IWatchedFile WatchFile(string filePath, bool enableChangeEvent = true);
 
 }
 
@@ -46,12 +46,11 @@ public class FileChangedEventHandlerArgs
 {
     public FileSystemEventArgs SystemEventArgs { get; }
 
-    public string WatchedFileFullPath { get; private set; }
+    public string WatchedFilePath { get; private set; }
 
-    public FileChangedEventHandlerArgs(string watchedFileFullPath, FileSystemEventArgs fileSystemEventArgs)
+    public FileChangedEventHandlerArgs(string watchedFilePath, FileSystemEventArgs fileSystemEventArgs)
     {
         SystemEventArgs = fileSystemEventArgs ?? throw new ArgumentNullException(nameof(fileSystemEventArgs));
-        WatchedFileFullPath = watchedFileFullPath ?? throw new ArgumentNullException(nameof(watchedFileFullPath));
+        WatchedFilePath = watchedFilePath ?? throw new ArgumentNullException(nameof(watchedFilePath));
     }
-
 }

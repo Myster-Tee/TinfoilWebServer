@@ -55,37 +55,56 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     }
 
 
-    private static void SafePopulateSubDir(VirtualDirectory parent, string subDirPath)
+    private void SafePopulateSubDir(VirtualDirectory parent, string subDirPath)
     {
-        var dirName = Path.GetFileName(subDirPath);
-
-        // Can be null or empty when serving the root of a drive, but in this case we really need to define a name to avoid empty URI path segment
-        dirName = string.IsNullOrEmpty(dirName) ? "root" : dirName;
-
-        var keyGenerator = new KeyGenerator(dirName);
-
-        string key;
-        do
+        try
         {
-            key = keyGenerator.GetNextKey();
-        } while (parent.ChildExists(key));
+            var dirName = Path.GetFileName(subDirPath);
 
-        parent.AddDirectory(new VirtualDirectory(key, subDirPath));
+            // Can be null or empty when serving the root of a drive, but in this case we really need to define a name to avoid empty URI path segment
+            dirName = string.IsNullOrEmpty(dirName) ? "root" : dirName;
+
+            var keyGenerator = new KeyGenerator(dirName);
+
+            string key;
+            do
+            {
+                key = keyGenerator.GetNextKey();
+            } while (parent.ChildExists(key));
+
+            parent.AddDirectory(new VirtualDirectory(key, subDirPath));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to populate directory \"{subDirPath}\" to served files.");
+        }
     }
 
-    private static void SafePopulateFile(VirtualDirectory parent, string subFilePath)
+    /// <summary>
+    /// Add the specified file to the virtual parent directory and ensure the uniqueness of the mapped key
+    /// </summary>
+    /// <param name="parent"></param>
+    /// <param name="subFilePath"></param>
+    private void SafePopulateFile(VirtualDirectory parent, string subFilePath)
     {
-        var fileInfo = new FileInfo(subFilePath);
-
-        var keyGenerator = new KeyGenerator(fileInfo.Name);
-
-        string key;
-        do
+        try
         {
-            key = keyGenerator.GetNextKey();
-        } while (parent.ChildExists(key));
+            var fileInfo = new FileInfo(subFilePath);
 
-        parent.AddFile(new VirtualFile(key, subFilePath, fileInfo.Length));
+            var keyGenerator = new KeyGenerator(fileInfo.Name);
+
+            string key;
+            do
+            {
+                key = keyGenerator.GetNextKey();
+            } while (parent.ChildExists(key));
+
+            parent.AddFile(new VirtualFile(key, subFilePath, fileInfo.Length)); // Length property can throw when file doesn't exist anymore
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to populate file \"{subFilePath}\" to served files.");
+        }
     }
 
 

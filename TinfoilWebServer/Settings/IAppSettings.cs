@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace TinfoilWebServer.Settings;
@@ -7,9 +6,9 @@ namespace TinfoilWebServer.Settings;
 public interface IAppSettings : INotifyPropertyChanged
 {
     /// <summary>
-    /// The list of served directories
+    /// The served directories
     /// </summary>
-    string[] ServedDirectories { get; }
+    IReadOnlyList<string> ServedDirectories { get; }
 
     /// <summary>
     /// Removes directories names in URLs of served files
@@ -24,7 +23,7 @@ public interface IAppSettings : INotifyPropertyChanged
     /// <summary>
     /// The list of allowed extensions
     /// </summary>
-    string[] AllowedExt { get; }
+    IReadOnlyList<string> AllowedExt { get; }
 
     /// <summary>
     /// The message of the day
@@ -35,11 +34,6 @@ public interface IAppSettings : INotifyPropertyChanged
     /// The path to a custom JSON index file
     /// </summary>
     string? CustomIndexPath { get; }
-
-    /// <summary>
-    /// Cache expiration settings
-    /// </summary>
-    ICacheExpirationSettings CacheExpiration { get; }
 
     /// <summary>
     /// Authentication settings
@@ -53,12 +47,6 @@ public interface IAppSettings : INotifyPropertyChanged
 
 }
 
-public interface ICacheExpirationSettings : INotifyPropertyChanged
-{
-    bool Enabled { get; }
-
-    TimeSpan ExpirationDelay { get; }
-}
 
 public interface IAuthenticationSettings : INotifyPropertyChanged
 {

@@ -19,18 +19,9 @@ public class AppSettingsModel
 
     public string? CustomIndexPath { get; set; }
 
-    public CacheExpirationSettingsModel? CacheExpiration { get; set; }
-
     public AuthenticationSettingsModel? Authentication { get; set; }
 
     public BlacklistSettingsModel? Blacklist { get; set; }
-}
-
-public class CacheExpirationSettingsModel
-{
-    public bool? Enabled { get; set; }
-
-    public TimeSpan? ExpirationDelay { get; set; }
 }
 
 public class AuthenticationSettingsModel

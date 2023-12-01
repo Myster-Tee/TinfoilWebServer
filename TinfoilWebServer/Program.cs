@@ -10,6 +10,7 @@ using TinfoilWebServer.Booting;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
+using TinfoilWebServer.Services.FSChangeDetection;
 using TinfoilWebServer.Services.JSON;
 using TinfoilWebServer.Services.Middleware.Authentication;
 using TinfoilWebServer.Services.Middleware.Blacklist;
@@ -24,7 +25,6 @@ public class Program
 
     public static int Main(string[] args)
     {
-
         const bool RELOAD_CONFIG_ON_CHANGE = true;
         ILogger<Program>? logger = null;
 
@@ -63,7 +63,6 @@ public class Program
 
                         .AddSingleton<IAppSettings, AppSettings>()
                         .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
-                        .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
                         .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().BlacklistSettings)
 
                         .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
@@ -80,7 +79,8 @@ public class Program
                         .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
                         .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
                         .AddSingleton<ICustomIndexManager, CustomIndexManager>()
-                        .AddSingleton<IFileChangeHelper, FileChangeHelper>();
+                        .AddSingleton<IFileChangeHelper, FileChangeHelper>()
+                        .AddSingleton<IDirectoryChangeHelper, DirectoryChangeHelper>();
                 })
                 .UseKestrel((ctx, options) =>
                 {

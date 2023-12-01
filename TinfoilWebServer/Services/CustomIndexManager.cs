@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.Services.FSChangeDetection;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services;
@@ -151,12 +152,9 @@ public class CustomIndexManager : ICustomIndexManager
                 if (!newCustomIndexPaths.Contains(cachedCustomIndexPath))
                 {
                     // Custom index path is not anymore referenced and can be removed from cache
-                    if (_cachedDataPerPath.TryGetValue(cachedCustomIndexPath, out var cachedData))
-                        cachedData.Dispose();
-
-                    _logger.LogInformation($"Custom index file \"{cachedCustomIndexPath}\" unloaded.");
-
+                    _cachedDataPerPath[cachedCustomIndexPath].Dispose();
                     _cachedDataPerPath.Remove(cachedCustomIndexPath);
+                    _logger.LogInformation($"Custom index file \"{cachedCustomIndexPath}\" unloaded.");
                 }
             }
         }

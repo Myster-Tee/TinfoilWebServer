@@ -59,11 +59,6 @@ public class SummaryInfoLogger : ISummaryInfoLogger
 
         sb.AppendLine($"- Allowed extensions:{_appSettings.AllowedExt.ToMultilineString()}");
 
-        var cacheExpiration = _appSettings.CacheExpiration;
-        sb.AppendLine($"- Cache expiration:");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {cacheExpiration.Enabled}");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}Expiration delay: {cacheExpiration.ExpirationDelay}");
-
         var authentication = _appSettings.Authentication;
         sb.AppendLine($"- Authentication:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {authentication.Enabled}");

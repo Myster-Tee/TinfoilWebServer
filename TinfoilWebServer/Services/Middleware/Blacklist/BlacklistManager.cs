@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Booting;
+using TinfoilWebServer.Services.FSChangeDetection;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services.Middleware.Blacklist;

@@ -8,13 +8,12 @@ namespace TinfoilWebServer.Settings;
 
 public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 {
-    private readonly CacheExpirationSettings _cacheExpirationSettings = new();
     private readonly AuthenticationSettings _authenticationSettings = new();
     private readonly BlacklistSettings _blacklistSettings = new();
-    private string[] _servedDirectories = null!;
+    private IReadOnlyList<string> _servedDirectories = null!;
     private bool _stripDirectoryNames;
     private bool _serveEmptyDirectories;
-    private string[] _allowedExt = null!;
+    private IReadOnlyList<string> _allowedExt = null!;
     private string? _messageOfTheDay;
     private string? _customIndexPath;
 
@@ -42,10 +41,6 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         MessageOfTheDay = string.IsNullOrWhiteSpace(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
 
-        var cacheExpiration = appSettingsModel.CacheExpiration;
-        _cacheExpirationSettings.Enabled = cacheExpiration?.Enabled ?? true;
-        _cacheExpirationSettings.ExpirationDelay = cacheExpiration?.ExpirationDelay ?? TimeSpan.FromHours(1);
-
         var authenticationSettings = appSettingsModel.Authentication;
         _authenticationSettings.Enabled = authenticationSettings?.Enabled ?? false;
         _authenticationSettings.WebBrowserAuthEnabled = authenticationSettings?.WebBrowserAuthEnabled ?? false;
@@ -67,9 +62,9 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         CustomIndexPath = appSettingsModel.CustomIndexPath;
     }
 
-    public string[] ServedDirectories
+    public IReadOnlyList<string> ServedDirectories
     {
-        get => _servedDirectories;
+        get => _servedDirectories.ToArray();
         private set => SetField(ref _servedDirectories, value);
     }
 
@@ -85,7 +80,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _serveEmptyDirectories, value);
     }
 
-    public string[] AllowedExt
+    public IReadOnlyList<string> AllowedExt
     {
         get => _allowedExt;
         private set => SetField(ref _allowedExt, value);
@@ -103,30 +98,10 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _customIndexPath, value);
     }
 
-    public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;
-
     public IAuthenticationSettings Authentication => _authenticationSettings;
 
     public IBlacklistSettings BlacklistSettings => _blacklistSettings;
-
-    private class CacheExpirationSettings : NotifyPropertyChangedBase, ICacheExpirationSettings
-    {
-        private bool _enabled;
-        private TimeSpan _expirationDelay;
-
-        public bool Enabled
-        {
-            get => _enabled;
-            set => SetField(ref _enabled, value);
-        }
-
-        public TimeSpan ExpirationDelay
-        {
-            get => _expirationDelay;
-            set => SetField(ref _expirationDelay, value);
-        }
-    }
-
+    
     private class AuthenticationSettings : NotifyPropertyChangedBase, IAuthenticationSettings
     {
         private bool _enabled;

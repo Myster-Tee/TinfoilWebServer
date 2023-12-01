@@ -13,6 +13,6 @@ public interface IVirtualFileSystemRootProvider
     /// <summary>
     /// Initializes cache
     /// </summary>
-    void Initialize();
+    void Refresh();
 
 }
