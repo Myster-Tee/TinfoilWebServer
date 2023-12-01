@@ -19,9 +19,19 @@ public class AppSettingsModel
 
     public string? CustomIndexPath { get; set; }
 
+    public CacheSettingsModel? Cache { get; set; }
+
     public AuthenticationSettingsModel? Authentication { get; set; }
 
     public BlacklistSettingsModel? Blacklist { get; set; }
+
+}
+
+public class CacheSettingsModel
+{
+    public bool? AutoDetectChanges { get; set; }
+
+    public TimeSpan? ForcedRefreshDelay { get; set; }
 }
 
 public class AuthenticationSettingsModel

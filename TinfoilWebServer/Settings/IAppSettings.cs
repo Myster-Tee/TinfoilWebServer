@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 
 namespace TinfoilWebServer.Settings;
 
@@ -8,7 +10,7 @@ public interface IAppSettings : INotifyPropertyChanged
     /// <summary>
     /// The served directories
     /// </summary>
-    IReadOnlyList<string?> ServedDirectories { get; }
+    IReadOnlyList<DirectoryInfo> ServedDirectories { get; }
 
     /// <summary>
     /// Removes directories names in URLs of served files
@@ -36,6 +38,11 @@ public interface IAppSettings : INotifyPropertyChanged
     string? CustomIndexPath { get; }
 
     /// <summary>
+    /// Cache expiration settings
+    /// </summary>
+    ICacheSettings Cache { get; }
+
+    /// <summary>
     /// Authentication settings
     /// </summary>
     IAuthenticationSettings Authentication { get; }
@@ -43,10 +50,22 @@ public interface IAppSettings : INotifyPropertyChanged
     /// <summary>
     /// Blacklist settings
     /// </summary>
-    IBlacklistSettings BlacklistSettings { get; }
+    IBlacklistSettings Blacklist { get; }
 
 }
 
+public interface ICacheSettings : INotifyPropertyChanged
+{
+    /// <summary>
+    /// When true, cache is automatically reloaded when a file system change occurs in served directories
+    /// </summary>
+    bool AutoDetectChanges { get; }
+
+    /// <summary>
+    /// The forced refresh delay
+    /// </summary>
+    TimeSpan? ForcedRefreshDelay { get; }
+}
 
 public interface IAuthenticationSettings : INotifyPropertyChanged
 {

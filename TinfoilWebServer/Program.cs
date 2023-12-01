@@ -62,8 +62,9 @@ public class Program
                         .AddSingleton<IBootInfo>(_ => bootInfo)
 
                         .AddSingleton<IAppSettings, AppSettings>()
+                        .AddSingleton<ICacheSettings>(provider => provider.GetRequiredService<IAppSettings>().Cache)
                         .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
-                        .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().BlacklistSettings)
+                        .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().Blacklist)
 
                         .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
                         .AddSingleton<IBlacklistMiddleware, BlacklistMiddleware>()
@@ -80,7 +81,9 @@ public class Program
                         .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
                         .AddSingleton<ICustomIndexManager, CustomIndexManager>()
                         .AddSingleton<IFileChangeHelper, FileChangeHelper>()
-                        .AddSingleton<IDirectoryChangeHelper, DirectoryChangeHelper>();
+                        .AddSingleton<IDirectoryChangeHelper, DirectoryChangeHelper>()
+                        .AddSingleton<IVFSForcedRefreshManager, VFSForcedRefreshManager>()
+                        .AddSingleton<IVFSAutoRefreshManager, VFSAutoRefreshManager>();
                 })
                 .UseKestrel((ctx, options) =>
                 {

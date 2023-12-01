@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -51,7 +52,7 @@ public class SummaryInfoLogger : ISummaryInfoLogger
 
         sb.AppendLine();
 
-        sb.AppendLine($"- Served directories:{_appSettings.ServedDirectories.ToMultilineString()}");
+        sb.AppendLine($"- Served directories:{_appSettings.ServedDirectories.Select(d => d.FullName).ToMultilineString()}");
 
         sb.AppendLine($"- Strip directory names: {_appSettings.StripDirectoryNames}");
 
@@ -59,13 +60,21 @@ public class SummaryInfoLogger : ISummaryInfoLogger
 
         sb.AppendLine($"- Allowed extensions:{_appSettings.AllowedExt.ToMultilineString()}");
 
+        sb.AppendLine($"- Message of the day:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}{_appSettings.MessageOfTheDay}");
+
+        var cacheSettings = _appSettings.Cache;
+        sb.AppendLine($"- Cache expiration:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Auto detect file changes: {cacheSettings.AutoDetectChanges}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Forced refresh delay: {cacheSettings.ForcedRefreshDelay}");
+
         var authentication = _appSettings.Authentication;
         sb.AppendLine($"- Authentication:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {authentication.Enabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Web browser auth enabled: {authentication.WebBrowserAuthEnabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Nb allowed users: {authentication.Users.Count}");
 
-        var blacklist = _appSettings.BlacklistSettings;
+        var blacklist = _appSettings.Blacklist;
         sb.AppendLine($"- Blacklist:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {blacklist.Enabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}File path: {blacklist.FilePath}");

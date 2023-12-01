@@ -5,9 +5,9 @@
   "AllowedExt": [ "nsp", "nsz", "xci" ],
   "MessageOfTheDay": "Hello World!",
   "CustomIndexPath": null,
-  "CacheExpiration": {
-    "Enabled": true,
-    "ExpirationDelay": "01:00:00"
+  "Cache": {
+    "AutoDetectChanges": true,
+    "ForcedRefreshDelay": "01:00:00"
   },
   "Authentication": {
     "Enabled": true,
