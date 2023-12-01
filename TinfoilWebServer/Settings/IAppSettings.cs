@@ -8,7 +8,7 @@ public interface IAppSettings : INotifyPropertyChanged
     /// <summary>
     /// The served directories
     /// </summary>
-    IReadOnlyList<string> ServedDirectories { get; }
+    IReadOnlyList<string?> ServedDirectories { get; }
 
     /// <summary>
     /// Removes directories names in URLs of served files

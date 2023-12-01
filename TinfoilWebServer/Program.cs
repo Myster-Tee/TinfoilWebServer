@@ -123,10 +123,12 @@ public class Program
                 logger.LogError(ex, $"An unexpected error occurred: {ex.Message}");
             else
                 Console.Error.WriteLine(
-                    $"An unexpected error occurred: {ex.Message}{Environment.NewLine}" +
-                    $"Exception Type: {ex.GetType().Name}{Environment.NewLine}" +
-                    $"Stack Trace:{Environment.NewLine}" +
-                    $"{ex.StackTrace}"
+                     $"""
+                      An unexpected error occurred: {ex.Message}
+                      Exception Type: {ex.GetType().Name}
+                      Stack Trace:
+                      {ex.StackTrace}
+                      """
                     );
             return 1;
         }

@@ -5,13 +5,13 @@ namespace TinfoilWebServer.Services.FSChangeDetection;
 
 public interface IDirectoryChangeHelper
 {
-    IWatchedDirectory WatchDirectory(string directoryPath, bool enableChangeEvent = true);
+    IWatchedDirectory WatchDirectory(DirectoryInfo directory, bool enableChangeEvent = true);
 }
 
 public interface IWatchedDirectory : IDisposable
 {
     /// <summary>
-    /// Triggered when the watched file needs to be reloaded or when the file doesn't exist anymore
+    /// Triggered when a changed occurred in the watched directory (renaming, deletion, creation, etc.)
     /// </summary>
     public event DirectoryChangedEventHandler DirectoryChanged;
 
@@ -21,9 +21,9 @@ public interface IWatchedDirectory : IDisposable
     public bool DirectoryChangedEventEnabled { get; set; }
 
     /// <summary>
-    /// The path of the watched file
+    /// The watched directory
     /// </summary>
-    public string WatchedDirectoryPath { get; }
+    public DirectoryInfo Directory { get; }
 }
 
 public delegate void DirectoryChangedEventHandler(object sender, DirectoryChangedEventHandlerArgs args);
@@ -32,12 +32,12 @@ public class DirectoryChangedEventHandlerArgs
 {
     public FileSystemEventArgs SystemEventArgs { get; }
 
-    public string WatchedDirectoryPath { get; private set; }
+    public DirectoryInfo WatchedDirectory { get; private set; }
 
-    public DirectoryChangedEventHandlerArgs(string watchedDirectoryPath, FileSystemEventArgs fileSystemEventArgs)
+    public DirectoryChangedEventHandlerArgs(DirectoryInfo watchedDirectory, FileSystemEventArgs fileSystemEventArgs)
     {
         SystemEventArgs = fileSystemEventArgs ?? throw new ArgumentNullException(nameof(fileSystemEventArgs));
-        WatchedDirectoryPath = watchedDirectoryPath ?? throw new ArgumentNullException(nameof(watchedDirectoryPath));
+        WatchedDirectory = watchedDirectory ?? throw new ArgumentNullException(nameof(watchedDirectory));
     }
 }
 

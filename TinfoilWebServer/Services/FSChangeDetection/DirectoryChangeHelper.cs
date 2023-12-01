@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using System;
+using System.IO;
 
 namespace TinfoilWebServer.Services.FSChangeDetection;
 
@@ -13,8 +14,8 @@ public class DirectoryChangeHelper : IDirectoryChangeHelper
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public IWatchedDirectory WatchDirectory(string directoryPath, bool enableChangeEvent = true)
+    public IWatchedDirectory WatchDirectory(DirectoryInfo directory, bool enableChangeEvent = true)
     {
-        return new WatchedDirectory(directoryPath, enableChangeEvent, _logger);
+        return new WatchedDirectory(directory, enableChangeEvent, _logger);
     }
 }

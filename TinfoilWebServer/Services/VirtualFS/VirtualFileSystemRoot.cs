@@ -7,7 +7,7 @@
 public class VirtualFileSystemRoot : VirtualDirectory
 {
 
-    public VirtualFileSystemRoot() : base("", "")
+    public VirtualFileSystemRoot() : base("", null)
     {
     }
 

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using TinfoilWebServer.Booting;
 using TinfoilWebServer.Services.FSChangeDetection;
@@ -13,7 +14,7 @@ namespace TinfoilWebServer.Services;
 public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
 {
 
-    private readonly Dictionary<string, IWatchedDirectory> _watchedDirectoriesPerPath = new();
+    private readonly Dictionary<string, IWatchedDirectory> _watchedDirectoriesPerFullPath = new();
 
 
     private readonly IVirtualFileSystemBuilder _virtualFileSystemBuilder;
@@ -35,67 +36,92 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
 
     public void Refresh()
     {
-        RefreshInternal(true);
+        SafeRefreshInternal(true);
     }
 
-    private void RefreshInternal(bool refreshWatchedDirectories)
+    private void SafeRefreshInternal(bool refreshWatchedDirectories)
     {
-        var servedDirectories = _appSettings.ServedDirectories;
-
-        if (refreshWatchedDirectories)
-        {
-            lock (_watchedDirectoriesPerPath)
-            {
-
-                foreach (var servedDirectory in servedDirectories)
-                {
-                    if (_watchedDirectoriesPerPath.ContainsKey(servedDirectory))
-                        continue;
-
-                    IWatchedDirectory watchedDirectory;
-                    try
-                    {
-                        watchedDirectory = _directoryChangeHelper.WatchDirectory(servedDirectory);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, $"Failed to watch changes of served directory \"{servedDirectory}\": {ex.Message}");
-                        continue;
-                    }
-
-                    watchedDirectory.DirectoryChanged += OnDirectoryChanged;
-                    _watchedDirectoriesPerPath.Add(servedDirectory, watchedDirectory);
-                }
-
-                foreach (var oldWatchedDirectoryPath in _watchedDirectoriesPerPath.Keys.ToArray()
-                             .Where(p => !servedDirectories.Contains(p)))
-                {
-                    var watchedDirectory = _watchedDirectoriesPerPath[oldWatchedDirectoryPath];
-                    watchedDirectory.DirectoryChanged -= OnDirectoryChanged;
-                    watchedDirectory.Dispose();
-
-                    _watchedDirectoriesPerPath.Remove(oldWatchedDirectoryPath);
-                    _logger.LogInformation($"Served directory \"{oldWatchedDirectoryPath}\" removed.");
-                }
-
-            }
-        }
-
         try
         {
+            var servedDirectoryPaths = _appSettings.ServedDirectories;
+            if (servedDirectoryPaths.Count <= 0)
+                _logger.LogWarning($"No served directory defined in configuration file \"{_bootInfo.ConfigFileFullPath}\".");
+
+            var servedDirectories = new List<DirectoryInfo>();
+
+            foreach (var servedDirectoryPath in servedDirectoryPaths)
+            {
+                if (string.IsNullOrWhiteSpace(servedDirectoryPath))
+                {
+                    _logger.LogError("Invalid configuration, served directory path can't be empty.");
+                    continue;
+                }
+
+                var servedDirectory = new DirectoryInfo(servedDirectoryPath);
+                if (!servedDirectory.Exists)
+                {
+                    _logger.LogError($"Served directory \"{servedDirectoryPath}\" doesn't exist.");
+                    continue;
+                }
+
+                servedDirectories.Add(servedDirectory);
+            }
+
+            if (refreshWatchedDirectories)
+            {
+                RefreshWatchedDirectories(servedDirectories);
+            }
+
             Root = UpdateVirtualFileSystem(servedDirectories);
         }
         catch (Exception ex)
         {
-            Root = new VirtualFileSystemRoot();
-            _logger.LogError(ex, $"Failed to build cache of served files: {ex.Message}");
+            _logger.LogError(ex, $"Failed to refresh cache of served files: {ex.Message}");
         }
 
     }
 
+    private void RefreshWatchedDirectories(IReadOnlyList<DirectoryInfo> servedDirectories)
+    {
+        lock (_watchedDirectoriesPerFullPath)
+        {
+            foreach (var servedDirectory in servedDirectories)
+            {
+                if (_watchedDirectoriesPerFullPath.ContainsKey(servedDirectory.FullName))
+                    continue;
+
+                IWatchedDirectory watchedDirectory;
+                try
+                {
+                    watchedDirectory = _directoryChangeHelper.WatchDirectory(servedDirectory);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, $"Failed to initialize changes detection of served directory \"{servedDirectory}\": {ex.Message}");
+                    continue;
+                }
+
+                watchedDirectory.DirectoryChanged += OnDirectoryChanged;
+                _watchedDirectoriesPerFullPath.Add(servedDirectory.FullName, watchedDirectory);
+            }
+
+            var removedDirectories = _watchedDirectoriesPerFullPath.Keys.ToArray().Where(fullPath => !servedDirectories.Select(directory => directory.FullName).Contains(fullPath));
+
+            foreach (var removedDirectory in removedDirectories)
+            {
+                var watchedDirectory = _watchedDirectoriesPerFullPath[removedDirectory];
+                watchedDirectory.DirectoryChanged -= OnDirectoryChanged;
+                watchedDirectory.Dispose();
+
+                _watchedDirectoriesPerFullPath.Remove(removedDirectory);
+                _logger.LogInformation($"Changes detection of previously served directory \"{removedDirectory}\" removed.");
+            }
+        }
+    }
+
     private void OnDirectoryChanged(object sender, DirectoryChangedEventHandlerArgs args)
     {
-        RefreshInternal(true);
+        SafeRefreshInternal(true);
     }
 
     private void OnAppSettingsChanged(object? sender, PropertyChangedEventArgs e)
@@ -103,17 +129,17 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
         if (e.PropertyName == nameof(IAppSettings.StripDirectoryNames))
         {
             _logger.LogInformation($"Setting \"{nameof(IAppSettings.StripDirectoryNames)}\" changed, refreshing served files cache.");
-            RefreshInternal(false);
+            SafeRefreshInternal(false);
         }
         else if (e.PropertyName == nameof(IAppSettings.ServeEmptyDirectories))
         {
             _logger.LogInformation($"Setting \"{nameof(IAppSettings.ServeEmptyDirectories)}\" changed, refreshing served files cache.");
-            RefreshInternal(false);
+            SafeRefreshInternal(false);
         }
         else if (e.PropertyName == nameof(IAppSettings.ServedDirectories))
         {
             _logger.LogInformation($"Setting \"{nameof(IAppSettings.ServedDirectories)}\" changed, refreshing served files cache.");
-            RefreshInternal(true);
+            SafeRefreshInternal(true);
         }
     }
 
@@ -121,11 +147,8 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     public VirtualFileSystemRoot Root { get; private set; } = new();
 
 
-    private VirtualFileSystemRoot UpdateVirtualFileSystem(IReadOnlyList<string> servedDirectories)
+    private VirtualFileSystemRoot UpdateVirtualFileSystem(IReadOnlyList<DirectoryInfo> servedDirectories)
     {
-        if (servedDirectories.Count <= 0)
-            _logger.LogWarning($"No served directory defined in configuration file \"{_bootInfo.ConfigFileFullPath}\".");
-
         var dateTime = DateTime.Now;
 
         var root = _appSettings.StripDirectoryNames ?

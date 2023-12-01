@@ -10,7 +10,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 {
     private readonly AuthenticationSettings _authenticationSettings = new();
     private readonly BlacklistSettings _blacklistSettings = new();
-    private IReadOnlyList<string> _servedDirectories = null!;
+    private IReadOnlyList<string?> _servedDirectories = null!;
     private bool _stripDirectoryNames;
     private bool _serveEmptyDirectories;
     private IReadOnlyList<string> _allowedExt = null!;
@@ -62,7 +62,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         CustomIndexPath = appSettingsModel.CustomIndexPath;
     }
 
-    public IReadOnlyList<string> ServedDirectories
+    public IReadOnlyList<string?> ServedDirectories
     {
         get => _servedDirectories.ToArray();
         private set => SetField(ref _servedDirectories, value);

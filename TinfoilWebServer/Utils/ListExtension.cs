@@ -6,7 +6,7 @@ namespace TinfoilWebServer.Utils;
 public static class ListExtension
 {
 
-    public static bool TryRemoveFirst<T>(this List<T> list,[NotNullWhen(true)] out T? item)
+    public static bool TryRemoveFirst<T>(this List<T> list, [NotNullWhen(true)] out T? item)
     {
         if (list.Count > 0)
         {

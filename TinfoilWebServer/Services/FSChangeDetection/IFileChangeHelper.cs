@@ -33,7 +33,7 @@ public interface IWatchedFile : IDisposable
     public bool FileChangedEventEnabled { get; set; }
 
     /// <summary>
-    /// The path of the watched file
+    /// The watched file
     /// </summary>
     public FileInfo File { get; }
 
@@ -46,11 +46,11 @@ public class FileChangedEventHandlerArgs
 {
     public FileSystemEventArgs SystemEventArgs { get; }
 
-    public FileInfo File { get; private set; }
+    public FileInfo WatchedFile { get; }
 
     public FileChangedEventHandlerArgs(FileInfo watchedFile, FileSystemEventArgs fileSystemEventArgs)
     {
         SystemEventArgs = fileSystemEventArgs ?? throw new ArgumentNullException(nameof(fileSystemEventArgs));
-        File = watchedFile ?? throw new ArgumentNullException(nameof(watchedFile));
+        WatchedFile = watchedFile ?? throw new ArgumentNullException(nameof(watchedFile));
     }
 }

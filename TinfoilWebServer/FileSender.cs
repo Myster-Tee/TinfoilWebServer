@@ -48,7 +48,7 @@ public class FileSender : IDisposable, IAsyncDisposable
         set
         {
             if (value <= 0)
-                throw new ArgumentOutOfRangeException(nameof(BufferSize), value, "Buffer can't be less than or equal to zero.");
+                throw new ArgumentOutOfRangeException(nameof(BufferSize), value, @"Buffer can't be less than or equal to zero.");
             _bufferSize = value;
         }
     }
@@ -112,12 +112,12 @@ public class FileSender : IDisposable, IAsyncDisposable
         var from = range.From;
         var to = range.To;
         if (from == null && to == null)
-            throw new ArgumentException("Invalid range, start and end value can't be both undefined.", nameof(range));
+            throw new ArgumentException(@"Invalid range, start and end value can't be both undefined.", nameof(range));
 
         if (from == null && to != null)
         {
             if (to.Value < 0)
-                throw new ArgumentException($"Invalid range, end value {to.Value} can't be less than zero.", nameof(range));
+                throw new ArgumentException($@"Invalid range, end value {to.Value} can't be less than zero.", nameof(range));
 
             if (to.Value > fileSize)
             {
@@ -135,24 +135,24 @@ public class FileSender : IDisposable, IAsyncDisposable
         if (from != null && to == null)
         {
             if (from.Value < 0)
-                throw new ArgumentException($"Invalid range, start value {from.Value} can't be less than zero.", nameof(range));
+                throw new ArgumentException($@"Invalid range, start value {from.Value} can't be less than zero.", nameof(range));
 
             if (from.Value >= fileSize)
-                throw new ArgumentException($"Invalid range, when end is undefined, start {from.Value} can't be greater than or equal to file size {fileSize} (bytes).", nameof(range));
+                throw new ArgumentException($@"Invalid range, when end is undefined, start {from.Value} can't be greater than or equal to file size {fileSize} (bytes).", nameof(range));
 
             startOffset = from.Value;
             contentLength = fileSize - from.Value;
             return;
         }
 
-        if (from.Value > to.Value)
-            throw new ArgumentException($"Invalid range, start value {from.Value} can't be greater than end value {to.Value}.", nameof(range));
+        if (from!.Value > to!.Value)
+            throw new ArgumentException($@"Invalid range, start value {from.Value} can't be greater than end value {to.Value}.", nameof(range));
 
         if (from.Value < 0)
-            throw new ArgumentException("Invalid range, start value can't be less than zero.", nameof(range));
+            throw new ArgumentException(@"Invalid range, start value can't be less than zero.", nameof(range));
 
         if (to.Value < 0)
-            throw new ArgumentException("Invalid range, end value can't be less than zero.", nameof(range));
+            throw new ArgumentException(@"Invalid range, end value can't be less than zero.", nameof(range));
 
         long realEnd;
         if (to.Value >= fileSize)

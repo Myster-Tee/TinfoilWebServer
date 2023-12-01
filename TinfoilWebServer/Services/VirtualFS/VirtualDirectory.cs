@@ -1,21 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 
 namespace TinfoilWebServer.Services.VirtualFS;
 
 public class VirtualDirectory : VirtualItem
 {
-    private readonly Dictionary<string, VirtualItem> _childItemsByKey = new();
+    public DirectoryInfo? Directory { get; }
 
+    private readonly Dictionary<string, VirtualItem> _childItemsByKey = new();
 
     public VirtualFile[] Files => _childItemsByKey.Values.OfType<VirtualFile>().ToArray();
 
     public VirtualDirectory[] Directories => _childItemsByKey.Values.OfType<VirtualDirectory>().ToArray();
 
-    public VirtualDirectory(string key, string fullLocalPath) : base(key, fullLocalPath)
+    public VirtualDirectory(string key, DirectoryInfo? directory) : base(key, directory)
     {
+        Directory = directory;
     }
 
     public void AddDirectory(VirtualDirectory virtualDirectory)

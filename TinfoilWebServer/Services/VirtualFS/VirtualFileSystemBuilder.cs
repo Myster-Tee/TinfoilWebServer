@@ -55,11 +55,11 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     }
 
 
-    private void SafePopulateSubDir(VirtualDirectory parent, string subDirPath)
+    private void SafePopulateSubDir(VirtualDirectory parent, DirectoryInfo subDirectory)
     {
         try
         {
-            var dirName = Path.GetFileName(subDirPath);
+            var dirName = subDirectory.Name;
 
             // Can be null or empty when serving the root of a drive, but in this case we really need to define a name to avoid empty URI path segment
             dirName = string.IsNullOrEmpty(dirName) ? "root" : dirName;
@@ -72,11 +72,11 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
                 key = keyGenerator.GetNextKey();
             } while (parent.ChildExists(key));
 
-            parent.AddDirectory(new VirtualDirectory(key, subDirPath));
+            parent.AddDirectory(new VirtualDirectory(key, subDirectory));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to populate directory \"{subDirPath}\" to served files.");
+            _logger.LogError(ex, $"Failed to populate directory \"{subDirectory}\" to served files.");
         }
     }
 
@@ -97,7 +97,7 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
                 key = keyGenerator.GetNextKey();
             } while (parent.ChildExists(key));
 
-            parent.AddFile(new VirtualFile(key, subFile.FullName, subFile.Length)); // Length property can throw when file doesn't exist anymore
+            parent.AddFile(new VirtualFile(key, subFile, subFile.Length)); // Length property can throw when file doesn't exist anymore
         }
         catch (Exception ex)
         {
@@ -106,20 +106,11 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     }
 
 
-    public VirtualFileSystemRoot BuildFlat(IReadOnlyList<string> servedDirectories)
+    public VirtualFileSystemRoot BuildFlat(IReadOnlyList<DirectoryInfo> servedDirectories)
     {
         var virtualFileSystemRoot = new VirtualFileSystemRoot();
 
-        var remainingDirsToBrowse = new List<DirectoryInfo>();
-
-        foreach (var servedDirectoryFullPath in servedDirectories.Select(ToFullPath))
-        {
-            var directory = new DirectoryInfo(servedDirectoryFullPath);
-            if (directory.Exists)
-                remainingDirsToBrowse.Add(directory);
-            else
-                _logger.LogError($"Served directory \"{servedDirectoryFullPath}\" not found (or access denied).");
-        }
+        var remainingDirsToBrowse = servedDirectories.ToList();
 
         while (remainingDirsToBrowse.TryRemoveFirst(out var dir))
         {
@@ -130,7 +121,7 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to list files of \"{dir}\": {ex.Message}");
+                _logger.LogError(ex, $"Failed to list files of \"{dir.FullName}\": {ex.Message}");
             }
 
             if (subFiles != null)
@@ -149,7 +140,7 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to list directories of \"{dir}\": {ex.Message}");
+                _logger.LogError(ex, $"Failed to list directories of \"{dir.FullName}\": {ex.Message}");
             }
 
             if (subDirs != null)
@@ -160,38 +151,35 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
     }
 
 
-    public VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<string> servedDirectories, bool excludeEmptyDirectories)
+    public VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<DirectoryInfo> servedDirectories, bool excludeEmptyDirectories)
     {
         var virtualFileSystemRoot = new VirtualFileSystemRoot();
 
-        foreach (var servedDirectoryFullPath in servedDirectories.Select(ToFullPath))
+        foreach (var servedDirectory in servedDirectories)
         {
             // Trims end separator to avoid having an empty name while calling Path.GetFileName
-            var safeDirPath = servedDirectoryFullPath.TrimEnd(Path.DirectorySeparatorChar);
+            //var safeDirPath = servedDirectory.TrimEnd(Path.DirectorySeparatorChar);
 
-            if (Directory.Exists(safeDirPath))
-                SafePopulateSubDir(virtualFileSystemRoot, safeDirPath);
-            else
-                _logger.LogError($"Served directory \"{servedDirectoryFullPath}\" not found.");
+            SafePopulateSubDir(virtualFileSystemRoot, servedDirectory);
         }
 
         var remainingDirsToBrowse = new List<VirtualDirectory>(virtualFileSystemRoot.Directories);
         while (remainingDirsToBrowse.TryRemoveFirst(out var virtualDir))
         {
 
-            string[]? subDirectoryPaths = null;
+            DirectoryInfo[]? subDirectories = null;
             try
             {
-                subDirectoryPaths = Directory.GetDirectories(virtualDir.FullLocalPath);
+                subDirectories = virtualDir.Directory!.GetDirectories();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to list directories of \"{virtualDir.FullLocalPath}\": {ex.Message}");
+                _logger.LogError(ex, $"Failed to list directories of \"{virtualDir.Directory}\": {ex.Message}");
             }
 
-            if (subDirectoryPaths != null)
+            if (subDirectories != null)
             {
-                foreach (var subDirectory in subDirectoryPaths)
+                foreach (var subDirectory in subDirectories)
                 {
                     SafePopulateSubDir(virtualDir, subDirectory);
                 }
@@ -202,11 +190,11 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             FileInfo[]? subFiles = null;
             try
             {
-                subFiles = new DirectoryInfo(virtualDir.FullLocalPath).GetFiles();
+                subFiles = virtualDir.Directory!.GetFiles();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to list files of \"{virtualDir.FullLocalPath}\": {ex.Message}");
+                _logger.LogError(ex, $"Failed to list files of \"{virtualDir.Directory}\": {ex.Message}");
             }
 
             if (subFiles != null)
@@ -224,20 +212,11 @@ public class VirtualFileSystemBuilder : IVirtualFileSystemBuilder
             var removedDirectories = virtualFileSystemRoot.RemoveDirectoriesWithoutFile();
 
             if (_logger.IsEnabled(LogLevel.Debug) && removedDirectories.Count > 0)
-                _logger.LogDebug($"Empty served directories removed:{removedDirectories.Select(directory => directory.FullLocalPath).ToMultilineString()}");
+                _logger.LogDebug($"Empty served directories removed:{removedDirectories.Select(directory => directory.Directory!.FullName).ToMultilineString()}");
         }
 
         return virtualFileSystemRoot;
 
-    }
-
-
-    private static string ToFullPath(string path)
-    {
-        if (Path.IsPathRooted(path))
-            return path;
-
-        return Path.GetFullPath(path);
     }
 
 }

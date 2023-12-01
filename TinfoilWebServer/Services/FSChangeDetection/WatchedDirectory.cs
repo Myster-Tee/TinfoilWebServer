@@ -17,18 +17,14 @@ public class WatchedDirectory : WatchedPathFiltered, IWatchedDirectory
         set => _fileSystemWatcher.EnableRaisingEvents = value;
     }
 
-    public string WatchedDirectoryPath { get; }
+    public DirectoryInfo Directory { get; }
 
-    public WatchedDirectory(string directoryPath, bool enableChangeEvent, ILogger<WatchedDirectory> logger) : base(logger)
+    public WatchedDirectory(DirectoryInfo directory, bool enableChangeEvent, ILogger<WatchedDirectory> logger) : base(logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        WatchedDirectoryPath = directoryPath ?? throw new ArgumentNullException(nameof(directoryPath));
+        Directory = directory ?? throw new ArgumentNullException(nameof(directory));
 
-        var fullDirPath = Path.GetFullPath(directoryPath);
-        if (fullDirPath == null)
-            throw new ArgumentException($@"The directory of file to watch ""{directoryPath}"" can't be determined.", nameof(directoryPath));
-
-        _fileSystemWatcher.Path = directoryPath;
+        _fileSystemWatcher.Path = directory.FullName;
         _fileSystemWatcher.Filter = "*";
         _fileSystemWatcher.IncludeSubdirectories = true;
         _fileSystemWatcher.EnableRaisingEvents = enableChangeEvent;
@@ -37,14 +33,14 @@ public class WatchedDirectory : WatchedPathFiltered, IWatchedDirectory
     protected override void OnError(ErrorEventArgs e)
     {
         var ex = e.GetException();
-        _logger.LogError(ex, $"An error occurred while watching changes of directory \"{WatchedDirectoryPath}\": {ex.Message}");
+        _logger.LogError(ex, $"An error occurred while watching changes of directory \"{Directory.FullName}\": {ex.Message}");
     }
 
 
     protected override void OnChange(FileSystemEventArgs e)
     {
         if (DirectoryChangedEventEnabled)
-            DirectoryChanged?.Invoke(this, new DirectoryChangedEventHandlerArgs(WatchedDirectoryPath, e));
+            DirectoryChanged?.Invoke(this, new DirectoryChangedEventHandlerArgs(Directory, e));
     }
 
 
