@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 
 namespace TinfoilWebServer.Services.VirtualFS;
 
@@ -12,7 +13,7 @@ public interface IVirtualFileSystemBuilder
     /// <param name="excludeEmptyDirectories"></param>
     /// <returns></returns>
     [Pure]
-    VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<string> servedDirectories, bool excludeEmptyDirectories);
+    VirtualFileSystemRoot BuildHierarchical(IReadOnlyList<DirectoryInfo> servedDirectories, bool excludeEmptyDirectories);
 
     /// <summary>
     /// Build the served files immediately under the returned root
@@ -20,5 +21,5 @@ public interface IVirtualFileSystemBuilder
     /// <param name="servedDirectories"></param>
     /// <returns></returns>
     [Pure]
-    VirtualFileSystemRoot BuildFlat(IReadOnlyList<string> servedDirectories);
+    VirtualFileSystemRoot BuildFlat(IReadOnlyList<DirectoryInfo> servedDirectories);
 }

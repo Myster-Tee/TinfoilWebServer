@@ -8,9 +8,9 @@ public static class LogUtil
 {
     public const string INDENT_SPACES = $"        ";
 
-    public static string ToMultilineString(this IEnumerable<string> lines)
+    public static string ToMultilineString(this IEnumerable<string?> lines)
     {
-        return string.Join("", lines.Select(loadingError => $"{Environment.NewLine}{INDENT_SPACES}{loadingError}"));
+        return string.Join("", lines.Select(line => $"{Environment.NewLine}{INDENT_SPACES}{line}"));
     }
 
 }

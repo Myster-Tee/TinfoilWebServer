@@ -1,4 +1,5 @@
-﻿using TinfoilWebServer.Services.VirtualFS;
+﻿using System.Threading.Tasks;
+using TinfoilWebServer.Services.VirtualFS;
 
 namespace TinfoilWebServer.Services;
 
@@ -13,6 +14,6 @@ public interface IVirtualFileSystemRootProvider
     /// <summary>
     /// Initializes cache
     /// </summary>
-    void Initialize();
+    Task Refresh();
 
 }

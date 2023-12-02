@@ -12,11 +12,10 @@ public class CustomConsoleFormatter : ConsoleFormatter
     {
 
     }
-     
 
-    public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider scopeProvider, TextWriter textWriter)
+    public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
     {
-        var message = logEntry.State.ToString();
+        var message = logEntry.State?.ToString();
         if (message == null)
             return;
 
@@ -44,8 +43,6 @@ public class CustomConsoleFormatter : ConsoleFormatter
                 textWriter.WriteWithColor("[C] ", null, ConsoleColor.Red);
                 break;
             case LogLevel.None:
-                break;
-            default:
                 break;
         }
 

@@ -1,25 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TinfoilWebServer.Booting;
 using TinfoilWebServer.Settings.ConfigModels;
 
 namespace TinfoilWebServer.Settings;
 
 public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 {
-    private readonly CacheExpirationSettings _cacheExpirationSettings = new();
+    private readonly ILogger<AppSettings> _logger;
+    private readonly IBootInfo _bootInfo;
+    private readonly CacheSettings _cacheSettings = new();
     private readonly AuthenticationSettings _authenticationSettings = new();
     private readonly BlacklistSettings _blacklistSettings = new();
-    private string[] _servedDirectories = null!;
+    private IReadOnlyList<DirectoryInfo> _servedDirectories = Array.Empty<DirectoryInfo>();
     private bool _stripDirectoryNames;
     private bool _serveEmptyDirectories;
-    private string[] _allowedExt = null!;
+    private IReadOnlyList<string> _allowedExt = null!;
     private string? _messageOfTheDay;
     private string? _customIndexPath;
 
-    public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel)
+    public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel, ILogger<AppSettings> logger, IBootInfo bootInfo)
     {
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
         appSettingsModel = appSettingsModel ?? throw new ArgumentNullException(nameof(appSettingsModel));
         InitializeFromModel(appSettingsModel.CurrentValue);
 
@@ -33,7 +40,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     private void InitializeFromModel(AppSettingsModel appSettingsModel)
     {
         var servedDirectories = appSettingsModel.ServedDirectories;
-        ServedDirectories = servedDirectories ?? Array.Empty<string>();
+        ServedDirectories = InitializeServedDirectories(servedDirectories);
         StripDirectoryNames = appSettingsModel.StripDirectoryNames ?? true;
         ServeEmptyDirectories = appSettingsModel.ServeEmptyDirectories ?? true;
 
@@ -42,9 +49,9 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         MessageOfTheDay = string.IsNullOrWhiteSpace(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
 
-        var cacheExpiration = appSettingsModel.CacheExpiration;
-        _cacheExpirationSettings.Enabled = cacheExpiration?.Enabled ?? true;
-        _cacheExpirationSettings.ExpirationDelay = cacheExpiration?.ExpirationDelay ?? TimeSpan.FromHours(1);
+        var cacheExpiration = appSettingsModel.Cache;
+        _cacheSettings.AutoDetectChanges = cacheExpiration?.AutoDetectChanges ?? true;
+        _cacheSettings.ForcedRefreshDelay = cacheExpiration?.ForcedRefreshDelay;
 
         var authenticationSettings = appSettingsModel.Authentication;
         _authenticationSettings.Enabled = authenticationSettings?.Enabled ?? false;
@@ -67,9 +74,50 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         CustomIndexPath = appSettingsModel.CustomIndexPath;
     }
 
-    public string[] ServedDirectories
+    private IReadOnlyList<DirectoryInfo> InitializeServedDirectories(IReadOnlyCollection<string?>? servedDirectoryPaths)
     {
-        get => _servedDirectories;
+        var servedDirectories = new List<DirectoryInfo>();
+
+        if (servedDirectoryPaths == null || servedDirectoryPaths.Count <= 0)
+        {
+            _logger.LogWarning($"No served directory defined in configuration file \"{_bootInfo.ConfigFileFullPath}\".");
+            return servedDirectories;
+        }
+
+        foreach (var servedDirectoryPath in servedDirectoryPaths)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(servedDirectoryPath))
+                {
+                    _logger.LogError("Invalid configuration, served directory path can't be empty.");
+                    continue;
+                }
+
+                var servedDirectory = new DirectoryInfo(servedDirectoryPath);
+                if (!servedDirectory.Exists)
+                {
+                    _logger.LogError($"Served directory \"{servedDirectoryPath}\" doesn't exist.");
+                    continue;
+                }
+
+                servedDirectories.Add(servedDirectory);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"An error occurred while initializing served directory \"{servedDirectoryPath}\": {ex.Message}");
+            }
+        }
+
+        if (servedDirectories.Count <= 0)
+            _logger.LogWarning($"No valid served directory found in configuration file \"{_bootInfo.ConfigFileFullPath}\".");
+
+        return servedDirectories;
+    }
+
+    public IReadOnlyList<DirectoryInfo> ServedDirectories
+    {
+        get => _servedDirectories.ToArray();
         private set => SetField(ref _servedDirectories, value);
     }
 
@@ -85,7 +133,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _serveEmptyDirectories, value);
     }
 
-    public string[] AllowedExt
+    public IReadOnlyList<string> AllowedExt
     {
         get => _allowedExt;
         private set => SetField(ref _allowedExt, value);
@@ -103,29 +151,11 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _customIndexPath, value);
     }
 
-    public ICacheExpirationSettings CacheExpiration => _cacheExpirationSettings;
+    public ICacheSettings Cache => _cacheSettings;
 
     public IAuthenticationSettings Authentication => _authenticationSettings;
 
-    public IBlacklistSettings BlacklistSettings => _blacklistSettings;
-
-    private class CacheExpirationSettings : NotifyPropertyChangedBase, ICacheExpirationSettings
-    {
-        private bool _enabled;
-        private TimeSpan _expirationDelay;
-
-        public bool Enabled
-        {
-            get => _enabled;
-            set => SetField(ref _enabled, value);
-        }
-
-        public TimeSpan ExpirationDelay
-        {
-            get => _expirationDelay;
-            set => SetField(ref _expirationDelay, value);
-        }
-    }
+    public IBlacklistSettings Blacklist => _blacklistSettings;
 
     private class AuthenticationSettings : NotifyPropertyChangedBase, IAuthenticationSettings
     {
@@ -163,6 +193,24 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         public string? MessageOfTheDay { get; init; }
     }
 
+}
+
+internal class CacheSettings : NotifyPropertyChangedBase, ICacheSettings
+{
+    private TimeSpan? _forcedRefreshDelay;
+    private bool _autoDetectChanges;
+
+    public bool AutoDetectChanges
+    {
+        get => _autoDetectChanges;
+        set => SetField(ref _autoDetectChanges, value);
+    }
+
+    public TimeSpan? ForcedRefreshDelay
+    {
+        get => _forcedRefreshDelay;
+        set => SetField(ref _forcedRefreshDelay, value);
+    }
 }
 
 public class BlacklistSettings : NotifyPropertyChangedBase, IBlacklistSettings

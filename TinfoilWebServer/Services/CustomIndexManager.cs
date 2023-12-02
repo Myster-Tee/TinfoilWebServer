@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
+using TinfoilWebServer.Services.FSChangeDetection;
 using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services;
@@ -21,10 +22,10 @@ public class CustomIndexManager : ICustomIndexManager
     {
         private readonly ILogger<CustomIndexManager> _logger;
 
-        public CachedData(string customIndexPath, IWatchedFile? watchedFile, ILogger<CustomIndexManager> logger)
+        public CachedData(FileInfo customIndexFile, IWatchedFile? watchedFile, ILogger<CustomIndexManager> logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            CustomIndexPath = customIndexPath ?? throw new ArgumentNullException(nameof(customIndexPath));
+            CustomIndexFile = customIndexFile ?? throw new ArgumentNullException(nameof(customIndexFile));
             WatchedFile = watchedFile;
 
             if (watchedFile != null)
@@ -36,7 +37,7 @@ public class CustomIndexManager : ICustomIndexManager
             RefreshSafe();
         }
 
-        public string CustomIndexPath { get; }
+        public FileInfo CustomIndexFile { get; }
 
         public IWatchedFile? WatchedFile { get; }
 
@@ -47,28 +48,28 @@ public class CustomIndexManager : ICustomIndexManager
         {
             try
             {
-                if (!File.Exists(CustomIndexPath))
+                if (!CustomIndexFile.Exists)
                 {
-                    _logger.LogError($"Custom index file \"{CustomIndexPath}\" not found.");
+                    _logger.LogError($"Custom index file \"{CustomIndexFile}\" not found.");
                     CustomIndex = null;
                     return;
                 }
 
-                using var fileStream = File.Open(CustomIndexPath, FileMode.Open);
+                using var fileStream = File.Open(CustomIndexFile.FullName, FileMode.Open);
 
                 if (JsonNode.Parse(fileStream) is not JsonObject jsonObject)
                 {
-                    _logger.LogError($"Custom index file \"{CustomIndexPath}\" is not a valid JSON object.");
+                    _logger.LogError($"Custom index file \"{CustomIndexFile}\" is not a valid JSON object.");
                 }
                 else
                 {
-                    _logger.LogInformation($"Custom index file \"{CustomIndexPath}\" successfully loaded.");
+                    _logger.LogInformation($"Custom index file \"{CustomIndexFile}\" successfully loaded.");
                     CustomIndex = jsonObject;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to load custom index from file \"{CustomIndexPath}\": {ex.Message}");
+                _logger.LogError(ex, $"Failed to load custom index from file \"{CustomIndexFile}\": {ex.Message}");
             }
         }
 
@@ -116,48 +117,47 @@ public class CustomIndexManager : ICustomIndexManager
 
     private void RefreshCustomIndexesCache()
     {
-        List<string> newCustomIndexPaths = _authenticationSettings.Users
+        var newCustomIndexFiles = _authenticationSettings.Users
             .Select(user => user.CustomIndexPath)
             .Append(_appSettings.CustomIndexPath) // Adds also the global custom index
             .Where(cip => !string.IsNullOrWhiteSpace(cip))
-            .ToList()!;
+            .Select(cip => new FileInfo(cip!))
+            .ToList();
 
         lock (_cachedDataPerPath)
         {
-            foreach (var newCustomIndexPath in newCustomIndexPaths)
+            foreach (var newCustomIndexFile in newCustomIndexFiles)
             {
-                if (_cachedDataPerPath.ContainsKey(newCustomIndexPath))
+                if (_cachedDataPerPath.ContainsKey(newCustomIndexFile.FullName))
                     continue; // Already loaded in the set
 
                 IWatchedFile? watchedFile = null;
                 try
                 {
-                    watchedFile = _fileChangeHelper.WatchFile(newCustomIndexPath);
+                    watchedFile = _fileChangeHelper.WatchFile(newCustomIndexFile);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Failed to watch changes of custom index file \"{newCustomIndexPath}\": {ex.Message}");
+                    _logger.LogError(ex, $"Failed to watch changes of custom index file \"{newCustomIndexFile}\": {ex.Message}");
                 }
 
-                var cachedData = new CachedData(newCustomIndexPath, watchedFile, _logger);
+                var cachedData = new CachedData(newCustomIndexFile, watchedFile, _logger);
                 cachedData.RefreshSafe();
 
-                _cachedDataPerPath.Add(newCustomIndexPath, cachedData);
+                _cachedDataPerPath.Add(newCustomIndexFile.FullName, cachedData);
             }
 
-            // Removes extra custom index from cache 
+            // Removes extra custom index from cache
+
             foreach (var cachedCustomIndexPath in _cachedDataPerPath.Keys.ToArray())
             {
-                if (!newCustomIndexPaths.Contains(cachedCustomIndexPath))
-                {
-                    // Custom index path is not anymore referenced and can be removed from cache
-                    if (_cachedDataPerPath.TryGetValue(cachedCustomIndexPath, out var cachedData))
-                        cachedData.Dispose();
+                if (newCustomIndexFiles.Select(f => f.FullName).Contains(cachedCustomIndexPath)) 
+                    continue;
 
-                    _logger.LogInformation($"Custom index file \"{cachedCustomIndexPath}\" unloaded.");
-
-                    _cachedDataPerPath.Remove(cachedCustomIndexPath);
-                }
+                // Custom index path is not anymore referenced and can be removed from cache
+                _cachedDataPerPath[cachedCustomIndexPath].Dispose();
+                _cachedDataPerPath.Remove(cachedCustomIndexPath);
+                _logger.LogInformation($"Custom index file \"{cachedCustomIndexPath}\" unloaded.");
             }
         }
     }

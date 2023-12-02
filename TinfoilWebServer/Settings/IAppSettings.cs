@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 
 namespace TinfoilWebServer.Settings;
 
 public interface IAppSettings : INotifyPropertyChanged
 {
     /// <summary>
-    /// The list of served directories
+    /// The served directories
     /// </summary>
-    string[] ServedDirectories { get; }
+    IReadOnlyList<DirectoryInfo> ServedDirectories { get; }
 
     /// <summary>
     /// Removes directories names in URLs of served files
@@ -24,7 +25,7 @@ public interface IAppSettings : INotifyPropertyChanged
     /// <summary>
     /// The list of allowed extensions
     /// </summary>
-    string[] AllowedExt { get; }
+    IReadOnlyList<string> AllowedExt { get; }
 
     /// <summary>
     /// The message of the day
@@ -39,7 +40,7 @@ public interface IAppSettings : INotifyPropertyChanged
     /// <summary>
     /// Cache expiration settings
     /// </summary>
-    ICacheExpirationSettings CacheExpiration { get; }
+    ICacheSettings Cache { get; }
 
     /// <summary>
     /// Authentication settings
@@ -49,15 +50,21 @@ public interface IAppSettings : INotifyPropertyChanged
     /// <summary>
     /// Blacklist settings
     /// </summary>
-    IBlacklistSettings BlacklistSettings { get; }
+    IBlacklistSettings Blacklist { get; }
 
 }
 
-public interface ICacheExpirationSettings : INotifyPropertyChanged
+public interface ICacheSettings : INotifyPropertyChanged
 {
-    bool Enabled { get; }
+    /// <summary>
+    /// When true, cache is automatically reloaded when a file system change occurs in served directories
+    /// </summary>
+    bool AutoDetectChanges { get; }
 
-    TimeSpan ExpirationDelay { get; }
+    /// <summary>
+    /// The forced refresh delay
+    /// </summary>
+    TimeSpan? ForcedRefreshDelay { get; }
 }
 
 public interface IAuthenticationSettings : INotifyPropertyChanged

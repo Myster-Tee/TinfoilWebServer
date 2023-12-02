@@ -10,6 +10,7 @@ using TinfoilWebServer.Booting;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Services;
+using TinfoilWebServer.Services.FSChangeDetection;
 using TinfoilWebServer.Services.JSON;
 using TinfoilWebServer.Services.Middleware.Authentication;
 using TinfoilWebServer.Services.Middleware.Blacklist;
@@ -24,7 +25,6 @@ public class Program
 
     public static int Main(string[] args)
     {
-
         const bool RELOAD_CONFIG_ON_CHANGE = true;
         ILogger<Program>? logger = null;
 
@@ -62,9 +62,9 @@ public class Program
                         .AddSingleton<IBootInfo>(_ => bootInfo)
 
                         .AddSingleton<IAppSettings, AppSettings>()
+                        .AddSingleton<ICacheSettings>(provider => provider.GetRequiredService<IAppSettings>().Cache)
                         .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
-                        .AddSingleton<ICacheExpirationSettings>(provider => provider.GetRequiredService<IAppSettings>().CacheExpiration)
-                        .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().BlacklistSettings)
+                        .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().Blacklist)
 
                         .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
                         .AddSingleton<IBlacklistMiddleware, BlacklistMiddleware>()
@@ -80,7 +80,10 @@ public class Program
                         .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
                         .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
                         .AddSingleton<ICustomIndexManager, CustomIndexManager>()
-                        .AddSingleton<IFileChangeHelper, FileChangeHelper>();
+                        .AddSingleton<IFileChangeHelper, FileChangeHelper>()
+                        .AddSingleton<IDirectoryChangeHelper, DirectoryChangeHelper>()
+                        .AddSingleton<IVFSForcedRefreshManager, VFSForcedRefreshManager>()
+                        .AddSingleton<IVFSAutoRefreshManager, VFSAutoRefreshManager>();
                 })
                 .UseKestrel((ctx, options) =>
                 {
@@ -123,10 +126,12 @@ public class Program
                 logger.LogError(ex, $"An unexpected error occurred: {ex.Message}");
             else
                 Console.Error.WriteLine(
-                    $"An unexpected error occurred: {ex.Message}{Environment.NewLine}" +
-                    $"Exception Type: {ex.GetType().Name}{Environment.NewLine}" +
-                    $"Stack Trace:{Environment.NewLine}" +
-                    $"{ex.StackTrace}"
+                     $"""
+                      An unexpected error occurred: {ex.Message}
+                      Exception Type: {ex.GetType().Name}
+                      Stack Trace:
+                      {ex.StackTrace}
+                      """
                     );
             return 1;
         }

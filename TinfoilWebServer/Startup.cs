@@ -18,9 +18,11 @@ public class Startup
     {
         app.UseMiddleware<IBlacklistMiddleware>();
         app.UseMiddleware<IBasicAuthMiddleware>();
-        app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();                         //Just to force initialization without waiting for first request
+        app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();                      // Just to force initialization without waiting for first request
         app.ApplicationServices.GetRequiredService<IBlacklistManager>().Initialize();
-        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().Initialize();  //Just to force initialization without waiting for first request
+        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().Refresh();  // 1st refresh served files cache
+        app.ApplicationServices.GetRequiredService<IVFSAutoRefreshManager>().Initialize();
+        app.ApplicationServices.GetRequiredService<IVFSForcedRefreshManager>().Initialize();
         app.Run(requestManager.OnRequest);
     }
 
