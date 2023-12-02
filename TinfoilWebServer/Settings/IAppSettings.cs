@@ -43,6 +43,11 @@ public interface IAppSettings : INotifyPropertyChanged
     ICacheSettings Cache { get; }
 
     /// <summary>
+    /// Devices filtering settings
+    /// </summary>
+    IDevicesFilteringSettings DevicesFiltering { get; }
+
+    /// <summary>
     /// Authentication settings
     /// </summary>
     IAuthenticationSettings Authentication { get; }
@@ -64,7 +69,15 @@ public interface ICacheSettings : INotifyPropertyChanged
     /// <summary>
     /// The forced refresh delay
     /// </summary>
-    TimeSpan? ForcedRefreshDelay { get; }
+    TimeSpan? PeriodicRefreshDelay { get; }
+}
+
+public interface IDevicesFilteringSettings : INotifyPropertyChanged
+{
+    /// <summary>
+    /// The list of allowed Switch users fingerprints
+    /// </summary>
+    IReadOnlyList<string> AllowedFingerprints { get; }
 }
 
 public interface IAuthenticationSettings : INotifyPropertyChanged
@@ -75,7 +88,7 @@ public interface IAuthenticationSettings : INotifyPropertyChanged
     public bool Enabled { get; }
 
     /// <summary>
-    /// When true, a native web browser authentication popup is displayed when the user is not authenticated.
+    /// When true, a native Web Browser authentication popup is displayed when the user is not authenticated.
     /// Only effective if <see cref="Enabled"/> is true.
     /// </summary>
     public bool WebBrowserAuthEnabled { get; }
@@ -92,6 +105,11 @@ public interface IUserInfo
     /// Name of the user
     /// </summary>
     public string Name { get; }
+
+    /// <summary>
+    /// The list of allowed Switch users fingerprints for this user
+    /// </summary>
+    IReadOnlyList<string> AllowedFingerprints { get; init; }
 
     /// <summary>
     /// The path to a custom JSON index file

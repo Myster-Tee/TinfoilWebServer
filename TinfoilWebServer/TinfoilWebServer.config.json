@@ -7,7 +7,7 @@
   "CustomIndexPath": null,
   "Cache": {
     "AutoDetectChanges": true,
-    "ForcedRefreshDelay": "01:00:00"
+    "PeriodicRefreshDelay": "01:00:00"
   },
   "Authentication": {
     "Enabled": true,
@@ -16,10 +16,14 @@
       {
         "Name": "JohnDoe",
         "Pwd": "123456",
+        "AllowedFingerprints": null,
         "MessageOfTheDay": "Hello JohnDoe!",
         "CustomIndexPath": null
       }
     ]
+  },
+  "DevicesFiltering": {
+    "AllowedFingerprints": null
   },
   "Blacklist": {
     "Enabled": true,

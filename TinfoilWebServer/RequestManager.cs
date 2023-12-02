@@ -7,6 +7,7 @@ using TinfoilWebServer.Properties;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.JSON;
 using TinfoilWebServer.Services.Middleware.Authentication;
+using TinfoilWebServer.Services.Middleware.Fingerprint;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Utils;
 
@@ -18,11 +19,8 @@ public class RequestManager : IRequestManager
     private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
     private readonly IVirtualItemFinder _virtualItemFinder;
 
-    public RequestManager(
-        IJsonSerializer jsonSerializer,
-        ITinfoilIndexBuilder tinfoilIndexBuilder,
-        IVirtualItemFinder virtualItemFinder
-        )
+
+    public RequestManager(IJsonSerializer jsonSerializer, ITinfoilIndexBuilder tinfoilIndexBuilder, IVirtualItemFinder virtualItemFinder)
     {
         _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
         _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
@@ -46,9 +44,15 @@ public class RequestManager : IRequestManager
 
         if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualDirectory virtualDirectory)
         {
-            var authenticatedUser  = context.User as AuthenticatedUser;
+            var fingerprintValidator = context.Features.Get<IFingerprintValidator>()!;
 
-            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory, authenticatedUser);
+            // NOTE: Tinfoil's documentation states that user fingerprint (UID header) is only sent when Tinfoil requests a directory, thus the strategy can't be easily implemented in the middleware
+            if (!await fingerprintValidator.Validate(context.Response))
+                return;
+
+            var authenticatedUser = context.User as AuthenticatedUser;
+
+            var tinfoilIndex = _tinfoilIndexBuilder.Build(virtualDirectory, authenticatedUser?.UserInfo);
 
             var json = _jsonSerializer.Serialize(tinfoilIndex);
 

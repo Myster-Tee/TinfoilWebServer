@@ -14,6 +14,7 @@ using TinfoilWebServer.Services.FSChangeDetection;
 using TinfoilWebServer.Services.JSON;
 using TinfoilWebServer.Services.Middleware.Authentication;
 using TinfoilWebServer.Services.Middleware.Blacklist;
+using TinfoilWebServer.Services.Middleware.Fingerprint;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 using TinfoilWebServer.Settings.ConfigModels;
@@ -64,11 +65,15 @@ public class Program
                         .AddSingleton<IAppSettings, AppSettings>()
                         .AddSingleton<ICacheSettings>(provider => provider.GetRequiredService<IAppSettings>().Cache)
                         .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
+                        .AddSingleton<IDevicesFilteringSettings>(provider => provider.GetRequiredService<IAppSettings>().DevicesFiltering)
                         .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().Blacklist)
 
                         .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
+                        
                         .AddSingleton<IBlacklistMiddleware, BlacklistMiddleware>()
                         .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
+                        .AddSingleton<IFingerprintMiddleware, FingerprintMiddleware>()
+
                         .AddSingleton<IBlacklistManager, BlacklistManager>()
                         .AddSingleton<IBlacklistSerializer, BlacklistSerializer>()
                         .AddSingleton<IRequestManager, RequestManager>()
@@ -82,7 +87,7 @@ public class Program
                         .AddSingleton<ICustomIndexManager, CustomIndexManager>()
                         .AddSingleton<IFileChangeHelper, FileChangeHelper>()
                         .AddSingleton<IDirectoryChangeHelper, DirectoryChangeHelper>()
-                        .AddSingleton<IVFSForcedRefreshManager, VFSForcedRefreshManager>()
+                        .AddSingleton<IVFSPeriodicRefreshManager, VFSPeriodicRefreshManager>()
                         .AddSingleton<IVFSAutoRefreshManager, VFSAutoRefreshManager>();
                 })
                 .UseKestrel((ctx, options) =>

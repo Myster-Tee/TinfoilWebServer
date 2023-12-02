@@ -85,7 +85,7 @@ dotnet TinfoilWebServer.dll
   "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "Cache": {
     "AutoDetectChanges": boolean,       // «true» to auto-refresh the list of served files when a file system change is detected in the served directories, «false» otherwise
-    "ForcedRefreshDelay": string        // Delay for auto-refreshing the list of served files, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s, set null to disable
+    "PeriodicRefreshDelay": string      // Periodic delay for auto-refreshing the list of served files, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s, set «null» to disable
   },
   "Authentication": {
     "Enabled": boolean,                 // «true» to enable authentication, «false» otherwise

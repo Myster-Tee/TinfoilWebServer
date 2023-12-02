@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -49,9 +50,9 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         else if (e.PropertyName == nameof(IAuthenticationSettings.WebBrowserAuthEnabled))
         {
             if (_authenticationSettings.WebBrowserAuthEnabled)
-                _logger.LogInformation($"Web browser authentication enabled.");
+                _logger.LogInformation($"Web Browser authentication enabled.");
             else
-                _logger.LogInformation($"Web browser authentication disabled.");
+                _logger.LogInformation($"Web Browser authentication disabled.");
         }
     }
 
@@ -113,9 +114,10 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             return;
         }
 
-        context.User = new AuthenticatedUser(allowedUser);
 
         _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" from user \"{allowedUser.Name}\".");
+
+        context.User = new AuthenticatedUser(allowedUser);
 
         await next.Invoke(context);
 

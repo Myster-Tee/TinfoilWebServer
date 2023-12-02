@@ -63,15 +63,15 @@ public class SummaryInfoLogger : ISummaryInfoLogger
         sb.AppendLine($"- Message of the day:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}{_appSettings.MessageOfTheDay}");
 
-        var cacheSettings = _appSettings.Cache;
-        sb.AppendLine($"- Cache expiration:");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}Auto detect file changes: {cacheSettings.AutoDetectChanges}");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}Forced refresh delay: {cacheSettings.ForcedRefreshDelay}");
+        var cache = _appSettings.Cache;
+        sb.AppendLine($"- Cache:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Auto detect file changes: {cache.AutoDetectChanges}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Forced refresh delay: {cache.PeriodicRefreshDelay}");
 
         var authentication = _appSettings.Authentication;
         sb.AppendLine($"- Authentication:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {authentication.Enabled}");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}Web browser auth enabled: {authentication.WebBrowserAuthEnabled}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Web Browser auth enabled: {authentication.WebBrowserAuthEnabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Nb allowed users: {authentication.Users.Count}");
 
         var blacklist = _appSettings.Blacklist;

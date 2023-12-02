@@ -13,9 +13,10 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 {
     private readonly ILogger<AppSettings> _logger;
     private readonly IBootInfo _bootInfo;
-    private readonly CacheSettings _cacheSettings = new();
-    private readonly AuthenticationSettings _authenticationSettings = new();
-    private readonly BlacklistSettings _blacklistSettings = new();
+    private readonly CacheSettings _cache = new();
+    private readonly DevicesFilteringSettings _devicesFiltering = new();
+    private readonly AuthenticationSettings _authentication = new();
+    private readonly BlacklistSettings _blacklist = new();
     private IReadOnlyList<DirectoryInfo> _servedDirectories = Array.Empty<DirectoryInfo>();
     private bool _stripDirectoryNames;
     private bool _serveEmptyDirectories;
@@ -49,27 +50,32 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         MessageOfTheDay = string.IsNullOrWhiteSpace(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
 
-        var cacheExpiration = appSettingsModel.Cache;
-        _cacheSettings.AutoDetectChanges = cacheExpiration?.AutoDetectChanges ?? true;
-        _cacheSettings.ForcedRefreshDelay = cacheExpiration?.ForcedRefreshDelay;
+        var cache = appSettingsModel.Cache;
+        _cache.AutoDetectChanges = cache?.AutoDetectChanges ?? true;
+        _cache.PeriodicRefreshDelay = cache?.PeriodicRefreshDelay;
 
-        var authenticationSettings = appSettingsModel.Authentication;
-        _authenticationSettings.Enabled = authenticationSettings?.Enabled ?? false;
-        _authenticationSettings.WebBrowserAuthEnabled = authenticationSettings?.WebBrowserAuthEnabled ?? false;
-        _authenticationSettings.Users = (authenticationSettings?.Users ?? Array.Empty<AllowedUserModel>()).Select(allowedUserModel =>
+        var authentication = appSettingsModel.Authentication;
+        _authentication.Enabled = authentication?.Enabled ?? false;
+        _authentication.WebBrowserAuthEnabled = authentication?.WebBrowserAuthEnabled ?? false;
+        _authentication.Users = (authentication?.Users ?? Array.Empty<AllowedUserModel>()).Select(allowedUserModel =>
             new AllowedUser
             {
                 Name = allowedUserModel.Name ?? "",
+                AllowedFingerprints = allowedUserModel.AllowedFingerprints ?? Array.Empty<string>(),
                 Password = allowedUserModel.Pwd ?? "",
                 CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath) ? null : allowedUserModel.CustomIndexPath,
                 MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay) ? null : allowedUserModel.MessageOfTheDay
             }).ToList();
 
-        var blacklistSettings = appSettingsModel.Blacklist;
-        _blacklistSettings.Enabled = blacklistSettings?.Enabled ?? true;
-        _blacklistSettings.FilePath = string.IsNullOrWhiteSpace(blacklistSettings?.FilePath) ? "IpBlacklist.txt" : blacklistSettings.FilePath;
-        _blacklistSettings.MaxConsecutiveFailedAuth = blacklistSettings?.MaxConsecutiveFailedAuth ?? 3;
-        _blacklistSettings.IsBehindProxy = blacklistSettings?.IsBehindProxy ?? false;
+
+        var devicesFiltering = appSettingsModel.DevicesFiltering;
+        _devicesFiltering.AllowedFingerprints = (devicesFiltering?.AllowedFingerprints?.Where(uid => !string.IsNullOrWhiteSpace(uid)).ToArray() ?? Array.Empty<string>())!;
+
+        var blacklist = appSettingsModel.Blacklist;
+        _blacklist.Enabled = blacklist?.Enabled ?? true;
+        _blacklist.FilePath = string.IsNullOrWhiteSpace(blacklist?.FilePath) ? "IpBlacklist.txt" : blacklist.FilePath;
+        _blacklist.MaxConsecutiveFailedAuth = blacklist?.MaxConsecutiveFailedAuth ?? 3;
+        _blacklist.IsBehindProxy = blacklist?.IsBehindProxy ?? false;
 
         CustomIndexPath = appSettingsModel.CustomIndexPath;
     }
@@ -151,11 +157,31 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _customIndexPath, value);
     }
 
-    public ICacheSettings Cache => _cacheSettings;
+    public ICacheSettings Cache => _cache;
 
-    public IAuthenticationSettings Authentication => _authenticationSettings;
+    public IDevicesFilteringSettings DevicesFiltering => _devicesFiltering;
 
-    public IBlacklistSettings Blacklist => _blacklistSettings;
+    public IAuthenticationSettings Authentication => _authentication;
+
+    public IBlacklistSettings Blacklist => _blacklist;
+
+    private class CacheSettings : NotifyPropertyChangedBase, ICacheSettings
+    {
+        private TimeSpan? _periodicRefreshDelay;
+        private bool _autoDetectChanges;
+
+        public bool AutoDetectChanges
+        {
+            get => _autoDetectChanges;
+            set => SetField(ref _autoDetectChanges, value);
+        }
+
+        public TimeSpan? PeriodicRefreshDelay
+        {
+            get => _periodicRefreshDelay;
+            set => SetField(ref _periodicRefreshDelay, value);
+        }
+    }
 
     private class AuthenticationSettings : NotifyPropertyChangedBase, IAuthenticationSettings
     {
@@ -188,59 +214,55 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         public string Password { get; init; } = "";
 
+        public IReadOnlyList<string> AllowedFingerprints { get; init; } = Array.Empty<string>();
+
         public string? CustomIndexPath { get; init; }
 
         public string? MessageOfTheDay { get; init; }
     }
 
+    private class DevicesFilteringSettings : NotifyPropertyChangedBase, IDevicesFilteringSettings
+    {
+        private IReadOnlyList<string> _allowedFingerprints = Array.Empty<string>();
+
+        public IReadOnlyList<string> AllowedFingerprints
+        {
+            get => _allowedFingerprints;
+            set => SetField(ref _allowedFingerprints, value);
+        }
+    }
+
+    private class BlacklistSettings : NotifyPropertyChangedBase, IBlacklistSettings
+    {
+        private bool _enabled;
+        private string _filePath = "";
+        private int _maxConsecutiveFailedAuth;
+        private bool _isBehindProxy;
+
+        public bool Enabled
+        {
+            get => _enabled;
+            set => SetField(ref _enabled, value);
+        }
+
+        public string FilePath
+        {
+            get => _filePath;
+            set => SetField(ref _filePath, value);
+        }
+
+        public int MaxConsecutiveFailedAuth
+        {
+            get => _maxConsecutiveFailedAuth;
+            set => SetField(ref _maxConsecutiveFailedAuth, value);
+        }
+
+        public bool IsBehindProxy
+        {
+            get => _isBehindProxy;
+            set => SetField(ref _isBehindProxy, value);
+        }
+    }
+
 }
 
-internal class CacheSettings : NotifyPropertyChangedBase, ICacheSettings
-{
-    private TimeSpan? _forcedRefreshDelay;
-    private bool _autoDetectChanges;
-
-    public bool AutoDetectChanges
-    {
-        get => _autoDetectChanges;
-        set => SetField(ref _autoDetectChanges, value);
-    }
-
-    public TimeSpan? ForcedRefreshDelay
-    {
-        get => _forcedRefreshDelay;
-        set => SetField(ref _forcedRefreshDelay, value);
-    }
-}
-
-public class BlacklistSettings : NotifyPropertyChangedBase, IBlacklistSettings
-{
-    private bool _enabled;
-    private string _filePath = "";
-    private int _maxConsecutiveFailedAuth;
-    private bool _isBehindProxy;
-
-    public bool Enabled
-    {
-        get => _enabled;
-        set => SetField(ref _enabled, value);
-    }
-
-    public string FilePath
-    {
-        get => _filePath;
-        set => SetField(ref _filePath, value);
-    }
-
-    public int MaxConsecutiveFailedAuth
-    {
-        get => _maxConsecutiveFailedAuth;
-        set => SetField(ref _maxConsecutiveFailedAuth, value);
-    }
-
-    public bool IsBehindProxy
-    {
-        get => _isBehindProxy;
-        set => SetField(ref _isBehindProxy, value);
-    }
-}

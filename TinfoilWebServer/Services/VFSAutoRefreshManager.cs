@@ -35,7 +35,7 @@ public class VFSAutoRefreshManager : IVFSAutoRefreshManager
     {
         if (e.PropertyName == nameof(IAppSettings.ServedDirectories))
         {
-            _logger.LogInformation("Refreshing automatic changes detection of served directories.");
+            _logger.LogInformation("Refreshing file system change detection of served directories.");
             SafeRefreshWatchedDirectories(_appSettings.ServedDirectories);
         }
     }
@@ -46,12 +46,12 @@ public class VFSAutoRefreshManager : IVFSAutoRefreshManager
         {
             if (_cacheSettings.AutoDetectChanges)
             {
-                _logger.LogInformation("Enabling automatic changes detection of served directories.");
+                _logger.LogInformation("Enabling automatic refresh of served files cache.");
                 SafeRefreshWatchedDirectories(_appSettings.ServedDirectories);
             }
             else
             {
-                _logger.LogInformation("Disabling automatic changes detection of served directories.");
+                _logger.LogInformation("Disabling automatic refresh of served files cache.");
                 SafeRefreshWatchedDirectories(Array.Empty<DirectoryInfo>());
             }
         }
@@ -75,7 +75,7 @@ public class VFSAutoRefreshManager : IVFSAutoRefreshManager
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, $"Failed to initialize changes detection of served directory \"{servedDirectory}\": {ex.Message}");
+                        _logger.LogError(ex, $"Failed to initialize file system change detection of served directory \"{servedDirectory}\": {ex.Message}");
                         continue;
                     }
 
@@ -92,19 +92,21 @@ public class VFSAutoRefreshManager : IVFSAutoRefreshManager
                     watchedDirectory.Dispose();
 
                     _watchedDirectoriesPerFullPath.Remove(removedDirectory);
-                    _logger.LogInformation($"Changes detection of previously served directory \"{removedDirectory}\" disabled.");
+                    _logger.LogInformation($"File system change detection of previously served directory \"{removedDirectory}\" stopped.");
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to refresh changes detection of served directories: {ex.Message}");
+            _logger.LogError(ex, $"Failed to refresh file system change detection of served directories: {ex.Message}");
         }
     }
 
-    private void OnDirectoryChanged(object sender, DirectoryChangedEventHandlerArgs args)
+    private async void OnDirectoryChanged(object sender, DirectoryChangedEventHandlerArgs args)
     {
-        _virtualFileSystemRootProvider.Refresh();
+        _logger.LogDebug($"Served files cache invoked from {this.GetType().Name}.");
+
+        await _virtualFileSystemRootProvider.SafeRefresh();
     }
 
     public void Initialize()

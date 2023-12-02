@@ -32,19 +32,19 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
     {
         if (e.PropertyName == nameof(IAppSettings.StripDirectoryNames))
         {
-            _ = Refresh();
+            _ = SafeRefresh();
         }
         else if (e.PropertyName == nameof(IAppSettings.ServeEmptyDirectories))
         {
-            _ = Refresh();
+            _ = SafeRefresh();
         }
         else if (e.PropertyName == nameof(IAppSettings.ServedDirectories))
         {
-            _ = Refresh();
+            _ = SafeRefresh();
         }
     }
 
-    public async Task Refresh()
+    public async Task SafeRefresh()
     {
         try
         {
