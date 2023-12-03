@@ -6,15 +6,15 @@ using TinfoilWebServer.Settings;
 
 namespace TinfoilWebServer.Services;
 
-public class VFSForcedRefreshManager : IVFSForcedRefreshManager, IDisposable
+public class VFSPeriodicRefreshManager : IVFSPeriodicRefreshManager, IDisposable
 {
     private readonly IVirtualFileSystemRootProvider _virtualFileSystemRootProvider;
     private readonly ICacheSettings _cacheSettings;
-    private readonly ILogger<VFSForcedRefreshManager> _logger;
+    private readonly ILogger<VFSPeriodicRefreshManager> _logger;
     private readonly Timer _timer = new();
 
 
-    public VFSForcedRefreshManager(IVirtualFileSystemRootProvider virtualFileSystemRootProvider, ICacheSettings cacheSettings, ILogger<VFSForcedRefreshManager> logger)
+    public VFSPeriodicRefreshManager(IVirtualFileSystemRootProvider virtualFileSystemRootProvider, ICacheSettings cacheSettings, ILogger<VFSPeriodicRefreshManager> logger)
     {
         _virtualFileSystemRootProvider = virtualFileSystemRootProvider ?? throw new ArgumentNullException(nameof(virtualFileSystemRootProvider));
         _cacheSettings = cacheSettings ?? throw new ArgumentNullException(nameof(cacheSettings));
@@ -27,9 +27,9 @@ public class VFSForcedRefreshManager : IVFSForcedRefreshManager, IDisposable
 
     public void Initialize()
     {
-        if (_cacheSettings.ForcedRefreshDelay != null)
+        if (_cacheSettings.PeriodicRefreshDelay != null)
         {
-            SafeEnable(_cacheSettings.ForcedRefreshDelay.Value);
+            SafeEnable(_cacheSettings.PeriodicRefreshDelay.Value);
         }
     }
 
@@ -42,7 +42,7 @@ public class VFSForcedRefreshManager : IVFSForcedRefreshManager, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to start automatic refresh delay of served directories with value {delay}: {ex.Message}");
+            _logger.LogError(ex, $"Failed to start periodic refresh of served files cache with value {delay}: {ex.Message}");
         }
     }
 
@@ -54,38 +54,40 @@ public class VFSForcedRefreshManager : IVFSForcedRefreshManager, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to stop automatic refresh delay of served directories: {ex.Message}");
+            _logger.LogError(ex, $"Failed to stop periodic refresh served files cache: {ex.Message}");
         }
     }
 
     private void OnCacheSettingsChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ICacheSettings.ForcedRefreshDelay))
+        if (e.PropertyName == nameof(ICacheSettings.PeriodicRefreshDelay))
         {
-            var forcedRefreshDelay = _cacheSettings.ForcedRefreshDelay;
-            if (forcedRefreshDelay == null)
+            var periodicRefreshDelay = _cacheSettings.PeriodicRefreshDelay;
+            if (periodicRefreshDelay == null)
             {
-                _logger.LogInformation("Disabling automatic refresh delay of served directories.");
+                _logger.LogInformation("Disabling periodic refresh of served files cache.");
                 SafeDisable();
             }
             else
             {
-                _logger.LogInformation($"Enabling automatic refresh delay of served directories every {forcedRefreshDelay.Value}.");
-                SafeEnable(forcedRefreshDelay.Value);
+                _logger.LogInformation($"Enabling periodic refresh of served files cache every {periodicRefreshDelay.Value}.");
+                SafeEnable(periodicRefreshDelay.Value);
             }
         }
     }
 
     private async void OnTimerElapsed(object? sender, ElapsedEventArgs e)
     {
-        await _virtualFileSystemRootProvider.Refresh();
+        _logger.LogDebug($"Served files cache invoked from {this.GetType().Name}.");
+
+        await _virtualFileSystemRootProvider.SafeRefresh();
         try
         {
             _timer.Start();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Failed to restart automatic refresh delay of served directories: {ex.Message}");
+            _logger.LogError(ex, $"Failed to rearm periodic refresh of served files cache: {ex.Message}");
         }
     }
 

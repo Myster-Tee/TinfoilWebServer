@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.Middleware.Authentication;
 using TinfoilWebServer.Services.Middleware.Blacklist;
+using TinfoilWebServer.Services.Middleware.Fingerprint;
 
 namespace TinfoilWebServer;
 
@@ -16,13 +17,18 @@ public class Startup
     /// <param name="requestManager"></param>
     public void Configure(IApplicationBuilder app, IRequestManager requestManager)
     {
-        app.UseMiddleware<IBlacklistMiddleware>();
-        app.UseMiddleware<IBasicAuthMiddleware>();
+        app
+            .UseMiddleware<IBlacklistMiddleware>()
+            .UseMiddleware<IBasicAuthMiddleware>()
+            .UseMiddleware<IFingerprintMiddleware>(); // This middleware should be added after the authentication middleware
+
         app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();                      // Just to force initialization without waiting for first request
+        app.ApplicationServices.GetRequiredService<IFingerprintMiddleware>();                      // Just to force initialization without waiting for first request
         app.ApplicationServices.GetRequiredService<IBlacklistManager>().Initialize();
-        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().Refresh();  // 1st refresh served files cache
+        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().SafeRefresh();  // 1st refresh served files cache
         app.ApplicationServices.GetRequiredService<IVFSAutoRefreshManager>().Initialize();
-        app.ApplicationServices.GetRequiredService<IVFSForcedRefreshManager>().Initialize();
+        app.ApplicationServices.GetRequiredService<IVFSPeriodicRefreshManager>().Initialize();
+
         app.Run(requestManager.OnRequest);
     }
 

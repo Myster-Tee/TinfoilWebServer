@@ -85,7 +85,7 @@ dotnet TinfoilWebServer.dll
   "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "Cache": {
     "AutoDetectChanges": boolean,       // «true» to auto-refresh the list of served files when a file system change is detected in the served directories, «false» otherwise
-    "ForcedRefreshDelay": string        // Delay for auto-refreshing the list of served files, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s, set null to disable
+    "PeriodicRefreshDelay": string      // Periodic delay for auto-refreshing the list of served files, format is «[d'.']hh':'mm':'ss['.'fffffff]», ex: "01:30:15" for 1h30m15s, set «null» to disable
   },
   "Authentication": {
     "Enabled": boolean,                 // «true» to enable authentication, «false» otherwise
@@ -94,9 +94,14 @@ dotnet TinfoilWebServer.dll
       {
         "Name": string,                 // The user name
         "Pwd": string,                  // The password
-        "MessageOfTheDay": string       // Custom message for the user
+        "AllowedFingerprints": string[],// The list of allowed Nintendo Switch users unique IDs for this user. Empty array or null to disable filtering.
+        "MessageOfTheDay": string,      // Custom message for the user
+        "CustomIndexPath": string       // The path to a custom JSON file for this user to be merged with the served index
       }
     ]
+  },
+  "DevicesFiltering": {
+    "AllowedFingerprints": string[]     // The global list of allowed Nintendo Switch users unique IDs. Empty array or null to disable filtering.
   },
   "Blacklist": {
     "Enabled": boolean,                 // Enable or disable the IP blacklisting feature
@@ -152,6 +157,15 @@ For example, using the JSON below, it is possible to enrich the served files wit
   "files": ["https://some/other/url1", "https://some/other/url2"] // Will be combined with served files
 }
 ```
+
+### Fingerprints
+
+A fingerprint is a unique Nintendo Switch user ID.  
+Specifying fingerprints in configuration <u>will not prevent a user from downloading files</u> because
+Tinfoil only emit a fingerprint while requesting the index, but it will prevent a user from accessing index.  
+When fingerprints are defined at user level, globlally defined fingerprints will be ignored.
+
+You may find fingerprints in the logs when available in the requests.
 
 ## Security considerations and recommendations
 
