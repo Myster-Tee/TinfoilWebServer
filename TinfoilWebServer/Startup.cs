@@ -22,10 +22,11 @@ public class Startup
             .UseMiddleware<IBasicAuthMiddleware>()
             .UseMiddleware<IFingerprintMiddleware>(); // This middleware should be added after the authentication middleware
 
-        app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();                      // Just to force initialization without waiting for first request
-        app.ApplicationServices.GetRequiredService<IFingerprintMiddleware>();                      // Just to force initialization without waiting for first request
+        app.ApplicationServices.GetRequiredService<IBasicAuthMiddleware>();                         // Just to force initialization without waiting for first request
+        app.ApplicationServices.GetRequiredService<IFingerprintMiddleware>();                       // Just to force initialization without waiting for first request
         app.ApplicationServices.GetRequiredService<IBlacklistManager>().Initialize();
-        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().SafeRefresh();  // 1st refresh served files cache
+        app.ApplicationServices.GetRequiredService<IFingerprintsFilteringManager>().Initialize();
+        app.ApplicationServices.GetRequiredService<IVirtualFileSystemRootProvider>().SafeRefresh(); // 1st refresh served files cache
         app.ApplicationServices.GetRequiredService<IVFSAutoRefreshManager>().Initialize();
         app.ApplicationServices.GetRequiredService<IVFSPeriodicRefreshManager>().Initialize();
 

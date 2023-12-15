@@ -16,14 +16,16 @@
       {
         "Name": "JohnDoe",
         "Pwd": "123456",
-        "AllowedFingerprints": null,
+        "MaxFingerprints": 1,
         "MessageOfTheDay": "Hello JohnDoe!",
         "CustomIndexPath": null
       }
     ]
   },
-  "DevicesFiltering": {
-    "AllowedFingerprints": null
+  "FingerprintsFilter": {
+    "Enabled": true,
+    "FingerprintsFilePath": "fingerprints.json",
+    "MaxFingerprints": 1
   },
   "Blacklist": {
     "Enabled": true,

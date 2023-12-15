@@ -73,6 +73,12 @@ public class SummaryInfoLogger : ISummaryInfoLogger
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {authentication.Enabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Web Browser auth enabled: {authentication.WebBrowserAuthEnabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Nb allowed users: {authentication.Users.Count}");
+        
+        var fingerprintsFilter = _appSettings.FingerprintsFilter;
+        sb.AppendLine($"- Fingerprints filter:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {fingerprintsFilter.Enabled}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Allowed fingerprints file: {fingerprintsFilter.FingerprintsFilePath}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Max global fingerprints allowed: {fingerprintsFilter.MaxFingerprints}");
 
         var blacklist = _appSettings.Blacklist;
         sb.AppendLine($"- Blacklist:");

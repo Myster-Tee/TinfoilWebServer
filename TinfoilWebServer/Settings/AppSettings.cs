@@ -14,7 +14,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     private readonly ILogger<AppSettings> _logger;
     private readonly IBootInfo _bootInfo;
     private readonly CacheSettings _cache = new();
-    private readonly DevicesFilteringSettings _devicesFiltering = new();
+    private readonly FingerprintsFilterSettings _fingerprintsFilter = new();
     private readonly AuthenticationSettings _authentication = new();
     private readonly BlacklistSettings _blacklist = new();
     private IReadOnlyList<DirectoryInfo> _servedDirectories = Array.Empty<DirectoryInfo>();
@@ -61,15 +61,16 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
             new AllowedUser
             {
                 Name = allowedUserModel.Name ?? "",
-                AllowedFingerprints = allowedUserModel.AllowedFingerprints ?? Array.Empty<string>(),
+                MaxFingerprints = allowedUserModel.MaxFingerprints ?? 1,
                 Password = allowedUserModel.Pwd ?? "",
                 CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath) ? null : allowedUserModel.CustomIndexPath,
                 MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay) ? null : allowedUserModel.MessageOfTheDay
             }).ToList();
 
-
-        var devicesFiltering = appSettingsModel.DevicesFiltering;
-        _devicesFiltering.AllowedFingerprints = (devicesFiltering?.AllowedFingerprints?.Where(uid => !string.IsNullOrWhiteSpace(uid)).ToArray() ?? Array.Empty<string>())!;
+        var fingerprintsFilter = appSettingsModel.FingerprintsFilter;
+        _fingerprintsFilter.Enabled = fingerprintsFilter?.Enabled ?? false;
+        _fingerprintsFilter.FingerprintsFilePath = fingerprintsFilter?.FingerprintsFilePath ?? "AllowedFingerprints.json";
+        _fingerprintsFilter.MaxFingerprints = fingerprintsFilter?.MaxFingerprints ?? 0;
 
         var blacklist = appSettingsModel.Blacklist;
         _blacklist.Enabled = blacklist?.Enabled ?? true;
@@ -159,7 +160,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
     public ICacheSettings Cache => _cache;
 
-    public IDevicesFilteringSettings DevicesFiltering => _devicesFiltering;
+    public IFingerprintsFilterSettings FingerprintsFilter => _fingerprintsFilter;
 
     public IAuthenticationSettings Authentication => _authentication;
 
@@ -212,23 +213,37 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     {
         public string Name { get; init; } = "";
 
-        public string Password { get; init; } = "";
+        public int MaxFingerprints { get; init; }
 
-        public IReadOnlyList<string> AllowedFingerprints { get; init; } = Array.Empty<string>();
+        public string Password { get; init; } = "";
 
         public string? CustomIndexPath { get; init; }
 
         public string? MessageOfTheDay { get; init; }
     }
 
-    private class DevicesFilteringSettings : NotifyPropertyChangedBase, IDevicesFilteringSettings
+    private class FingerprintsFilterSettings : NotifyPropertyChangedBase, IFingerprintsFilterSettings
     {
-        private IReadOnlyList<string> _allowedFingerprints = Array.Empty<string>();
+        private bool _enabled;
+        private string _fingerprintsFilePath = "";
+        private int _maxFingerprints;
 
-        public IReadOnlyList<string> AllowedFingerprints
+        public bool Enabled
         {
-            get => _allowedFingerprints;
-            set => SetField(ref _allowedFingerprints, value);
+            get => _enabled;
+            set => SetField(ref _enabled, value);
+        }
+
+        public string FingerprintsFilePath
+        {
+            get => _fingerprintsFilePath;
+            set => SetField(ref _fingerprintsFilePath, value);
+        }
+
+        public int MaxFingerprints
+        {
+            get => _maxFingerprints;
+            set => SetField(ref _maxFingerprints, value);
         }
     }
 

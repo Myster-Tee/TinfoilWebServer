@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TinfoilWebServer.Settings.ConfigModels;
 
@@ -24,7 +23,7 @@ public class AppSettingsModel
 
     public AuthenticationSettingsModel? Authentication { get; set; }
 
-    public DevicesFilteringSettingsModel? DevicesFiltering { get; set; }
+    public FingerprintsFilterSettingsModel? FingerprintsFilter { get; set; }
 
     public BlacklistSettingsModel? Blacklist { get; set; }
 }
@@ -50,7 +49,7 @@ public class AllowedUserModel
 {
     public string? Name { get; set; }
 
-    public IReadOnlyList<string>? AllowedFingerprints { get; set; }
+    public int? MaxFingerprints { get; set; }
 
     public string? Pwd { get; set; }
 
@@ -59,9 +58,13 @@ public class AllowedUserModel
     public string? MessageOfTheDay { get; set; }
 }
 
-public class DevicesFilteringSettingsModel
+public class FingerprintsFilterSettingsModel
 {
-    public string?[]? AllowedFingerprints { get; set; }
+    public bool? Enabled { get; set; }
+
+    public string? FingerprintsFilePath { get; set; }
+
+    public int? MaxFingerprints { get; set; }
 }
 
 public class BlacklistSettingsModel

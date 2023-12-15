@@ -63,7 +63,9 @@ public class BlacklistSerializer : IBlacklistSerializer
                 while ((lineRaw = textReader.ReadLine()) != null)
                 {
                     var sanitizedLine = lineRaw.Split('#', 2)[0].Trim(); // Strips comments
-                    if (!string.IsNullOrEmpty(sanitizedLine) && IPAddress.TryParse(sanitizedLine, out var ipAddress))
+                    if(string.IsNullOrEmpty(sanitizedLine))
+                        continue;
+                    if (IPAddress.TryParse(sanitizedLine, out var ipAddress))
                         ipAddresses.Add(ipAddress);
                     else if (logErrors)
                         _logger.LogError($"Invalid IP address \"{sanitizedLine}\" found file in file \"{filePath}\".");

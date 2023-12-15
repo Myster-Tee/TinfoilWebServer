@@ -46,30 +46,32 @@ public class CustomIndexManager : ICustomIndexManager
 
         public void RefreshSafe()
         {
+            var customIndexFile = CustomIndexFile;
             try
             {
-                if (!CustomIndexFile.Exists)
+                customIndexFile.Refresh();
+                if (!customIndexFile.Exists)
                 {
-                    _logger.LogError($"Custom index file \"{CustomIndexFile}\" not found.");
+                    _logger.LogError($"Custom index file \"{customIndexFile}\" not found.");
                     CustomIndex = null;
                     return;
                 }
 
-                using var fileStream = File.Open(CustomIndexFile.FullName, FileMode.Open);
+                using var fileStream = File.Open(customIndexFile.FullName, FileMode.Open);
 
                 if (JsonNode.Parse(fileStream) is not JsonObject jsonObject)
                 {
-                    _logger.LogError($"Custom index file \"{CustomIndexFile}\" is not a valid JSON object.");
+                    _logger.LogError($"Custom index file \"{customIndexFile}\" is not a valid JSON object.");
                 }
                 else
                 {
-                    _logger.LogInformation($"Custom index file \"{CustomIndexFile}\" successfully loaded.");
+                    _logger.LogInformation($"Custom index file \"{customIndexFile}\" successfully loaded.");
                     CustomIndex = jsonObject;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Failed to load custom index from file \"{CustomIndexFile}\": {ex.Message}");
+                _logger.LogError(ex, $"Failed to load custom index from file \"{customIndexFile}\": {ex.Message}");
             }
         }
 

@@ -18,7 +18,7 @@ The requirements depend on the version you choose to download.
 
 ### Framework-Dependent version
 
-This version is lightweight but you'll need to install the [ASP.NET Core Runtime 6.X.X](https://dotnet.microsoft.com/download/dotnet/6.0) before running the server.
+This version is lightweight but you'll need to install the [ASP.NET Core Runtime 8.X.X](https://dotnet.microsoft.com/download/dotnet/8.0) before running the server.
 
 ### Framework-Independent version
 
@@ -94,14 +94,16 @@ dotnet TinfoilWebServer.dll
       {
         "Name": string,                 // The user name
         "Pwd": string,                  // The password
-        "AllowedFingerprints": string[],// The list of allowed Nintendo Switch users unique IDs for this user. Empty array or null to disable filtering.
+        "MaxFingerprints": number,      // The maximum number of fingerprints allowed for this user
         "MessageOfTheDay": string,      // Custom message for the user
         "CustomIndexPath": string       // The path to a custom JSON file for this user to be merged with the served index
       }
     ]
   },
-  "DevicesFiltering": {
-    "AllowedFingerprints": string[]     // The global list of allowed Nintendo Switch users unique IDs. Empty array or null to disable filtering.
+  "FingerprintsFilter": {
+    "Enabled" : boolean,                // «true» to enable fingerprints validation filter, «false» otherwise
+    "FingerprintsFilePath": string      // The path to the file where to save allowed fingerprints
+    "MaxFingerprints" : number          // The maximum number of global fingerprints allowed
   },
   "Blacklist": {
     "Enabled": boolean,                 // Enable or disable the IP blacklisting feature
@@ -158,14 +160,17 @@ For example, using the JSON below, it is possible to enrich the served files wit
 }
 ```
 
+### IP Blacklisting
+
+File format is text, one line per blacklisted IP. Empty lines will be ignored. Use # to write comments.
+
+
 ### Fingerprints
 
 A fingerprint is a unique Nintendo Switch user ID.  
-Specifying fingerprints in configuration <u>will not prevent a user from downloading files</u> because
-Tinfoil only emit a fingerprint while requesting the index, but it will prevent a user from accessing index.  
-When fingerprints are defined at user level, globlally defined fingerprints will be ignored.
+Tinfoil emits a fingerprint only when requesting the index, but not when requesting files. Thus specifying fingerprints in configuration <u>will not prevent a user from downloading files</u>.
 
-You may find fingerprints in the logs when available in the requests.
+When fingerprints are allowed globally and at user level, server will check for a valid fingerprint among allowed user fingerprints and globally allowed fingerprints.
 
 ## Security considerations and recommendations
 
@@ -173,7 +178,8 @@ If you plan to open your server to the Internet network (WAN) instead of local n
 
 1. Setup HTTPS only
 1. Enable authentication to restrict access to some specific users
-1. Serving directories with only Switch packages (without personal data)
-1. Serve only Switch packages file extensions
+1. Serve directories containining only Nintendo Switch files (without personal data)
+1. Restrict served file extensions to Nintendo Switch files
 1. Setup _StripDirectoryNames_ setting to _true_ to hide your personal folder tree organization
 1. Enable IP blacklistng feature
+1. Enable fingerprints filter feature

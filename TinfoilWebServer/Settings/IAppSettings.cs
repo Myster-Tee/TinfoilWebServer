@@ -43,9 +43,9 @@ public interface IAppSettings : INotifyPropertyChanged
     ICacheSettings Cache { get; }
 
     /// <summary>
-    /// Devices filtering settings
+    /// Fingerprints filter settings
     /// </summary>
-    IDevicesFilteringSettings DevicesFiltering { get; }
+    IFingerprintsFilterSettings FingerprintsFilter { get; }
 
     /// <summary>
     /// Authentication settings
@@ -72,12 +72,13 @@ public interface ICacheSettings : INotifyPropertyChanged
     TimeSpan? PeriodicRefreshDelay { get; }
 }
 
-public interface IDevicesFilteringSettings : INotifyPropertyChanged
+public interface IFingerprintsFilterSettings : INotifyPropertyChanged
 {
-    /// <summary>
-    /// The list of allowed Switch users fingerprints
-    /// </summary>
-    IReadOnlyList<string> AllowedFingerprints { get; }
+    bool Enabled { get; }
+
+    string FingerprintsFilePath { get; }
+
+    int MaxFingerprints { get; }
 }
 
 public interface IAuthenticationSettings : INotifyPropertyChanged
@@ -107,9 +108,9 @@ public interface IUserInfo
     public string Name { get; }
 
     /// <summary>
-    /// The list of allowed Switch users fingerprints for this user
+    /// The maximum number of fingerprints allowed for this user
     /// </summary>
-    IReadOnlyList<string> AllowedFingerprints { get; init; }
+    int MaxFingerprints { get; init; }
 
     /// <summary>
     /// The path to a custom JSON index file

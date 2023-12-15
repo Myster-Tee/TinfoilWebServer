@@ -65,7 +65,7 @@ public class Program
                         .AddSingleton<IAppSettings, AppSettings>()
                         .AddSingleton<ICacheSettings>(provider => provider.GetRequiredService<IAppSettings>().Cache)
                         .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
-                        .AddSingleton<IDevicesFilteringSettings>(provider => provider.GetRequiredService<IAppSettings>().DevicesFiltering)
+                        .AddSingleton<IFingerprintsFilterSettings>(provider => provider.GetRequiredService<IAppSettings>().FingerprintsFilter)
                         .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().Blacklist)
 
                         .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
@@ -74,6 +74,8 @@ public class Program
                         .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                         .AddSingleton<IFingerprintMiddleware, FingerprintMiddleware>()
 
+                        .AddSingleton<IFingerprintsFilteringManager, FingerprintsFilteringManager>()
+                        .AddSingleton<IFingerprintsSerializer, FingerprintsSerializer>()
                         .AddSingleton<IBlacklistManager, BlacklistManager>()
                         .AddSingleton<IBlacklistSerializer, BlacklistSerializer>()
                         .AddSingleton<IRequestManager, RequestManager>()

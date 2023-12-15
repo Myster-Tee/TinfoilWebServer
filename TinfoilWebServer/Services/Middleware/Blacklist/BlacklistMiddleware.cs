@@ -55,7 +55,7 @@ public class BlacklistMiddleware : IBlacklistMiddleware
 
         await next.Invoke(context);
 
-        if (context.Response.StatusCode is >= 401 and <= 403)
+        if (context.Response.StatusCode is >= StatusCodes.Status401Unauthorized and <= StatusCodes.Status403Forbidden)
         {
             _blacklistManager.ReportIpUnauthorized(remoteIpAddress);
         }

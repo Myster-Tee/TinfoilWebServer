@@ -47,7 +47,7 @@ public class RequestManager : IRequestManager
             var fingerprintValidator = context.Features.Get<IFingerprintValidator>()!;
 
             // NOTE: Tinfoil's documentation states that user fingerprint (UID header) is only sent when Tinfoil requests a directory, thus the strategy can't be easily implemented in the middleware
-            if (!await fingerprintValidator.Validate(context.Response))
+            if (!await fingerprintValidator.Validate())
                 return;
 
             var authenticatedUser = context.User as AuthenticatedUser;
@@ -64,6 +64,7 @@ public class RequestManager : IRequestManager
         else if ((request.Method is "GET" or "HEAD") && virtualItem is VirtualFile virtualFile)
         {
             var rangeHeader = request.GetTypedHeaders().Range;
+            context.Response.ContentType = "application/octet-stream";
 
             await context.Response.WriteFile(virtualFile.File.FullName, context.RequestAborted, rangeHeader: rangeHeader);
         }

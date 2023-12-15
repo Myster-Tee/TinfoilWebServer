@@ -55,7 +55,6 @@ public class BlacklistManager : IBlacklistManager, IDisposable
 
             SafeInitializeInternal(false);
         }
-
     }
 
     private void OnBlacklistFileChanged(object sender, FileChangedEventHandlerArgs args)
@@ -73,7 +72,6 @@ public class BlacklistManager : IBlacklistManager, IDisposable
             return _blacklistedIps.Contains(ipAddress);
         }
     }
-
 
     public void ReportIpUnauthorized(IPAddress ipAddress)
     {
@@ -169,13 +167,14 @@ public class BlacklistManager : IBlacklistManager, IDisposable
                 _logger.LogWarning($"IP blacklisting is enabled but blacklist file path is empty in configuration file \"{_bootInfo.ConfigFileFullPath}\", blacklisted IPs won't be saved.");
                 return;
             }
-            
+
             _blacklistFile = new FileInfo(blacklistFilePath);
 
             if (_blacklistFile.Directory == null)
                 throw new Exception($"The directory of blacklist file \"{_blacklistFile}\" can't be determined.");
 
             var blacklistFileDir = _blacklistFile.Directory;
+            blacklistFileDir.Refresh();
             if (!blacklistFileDir.Exists)
             {
                 _blacklistFile.Directory.Create();
@@ -201,13 +200,14 @@ public class BlacklistManager : IBlacklistManager, IDisposable
         try
         {
             _watchedFile = _fileChangeHelper.WatchFile(blacklistFullFilePath);
-            _watchedFile.FileChanged += OnBlacklistFileChanged;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Failed to watch changes of file \"{blacklistFullFilePath}\": {ex.Message}");
-            _watchedFile?.Dispose();
+            return;
         }
+
+        _watchedFile.FileChanged += OnBlacklistFileChanged;
     }
 
     private void SafeLoadBlacklistedIps()
@@ -221,6 +221,7 @@ public class BlacklistManager : IBlacklistManager, IDisposable
                 if (_blacklistFile == null)
                     return;
 
+                _blacklistFile.Refresh();
                 if (_blacklistFile.Exists)
                 {
                     _blacklistSerializer.Deserialize(_blacklistFile.FullName, _blacklistedIps);
