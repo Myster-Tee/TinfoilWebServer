@@ -16,7 +16,7 @@ public static class LogFileFormatter
                 $"Exception Type: {ex.GetType().Name}{Environment.NewLine}" +
                 $"Stack Trace:{Environment.NewLine}{ex.StackTrace}";
 
-        return $"{DateTime.Now}-{LevelToString(message.LogLevel)}: {message.Message}{exceptionMessage}";
+        return $"{DateTime.Now:yyyy/MM/dd@HH:mm:ss}-{LevelToString(message.LogLevel)}: {message.Message}{exceptionMessage}";
     }
 
     private static string LevelToString(LogLevel level)
