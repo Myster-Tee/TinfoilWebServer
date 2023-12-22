@@ -11,7 +11,7 @@
   },
   "Authentication": {
     "Enabled": true,
-    "WebBrowserAuthEnabled": true,
+    "WebBrowserAuthEnabled": false,
     "Users": [
       {
         "Name": "JohnDoe",
