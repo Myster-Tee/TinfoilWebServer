@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Booting;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
+using TinfoilWebServer.Logging.Formatting;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.FSChangeDetection;
 using TinfoilWebServer.Services.JSON;
@@ -46,15 +47,17 @@ public class Program
                 })
                 .ConfigureLogging((ctx, loggingBuilder) =>
                 {
+                    var loggingConfig = ctx.Configuration.GetSection("Logging");
                     loggingBuilder
-                        .AddConfiguration(ctx.Configuration.GetSection("Logging"))
+                        .AddConfiguration(loggingConfig)
+                        .AddFilter("Microsoft", LogLevel.None)
                         .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(_ => { })
                         .AddConsole(options =>
                         {
                             if (options.FormatterName == null) // NOTE: not null when formatter name is specified in config file
                                 options.FormatterName = nameof(CustomConsoleFormatter);
                         })
-                        .AddFile(ctx.Configuration.GetSection("Logging"), options => options.FormatLogEntry = LogFileFormatter.FormatLogEntry);
+                        .AddFile(loggingConfig, options => options.FormatLogEntry = new LogFileFormatter(loggingConfig).FormatLogEntry);
                 })
                 .ConfigureServices((ctx, services) =>
                 {
