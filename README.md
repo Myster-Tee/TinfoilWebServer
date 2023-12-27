@@ -132,14 +132,22 @@ dotnet TinfoilWebServer.dll
     "Console": {                        // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
       "LogLevel": {
         "Default": string
-      }
+      },
+      "FormatterOptions": {
+        "Format": string,               // The custom log format for a log event without exception (see below for more information)
+        "FormatWithException": string   // The custom log format for a log event with exception (see below for more information)
+	  }	
     },
     "File": {                           // See https://github.com/nreco/logging#how-to-use for more information
       "Path": string,
       "Append": boolean,
       "MinLevel": string,
       "FileSizeLimitBytes": number,
-      "MaxRollingFiles": number
+      "MaxRollingFiles": number,
+      "FormatterOptions": {
+        "Format": string,               // The custom log format for a log event without exception (see below for more information)
+        "FormatWithException": string   // The custom log format for a log event with exception (see below for more information)
+	  }	
     }
   }
 }
@@ -171,6 +179,39 @@ A fingerprint is a unique Nintendo Switch user ID.
 Tinfoil emits a fingerprint only when requesting the index, but not when requesting files. Thus specifying fingerprints in configuration <u>will not prevent a user from downloading files</u>.
 
 When fingerprints are allowed globally and at user level, server will check for a valid fingerprint among allowed user fingerprints and globally allowed fingerprints.
+
+### Custom log format
+
+You can specify a custom log format using keywords between braces.
+
+Format for keywords without options: *\{SomeKeyWord\}*  
+Format for keywords with options: *\{SomeKeyWord:SomeOptions\}*
+
+Example:
+
+```
+"FormatWithException" : "> {Date}-{LogLevel}-{Category}: {Message}{NewLine}Exception message: {ExMessage}{NewLine}Stack trace:{NewLine}{ExStackTrace}"
+```
+
+#### List of supported keywords for log event with and without exception:
+
+- \{Message\}: the log message
+- \{NewLine\}: appends a new line according to the current system (\r, \n or \r\n)
+- \{Category\}: the log category (.NET Namespace)
+- \{EventId\}: the log event ID
+- \{LogLevel:\<Option\>\}: the log level, optional option:
+  - SU: Short log level upper case
+  - SL: Short log level lower case
+  - U: Log level upper case
+  - L: Log level lower case
+- \{Date:\<Option\>\}: the log date, optional option: [a valid date format](https://learn.microsoft.com/fr-fr/dotnet/api/system.datetime.tostring?view=net-8.0#system-datetime-tostring(system-string))
+
+#### List of supported keywords for log event with exception only:
+
+- \{ExMessage\}: The exception message
+- \{ExType\}: The exception type name
+- \{ExStackTrace\}: The exception stack trace
+
 
 ## Security considerations and recommendations
 

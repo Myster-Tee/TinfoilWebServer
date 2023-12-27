@@ -28,7 +28,7 @@ public class DelimitedTextParser
     /// <returns></returns>
     public IEnumerable<TextPart> Parse(string inputText)
     {
-        var stringReader = new StringReader(inputText);
+        using var stringReader = new StringReader(inputText);
 
         var isInKeyword = false;
         var buffer = new StringBuilder();

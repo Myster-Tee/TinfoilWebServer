@@ -1,51 +1,68 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
+using Microsoft.Extensions.Options;
+using TinfoilWebServer.Logging.Formatting;
+using TinfoilWebServer.Logging.Formatting.Parts;
+
 
 namespace TinfoilWebServer.Logging.Console;
 
 public class CustomConsoleFormatter : ConsoleFormatter
 {
-    public CustomConsoleFormatter() : base(nameof(CustomConsoleFormatter))
-    {
+    private LogEntryFormat _logEntryFormat;
+    private LogEntryFormat _logEntryWithExceptionFormat;
+    private bool _useColor = true;
 
+    public CustomConsoleFormatter(IOptionsMonitor<CustomConsoleFormatterOptions> optionsMonitor) : base(nameof(CustomConsoleFormatter))
+    {
+        UpdateFromOptions(optionsMonitor.CurrentValue);
+        optionsMonitor.OnChange(UpdateFromOptions);
+    }
+
+    [MemberNotNull(nameof(_logEntryFormat))]
+    [MemberNotNull(nameof(_logEntryWithExceptionFormat))]
+    private void UpdateFromOptions(CustomConsoleFormatterOptions options)
+    {
+        var format = options.Format;
+        _logEntryFormat = string.IsNullOrEmpty(format) ? LogEntryFormat.Default : LogEntryFormat.Parse(format);
+
+        var formatWithException = options.FormatWithException;
+        _logEntryWithExceptionFormat = string.IsNullOrEmpty(formatWithException) ? LogEntryFormat.DefaultWithException: LogEntryFormat.Parse(formatWithException);
+
+        _useColor = options.UseColor;
     }
 
     public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
     {
-        var message = logEntry.State?.ToString();
-        if (message == null)
-            return;
+        var logEntryFormat = logEntry.Exception != null ? _logEntryWithExceptionFormat: _logEntryFormat;
 
-        if (logEntry.Exception != null)
-            message += Environment.NewLine + logEntry.Exception.Message;
-
-        switch (logEntry.LogLevel)
+        foreach (var part in logEntryFormat)
         {
-            case LogLevel.Trace:
-                textWriter.WriteWithColor("[T] ", null, ConsoleColor.Magenta);
-                break;
-            case LogLevel.Debug:
-                textWriter.WriteWithColor("[D] ", null, ConsoleColor.Magenta);
-                break;
-            case LogLevel.Information:
-                textWriter.WriteWithColor("[I] ", null, ConsoleColor.Green);
-                break;
-            case LogLevel.Warning:
-                textWriter.WriteWithColor("[W] ", null, ConsoleColor.Yellow);
-                break;
-            case LogLevel.Error:
-                textWriter.WriteWithColor("[E] ", null, ConsoleColor.Red);
-                break;
-            case LogLevel.Critical:
-                textWriter.WriteWithColor("[C] ", null, ConsoleColor.Red);
-                break;
-            case LogLevel.None:
-                break;
+            var text = part.GetText(logEntry);
+            if (_useColor && part is LogLevelPart && text != null)
+            {
+                var consoleColor = logEntry.LogLevel switch
+                {
+                    LogLevel.Trace => ConsoleColor.Magenta,
+                    LogLevel.Debug => ConsoleColor.Magenta,
+                    LogLevel.Information => ConsoleColor.Green,
+                    LogLevel.Warning => ConsoleColor.Yellow,
+                    LogLevel.Error => ConsoleColor.Red,
+                    LogLevel.Critical => ConsoleColor.Red,
+                    LogLevel.None => default,
+                    _ => default
+                };
+                textWriter.WriteWithColor(text, null, consoleColor);
+            }
+            else
+            {
+                textWriter.Write(text);
+            }
         }
-
-        textWriter.WriteLine(message);
+        textWriter.WriteLine();
     }
 }
