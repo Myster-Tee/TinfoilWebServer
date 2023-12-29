@@ -23,7 +23,7 @@ public class FingerprintMiddleware : IFingerprintMiddleware
     {
         var incomingFingerprint = context.Request.Headers["UID"].FirstOrDefault();
         if (incomingFingerprint != null)
-            _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" received with fingerprint \"{incomingFingerprint}\".");
+            _logger.LogDebug($"Request [{context.TraceIdentifier}] received with fingerprint \"{incomingFingerprint}\".");
 
         var authenticatedUser = context.User as AuthenticatedUser;
 
@@ -46,6 +46,8 @@ public class FingerprintMiddleware : IFingerprintMiddleware
             _authenticatedUser = authenticatedUser;
             _incomingFingerprint = incomingFingerprint;
         }
+
+        public string? Fingerprint => _incomingFingerprint;
 
         public async Task<bool> Validate()
         {

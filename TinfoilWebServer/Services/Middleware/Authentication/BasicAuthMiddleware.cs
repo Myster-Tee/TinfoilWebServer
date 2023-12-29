@@ -84,7 +84,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         var headerValue = headersAuthorization.FirstOrDefault();
         if (headerValue == null)
         {
-            _logger.LogDebug($"Incoming request \"{context.TraceIdentifier}\" is missing authentication header.");
+            _logger.LogDebug($"Request [{context.TraceIdentifier}] is missing authentication header.");
             await RespondUnauthorized(context);
             return;
         }
@@ -93,14 +93,14 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
         if (strings.Length != 2)
         {
-            _logger.LogDebug($"Incoming request \"{context.TraceIdentifier}\" authorization header invalid, space separator missing.");
+            _logger.LogDebug($"Request [{context.TraceIdentifier}] authorization header invalid, space separator missing.");
             await RespondUnauthorized(context);
             return;
         }
 
         if (!string.Equals("Basic", strings[0], StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogDebug($"Incoming request \"{context.TraceIdentifier}\" authentication header is not basic, found \"{strings[0]}\".");
+            _logger.LogDebug($"Request [{context.TraceIdentifier}] authentication header is not basic, found \"{strings[0]}\".");
             await RespondUnauthorized(context);
             return;
         }
@@ -108,18 +108,17 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         var base64IncomingAccount = strings[1];
         if (!_allowedBase64Accounts.TryGetValue(base64IncomingAccount, out var allowedUser))
         {
-            _logger.LogDebug($"Incoming request \"{context.TraceIdentifier}\" login or password incorrect.");
+            _logger.LogDebug($"Request [{context.TraceIdentifier}] login or password incorrect.");
             await RespondUnauthorized(context);
             return;
         }
 
 
-        _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" from user \"{allowedUser.Name}\".");
+        _logger.LogDebug($"Request [{context.TraceIdentifier}] from user \"{allowedUser.Name}\".");
 
         context.User = new AuthenticatedUser(allowedUser);
 
         await next.Invoke(context);
-
     }
 
     private async Task RespondUnauthorized(HttpContext context)

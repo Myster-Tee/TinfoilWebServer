@@ -39,19 +39,19 @@ public class BlacklistMiddleware : IBlacklistMiddleware
         var remoteIpAddress = GetRemoteIpAddress(context);
         if (remoteIpAddress == null)
         {
-            _logger.LogWarning($"Incoming request \"{context.TraceIdentifier}\" rejected, no remote IP address found.");
+            _logger.LogWarning($"Request [{context.TraceIdentifier}] rejected, no remote IP address found.");
             await RespondUnauthorized(context);
             return;
         }
 
         if (_blacklistManager.IsIpBlacklisted(remoteIpAddress))
         {
-            _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" rejected, IP address \"{remoteIpAddress}\" blacklisted.");
+            _logger.LogInformation($"Request [{context.TraceIdentifier}] rejected, IP address \"{remoteIpAddress}\" blacklisted.");
             await RespondUnauthorized(context);
             return;
         }
 
-        _logger.LogInformation($"Incoming request \"{context.TraceIdentifier}\" from IP Address \"{remoteIpAddress}\".");
+        _logger.LogDebug($"Request [{context.TraceIdentifier}] from IP Address \"{remoteIpAddress}\".");
 
         await next.Invoke(context);
 
@@ -74,15 +74,23 @@ public class BlacklistMiddleware : IBlacklistMiddleware
             if (context.Request.Headers.TryGetValue(EXPECTED_HEADER, out var value))
             {
                 if (!IPAddress.TryParse(value, out var ipAddress))
-                    _logger.LogWarning($"Server configuration \"{nameof(IBlacklistSettings.IsBehindProxy)}\" is set to {true}, but value \"{value}\" of header \"{EXPECTED_HEADER}\" is not a valid IP address.{Environment.NewLine}" +
-                                       $"For security reasons, it is recommended to set this setting to {false} if your proxy doesn't support this header.");
+                    _logger.LogWarning(
+                        $"""
+                         Server configuration \"{nameof(IBlacklistSettings.IsBehindProxy)}\" is set to {true}, but value \"{value}\" of header \"{EXPECTED_HEADER}\" is not a valid IP address.
+                         For security reasons, it is recommended to set this setting to {false} if your proxy doesn't support this header.
+                         """
+                        );
                 else
                     return ipAddress;
             }
-            else if(_blacklistSettings.Enabled)
+            else if (_blacklistSettings.Enabled)
             {
-                _logger.LogWarning($"Server configuration \"{nameof(IBlacklistSettings.IsBehindProxy)}\" is set to {true}, but expected header \"{EXPECTED_HEADER}\" was not found.{Environment.NewLine}" +
-                                   $"For security reasons, it is recommended to set this setting to {false} if your proxy doesn't support this header.");
+                _logger.LogWarning(
+                    $"""
+                    Server configuration \"{nameof(IBlacklistSettings.IsBehindProxy)}\" is set to {true}, but expected header \"{EXPECTED_HEADER}\" was not found.
+                    For security reasons, it is recommended to set this setting to {false} if your proxy doesn't support this header.
+                    """
+                    );
             }
         }
 

@@ -94,7 +94,7 @@ dotnet TinfoilWebServer.dll
       {
         "Name": string,                 // The user name
         "Pwd": string,                  // The password
-        "MaxFingerprints": number,      // The maximum number of fingerprints allowed for this user
+        "MaxFingerprints": number,      // The maximum number of fingerprints allowed for this user (default is 1)
         "MessageOfTheDay": string,      // Custom message for the user
         "CustomIndexPath": string       // The path to a custom JSON file for this user to be merged with the served index
       }
@@ -123,6 +123,9 @@ dotnet TinfoilWebServer.dll
           "KeyPath": string             // The path to the private key file (ex: "MyPrivateKey.key")
         }
       }
+    },
+    "Limits": {
+      "MaxConcurrentConnections": number, // Sets the maximum number of open connection
     }
   },
   "Logging": {                          // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
@@ -175,10 +178,10 @@ File format is text, one line per blacklisted IP. Empty lines will be ignored. U
 
 ### Fingerprints
 
-A fingerprint is a unique Nintendo Switch user ID.  
+A fingerprint consists in a unique Nintendo Switch device identifier.
 Tinfoil emits a fingerprint only when requesting the index, but not when requesting files. Thus specifying fingerprints in configuration <u>will not prevent a user from downloading files</u>.
 
-When fingerprints are allowed globally and at user level, server will check for a valid fingerprint among allowed user fingerprints and globally allowed fingerprints.
+When fingerprints are both allowed globally and at user level, server will check for a valid fingerprint among allowed user fingerprints and globally allowed fingerprints.
 
 ### Custom log format
 

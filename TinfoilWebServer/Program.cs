@@ -51,7 +51,6 @@ public class Program
                     var loggingConfig = ctx.Configuration.GetSection("Logging");
                     loggingBuilder
                         .AddConfiguration(loggingConfig)
-                        //.AddFilter("Microsoft", LogLevel.None)
                         .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>()
                         .AddConsole(options =>
                         {
@@ -134,6 +133,8 @@ public class Program
 
             // Wait for server to shutdown
             runTask.GetAwaiter().GetResult();
+
+            logger.LogInformation("Server closing.");
 
             return 0;
         }
