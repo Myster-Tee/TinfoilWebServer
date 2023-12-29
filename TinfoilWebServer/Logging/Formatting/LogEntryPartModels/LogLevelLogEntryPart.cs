@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace TinfoilWebServer.Logging.Formatting.Parts;
+namespace TinfoilWebServer.Logging.Formatting.LogEntryPartModels;
 
-public class LogLevelPart : Part
+public class LogLevelLogEntryPart : ILogEntryPart
 {
     public LogLevelMode Mode { get; set; } = LogLevelMode.ShortUpper;
 
-    public override string GetText<TState>(LogEntry<TState> logEntry)
+    public string GetText<TState>(LogEntry<TState> logEntry)
     {
         var level = logEntry.LogLevel;
         switch (Mode)

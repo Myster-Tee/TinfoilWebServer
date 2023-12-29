@@ -7,8 +7,7 @@ namespace TinfoilWebServer.Logging.File;
 
 public class LogFileFormatter
 {
-    private LogEntryFormat _format = LogEntryFormat.Default;
-    private LogEntryFormat _formatWithException = LogEntryFormat.DefaultWithException;
+    private LogEntryFormat _logEntryFormat = LogEntryFormat.Default;
 
 
     /// <summary>
@@ -24,20 +23,23 @@ public class LogFileFormatter
 
     private void InitFromOptions(FileFormatterOptions options)
     {
-        var format = options.Format;
-        _format = string.IsNullOrEmpty(format) ? LogEntryFormat.Default : LogEntryFormat.Parse(format);
+        _logEntryFormat = LogEntryFormat.Default;
 
-        var formatWithException = options.FormatWithException;
-        _formatWithException = string.IsNullOrEmpty(formatWithException) ? LogEntryFormat.DefaultWithException : LogEntryFormat.Parse(formatWithException);
+        var format = options.Format;
+        if (!string.IsNullOrEmpty(format))
+            _logEntryFormat.LogEntryParts = LogEntryParts.Parse(format);
+
+        var exceptionFormat = options.ExceptionFormat;
+
+        if (!string.IsNullOrEmpty(exceptionFormat))
+            _logEntryFormat.ExParts = ExParts.ParseException(exceptionFormat);
     }
 
     public string FormatLogEntry(LogMessage message)
     {
         var logEntry = new LogEntry<string>(message.LogLevel, message.LogName, message.EventId, message.Message, message.Exception, (s, _) => s);
 
-        var logText = logEntry.Exception == null
-            ? logEntry.Format(_format)
-            : logEntry.Format(_formatWithException);
+        var logText = logEntry.Format(_logEntryFormat);
 
         return logText;
     }

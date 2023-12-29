@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using TinfoilWebServer.Logging.Formatting;
-using TinfoilWebServer.Logging.Formatting.Parts;
+using TinfoilWebServer.Logging.Formatting.LogEntryPartModels;
 
 
 namespace TinfoilWebServer.Logging.Console;
@@ -14,7 +14,6 @@ namespace TinfoilWebServer.Logging.Console;
 public class CustomConsoleFormatter : ConsoleFormatter
 {
     private LogEntryFormat _logEntryFormat;
-    private LogEntryFormat _logEntryWithExceptionFormat;
     private bool _useColor = true;
 
     public CustomConsoleFormatter(IOptionsMonitor<CustomConsoleFormatterOptions> optionsMonitor) : base(nameof(CustomConsoleFormatter))
@@ -24,26 +23,28 @@ public class CustomConsoleFormatter : ConsoleFormatter
     }
 
     [MemberNotNull(nameof(_logEntryFormat))]
-    [MemberNotNull(nameof(_logEntryWithExceptionFormat))]
     private void UpdateFromOptions(CustomConsoleFormatterOptions options)
     {
-        var format = options.Format;
-        _logEntryFormat = string.IsNullOrEmpty(format) ? LogEntryFormat.Default : LogEntryFormat.Parse(format);
+        _logEntryFormat = LogEntryFormat.Default;
 
-        var formatWithException = options.FormatWithException;
-        _logEntryWithExceptionFormat = string.IsNullOrEmpty(formatWithException) ? LogEntryFormat.DefaultWithException: LogEntryFormat.Parse(formatWithException);
+        var format = options.Format;
+        if (!string.IsNullOrEmpty(format))
+            _logEntryFormat.LogEntryParts = LogEntryParts.Parse(format);
+
+        var exceptionFormat = options.ExceptionFormat;
+
+        if (!string.IsNullOrEmpty(exceptionFormat))
+            _logEntryFormat.ExParts = ExParts.ParseException(exceptionFormat);
 
         _useColor = options.UseColor;
     }
 
     public override void Write<TState>(in LogEntry<TState> logEntry, IExternalScopeProvider? scopeProvider, TextWriter textWriter)
     {
-        var logEntryFormat = logEntry.Exception != null ? _logEntryWithExceptionFormat: _logEntryFormat;
 
-        foreach (var part in logEntryFormat)
+        foreach (var (text, part) in logEntry.FormatParts(_logEntryFormat))
         {
-            var text = part.GetText(logEntry);
-            if (_useColor && part is LogLevelPart && text != null)
+            if (_useColor && part is LogLevelLogEntryPart && text != null)
             {
                 var consoleColor = logEntry.LogLevel switch
                 {
@@ -63,6 +64,7 @@ public class CustomConsoleFormatter : ConsoleFormatter
                 textWriter.Write(text);
             }
         }
+
         textWriter.WriteLine();
     }
 }

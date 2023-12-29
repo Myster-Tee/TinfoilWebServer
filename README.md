@@ -134,8 +134,8 @@ dotnet TinfoilWebServer.dll
         "Default": string
       },
       "FormatterOptions": {
-        "Format": string,               // The custom log format for a log event without exception (see below for more information)
-        "FormatWithException": string   // The custom log format for a log event with exception (see below for more information)
+        "Format": string,               // The custom log format (see below for more information)
+        "ExceptionFormat": string       // The custom exception format (see below for more information)
 	  }	
     },
     "File": {                           // See https://github.com/nreco/logging#how-to-use for more information
@@ -145,8 +145,8 @@ dotnet TinfoilWebServer.dll
       "FileSizeLimitBytes": number,
       "MaxRollingFiles": number,
       "FormatterOptions": {
-        "Format": string,               // The custom log format for a log event without exception (see below for more information)
-        "FormatWithException": string   // The custom log format for a log event with exception (see below for more information)
+        "Format": string,               // The custom log format (see below for more information)
+        "ExceptionFormat": string       // The custom exception format (see below for more information)
 	  }	
     }
   }
@@ -182,35 +182,36 @@ When fingerprints are allowed globally and at user level, server will check for 
 
 ### Custom log format
 
-You can specify a custom log format using keywords between braces.
-
-Format for keywords without options: *\{SomeKeyWord\}*  
-Format for keywords with options: *\{SomeKeyWord:SomeOptions\}*
+You can specify a custom log format using keywords between braces.  
+Some keywords accept options in the format of *\{SomeKeyword:SomeOptions\}*.
 
 Example:
 
 ```
-"FormatWithException" : "> {Date}-{LogLevel}-{Category}: {Message}{NewLine}Exception message: {ExMessage}{NewLine}Stack trace:{NewLine}{ExStackTrace}"
+"Format" : "> {Date:yyyy-MM-dd@HH:mm:ss}-{LogLevel:U}-{Category}: {Message}{NewLine}{Exception}"
 ```
 
-#### List of supported keywords for log event with and without exception:
+#### Supported keywords for *Format* field:
 
-- \{Message\}: the log message
+- \{Date:\<Option\>\}: the log date, optional option: [a valid date format](https://learn.microsoft.com/fr-fr/dotnet/api/system.datetime.tostring?view=net-8.0#system-datetime-tostring(system-string))
 - \{NewLine\}: appends a new line according to the current system (\r, \n or \r\n)
+- \{Message\}: the log message
 - \{Category\}: the log category (.NET Namespace)
 - \{EventId\}: the log event ID
-- \{LogLevel:\<Option\>\}: the log level, optional option:
-  - SU: Short log level upper case
-  - SL: Short log level lower case
-  - U: Log level upper case
-  - L: Log level lower case
-- \{Date:\<Option\>\}: the log date, optional option: [a valid date format](https://learn.microsoft.com/fr-fr/dotnet/api/system.datetime.tostring?view=net-8.0#system-datetime-tostring(system-string))
+- \{LogLevel:\<Option\>\}: the log level. Optional options:
+  - SU: short log level upper case
+  - SL: short log level lower case
+  - U: log level upper case
+  - L: log level lower case
+- \{Exception\}: the exception formatted according to the *ExceptionFormat* field
 
-#### List of supported keywords for log event with exception only:
+#### Supported keywords for *ExceptionFormat* field:
 
-- \{ExMessage\}: The exception message
-- \{ExType\}: The exception type name
-- \{ExStackTrace\}: The exception stack trace
+- \{Date:\<Option\>\}: same as *\{Date\}* keyword of *Format* field
+- \{NewLine\}: same as *\{NewLine\}* keyword of *Format* field
+- \{Message\}: the exception message
+- \{Type\}: the exception type name
+- \{StackTrace\}: the exception stack trace
 
 
 ## Security considerations and recommendations

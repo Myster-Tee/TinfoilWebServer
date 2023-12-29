@@ -1,9 +1,8 @@
 ﻿using System;
-using Microsoft.Extensions.Logging.Abstractions;
 
-namespace TinfoilWebServer.Logging.Formatting.Parts;
+namespace TinfoilWebServer.Logging.Formatting.BasePartModels;
 
-internal class DatePart : Part
+public class DateBasePart
 {
 
     private string? _format;
@@ -21,7 +20,7 @@ internal class DatePart : Part
         }
     }
 
-    public override string GetText<TState>(LogEntry<TState> logEntry)
+    public string GetDateString()
     {
         var now = DateTime.Now;
 

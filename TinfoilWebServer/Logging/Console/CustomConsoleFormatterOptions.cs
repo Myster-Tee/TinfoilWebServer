@@ -10,7 +10,7 @@ public class CustomConsoleFormatterOptions : ConsoleFormatterOptions
 
     public string? Format { get; set; }
 
-    public string? FormatWithException { get; set; }
+    public string? ExceptionFormat { get; set; }
 
     public bool UseColor { get; set; } = true;
 
