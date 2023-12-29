@@ -40,8 +40,11 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     /// <param name="appSettingsModel"></param>
     private void InitializeFromModel(AppSettingsModel appSettingsModel)
     {
-        var servedDirectories = appSettingsModel.ServedDirectories;
-        ServedDirectories = InitializeServedDirectories(servedDirectories);
+        var servedDirectoryPaths = appSettingsModel.ServedDirectories;
+        var newServedDirectories = InitializeServedDirectories(servedDirectoryPaths);
+        if (!ServedDirectoriesEqual(ServedDirectories, newServedDirectories))
+            ServedDirectories = newServedDirectories;
+
         StripDirectoryNames = appSettingsModel.StripDirectoryNames ?? true;
         ServeEmptyDirectories = appSettingsModel.ServeEmptyDirectories ?? true;
 
@@ -57,7 +60,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         var authentication = appSettingsModel.Authentication;
         _authentication.Enabled = authentication?.Enabled ?? false;
         _authentication.WebBrowserAuthEnabled = authentication?.WebBrowserAuthEnabled ?? false;
-        _authentication.Users = (authentication?.Users ?? Array.Empty<AllowedUserModel>()).Select(allowedUserModel =>
+        var newUsers = (authentication?.Users ?? Array.Empty<AllowedUserModel>()).Select(allowedUserModel =>
             new AllowedUser
             {
                 Name = allowedUserModel.Name ?? "",
@@ -66,6 +69,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
                 CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath) ? null : allowedUserModel.CustomIndexPath,
                 MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay) ? null : allowedUserModel.MessageOfTheDay
             }).ToList();
+        _authentication.Users = newUsers;
 
         var fingerprintsFilter = appSettingsModel.FingerprintsFilter;
         _fingerprintsFilter.Enabled = fingerprintsFilter?.Enabled ?? false;
@@ -79,6 +83,20 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         _blacklist.IsBehindProxy = blacklist?.IsBehindProxy ?? false;
 
         CustomIndexPath = appSettingsModel.CustomIndexPath;
+    }
+
+    private static bool ServedDirectoriesEqual(IReadOnlyList<DirectoryInfo> oldServedDirectories, IReadOnlyList<DirectoryInfo> newServedDirectories)
+    {
+        if(oldServedDirectories.Count != newServedDirectories.Count)
+            return false;
+
+        for (var i = 0; i < oldServedDirectories.Count; i++)
+        {
+            if(oldServedDirectories[i].FullName != newServedDirectories[i].FullName)
+                return false;
+        }
+
+        return true;
     }
 
     private IReadOnlyList<DirectoryInfo> InitializeServedDirectories(IReadOnlyCollection<string?>? servedDirectoryPaths)
