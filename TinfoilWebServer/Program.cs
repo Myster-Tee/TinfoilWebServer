@@ -76,7 +76,7 @@ public class Program
                         .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().Blacklist)
 
                         .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
-                        
+
                         .AddSingleton<IBlacklistMiddleware, BlacklistMiddleware>()
                         .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                         .AddSingleton<IFingerprintMiddleware, FingerprintMiddleware>()
@@ -120,6 +120,7 @@ public class Program
 
             var summaryInfoLogger = webHost.Services.GetRequiredService<ISummaryInfoLogger>();
             summaryInfoLogger.LogWelcomeMessage();
+            summaryInfoLogger.LogBootErrors();
             summaryInfoLogger.LogRelevantSettings();
             summaryInfoLogger.LogCurrentMachineInfo();
 
@@ -155,8 +156,26 @@ public class Program
         }
     }
 
-    private static IBootInfo BuildBootInfo(CmdOptions cmdOptions)
+    private static BootInfo BuildBootInfo(CmdOptions cmdOptions)
     {
+        var bootInfo = new BootInfo
+        {
+            CmdOptions = cmdOptions,
+        };
+
+        var workingDirectory = cmdOptions.WorkingDirectory;
+        if (!string.IsNullOrWhiteSpace(workingDirectory))
+        {
+            try
+            {
+                Environment.CurrentDirectory = workingDirectory;
+            }
+            catch (Exception ex)
+            {
+                bootInfo.Errors.Add($"Failed to change the working directory to \"{workingDirectory}\": {ex.Message}");
+            }
+        }
+
         string configFilePathRaw;
         if (cmdOptions.ConfigFilePath != null)
         {
@@ -167,12 +186,9 @@ public class Program
             var assemblyName = Assembly.GetExecutingAssembly().GetName().Name;
             configFilePathRaw = $"{assemblyName}.config.json";
         }
+        bootInfo.ConfigFileFullPath = Path.GetFullPath(configFilePathRaw);
 
-        return new BootInfo
-        {
-            CmdOptions = cmdOptions,
-            ConfigFileFullPath = Path.GetFullPath(configFilePathRaw)
-        };
+        return bootInfo;
     }
 
 }

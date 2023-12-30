@@ -38,6 +38,21 @@ public class SummaryInfoLogger : ISummaryInfoLogger
         _logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Build} (press CTRL+C to exit)");
     }
 
+    public void LogBootErrors()
+    {
+        if (_bootInfo.Errors.Count > 0)
+        {
+            var errorsStr = string.Join(Environment.NewLine, _bootInfo.Errors.Select(e => $"-> {e}"));
+
+            _logger.LogError(
+                $"""
+                Some initialization errors occurred:
+                {errorsStr}
+                """
+                );
+        }
+    }
+
     public void LogRelevantSettings()
     {
         var configFilePath = _bootInfo.ConfigFileFullPath;
@@ -73,7 +88,7 @@ public class SummaryInfoLogger : ISummaryInfoLogger
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {authentication.Enabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Web Browser auth enabled: {authentication.WebBrowserAuthEnabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Nb allowed users: {authentication.Users.Count}");
-        
+
         var fingerprintsFilter = _appSettings.FingerprintsFilter;
         sb.AppendLine($"- Fingerprints filter:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {fingerprintsFilter.Enabled}");

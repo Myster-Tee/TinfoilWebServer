@@ -57,9 +57,10 @@ dotnet TinfoilWebServer.dll
 #### Command line options
 
 ```txt
--c, --config    Custom location of the configuration file.
---help          Display this help screen.
---version       Display version information.
+-c, --config      Custom location of the configuration file.
+-w, --workingDir  Change the working directory.
+--help            Display this help screen.
+--version         Display version information.
 ```
 
 ## Setting up Tinfoil on your Switch
