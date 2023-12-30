@@ -60,7 +60,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         var authentication = appSettingsModel.Authentication;
         _authentication.Enabled = authentication?.Enabled ?? false;
         _authentication.WebBrowserAuthEnabled = authentication?.WebBrowserAuthEnabled ?? false;
-        var newUsers = (authentication?.Users ?? Array.Empty<AllowedUserModel>()).Select(allowedUserModel =>
+        var newUsers = (authentication?.Users ?? Array.Empty<AllowedUserModel>()).OfType<AllowedUserModel>().Select(allowedUserModel =>
             new AllowedUser
             {
                 Name = allowedUserModel.Name ?? "",
@@ -69,7 +69,8 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
                 CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath) ? null : allowedUserModel.CustomIndexPath,
                 MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay) ? null : allowedUserModel.MessageOfTheDay
             }).ToList();
-        _authentication.Users = newUsers;
+        if (!UsersEqual(_authentication.Users, newUsers))
+            _authentication.Users = newUsers;
 
         var fingerprintsFilter = appSettingsModel.FingerprintsFilter;
         _fingerprintsFilter.Enabled = fingerprintsFilter?.Enabled ?? false;
@@ -85,18 +86,20 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         CustomIndexPath = appSettingsModel.CustomIndexPath;
     }
 
-    private static bool ServedDirectoriesEqual(IReadOnlyList<DirectoryInfo> oldServedDirectories, IReadOnlyList<DirectoryInfo> newServedDirectories)
+    private static bool UsersEqual(IReadOnlyList<IAllowedUser> oldUsers, IReadOnlyList<IAllowedUser> newUsers)
     {
-        if(oldServedDirectories.Count != newServedDirectories.Count)
+        if (oldUsers.Count != newUsers.Count)
             return false;
 
-        for (var i = 0; i < oldServedDirectories.Count; i++)
-        {
-            if(oldServedDirectories[i].FullName != newServedDirectories[i].FullName)
-                return false;
-        }
+        return !oldUsers.Where((t, i) => !AllowedUser.Equals(t, newUsers[i])).Any();
+    }
 
-        return true;
+    private static bool ServedDirectoriesEqual(IReadOnlyList<DirectoryInfo> oldServedDirectories, IReadOnlyList<DirectoryInfo> newServedDirectories)
+    {
+        if (oldServedDirectories.Count != newServedDirectories.Count)
+            return false;
+
+        return !oldServedDirectories.Where((t, i) => t.FullName != newServedDirectories[i].FullName).Any();
     }
 
     private IReadOnlyList<DirectoryInfo> InitializeServedDirectories(IReadOnlyCollection<string?>? servedDirectoryPaths)
@@ -238,6 +241,22 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         public string? CustomIndexPath { get; init; }
 
         public string? MessageOfTheDay { get; init; }
+
+        public static bool Equals(IAllowedUser? u1, IAllowedUser? u2)
+        {
+            if (u1 == null && u2 == null)
+                return true;
+
+            if (u1 == null || u2 == null)
+                return false;
+
+            return u1.Name == u2.Name
+                   && u1.MaxFingerprints == u2.MaxFingerprints
+                   && u1.Password == u2.Password
+                   && u1.CustomIndexPath == u2.CustomIndexPath
+                   && u1.MessageOfTheDay == u2.MessageOfTheDay;
+        }
+
     }
 
     private class FingerprintsFilterSettings : NotifyPropertyChangedBase, IFingerprintsFilterSettings
