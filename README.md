@@ -94,7 +94,7 @@ dotnet TinfoilWebServer.dll
       {
         "Name": string,                 // The user name
         "Pwd": string,                  // The password
-        "MaxFingerprints": number,      // The maximum number of fingerprints allowed for this user
+        "MaxFingerprints": number,      // The maximum number of fingerprints allowed for this user (default is 1)
         "MessageOfTheDay": string,      // Custom message for the user
         "CustomIndexPath": string       // The path to a custom JSON file for this user to be merged with the served index
       }
@@ -123,6 +123,9 @@ dotnet TinfoilWebServer.dll
           "KeyPath": string             // The path to the private key file (ex: "MyPrivateKey.key")
         }
       }
+    },
+    "Limits": {
+      "MaxConcurrentConnections": number, // Sets the maximum number of open connection
     }
   },
   "Logging": {                          // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
@@ -132,14 +135,22 @@ dotnet TinfoilWebServer.dll
     "Console": {                        // See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging/?view=aspnetcore-6.0 for more information
       "LogLevel": {
         "Default": string
-      }
+      },
+      "FormatterOptions": {
+        "Format": string,               // The custom log format (see below for more information)
+        "ExceptionFormat": string       // The custom exception format (see below for more information)
+	  }	
     },
     "File": {                           // See https://github.com/nreco/logging#how-to-use for more information
       "Path": string,
       "Append": boolean,
       "MinLevel": string,
       "FileSizeLimitBytes": number,
-      "MaxRollingFiles": number
+      "MaxRollingFiles": number,
+      "FormatterOptions": {
+        "Format": string,               // The custom log format (see below for more information)
+        "ExceptionFormat": string       // The custom exception format (see below for more information)
+	  }	
     }
   }
 }
@@ -167,10 +178,44 @@ File format is text, one line per blacklisted IP. Empty lines will be ignored. U
 
 ### Fingerprints
 
-A fingerprint is a unique Nintendo Switch user ID.  
+A fingerprint consists in a unique Nintendo Switch device identifier.
 Tinfoil emits a fingerprint only when requesting the index, but not when requesting files. Thus specifying fingerprints in configuration <u>will not prevent a user from downloading files</u>.
 
-When fingerprints are allowed globally and at user level, server will check for a valid fingerprint among allowed user fingerprints and globally allowed fingerprints.
+When fingerprints are both allowed globally and at user level, server will check for a valid fingerprint among allowed user fingerprints and globally allowed fingerprints.
+
+### Custom log format
+
+You can specify a custom log format using keywords between braces.  
+Some keywords accept options in the format of *\{SomeKeyword:SomeOptions\}*.
+
+Example:
+
+```
+"Format" : "> {Date:yyyy-MM-dd@HH:mm:ss}-{LogLevel:U}-{Category}: {Message}{NewLine}{Exception}"
+```
+
+#### Supported keywords for *Format* field:
+
+- \{Date:\<Option\>\}: the log date, optional option: [a valid date format](https://learn.microsoft.com/fr-fr/dotnet/api/system.datetime.tostring?view=net-8.0#system-datetime-tostring(system-string))
+- \{NewLine\}: appends a new line according to the current system (\r, \n or \r\n)
+- \{Message\}: the log message
+- \{Category\}: the log category (.NET Namespace)
+- \{EventId\}: the log event ID
+- \{LogLevel:\<Option\>\}: the log level. Optional options:
+  - SU: short log level upper case
+  - SL: short log level lower case
+  - U: log level upper case
+  - L: log level lower case
+- \{Exception\}: the exception formatted according to the *ExceptionFormat* field
+
+#### Supported keywords for *ExceptionFormat* field:
+
+- \{Date:\<Option\>\}: same as *\{Date\}* keyword of *Format* field
+- \{NewLine\}: same as *\{NewLine\}* keyword of *Format* field
+- \{Message\}: the exception message
+- \{Type\}: the exception type name
+- \{StackTrace\}: the exception stack trace
+
 
 ## Security considerations and recommendations
 

@@ -6,9 +6,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TinfoilWebServer.Booting;
-using TinfoilWebServer.Logging;
 using TinfoilWebServer.Logging.Console;
+using TinfoilWebServer.Logging.File;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.FSChangeDetection;
 using TinfoilWebServer.Services.JSON;
@@ -28,7 +29,6 @@ public class Program
     {
         const bool RELOAD_CONFIG_ON_CHANGE = true;
         ILogger<Program>? logger = null;
-
         try
         {
             var parserResult = Parser.Default.ParseArguments<CmdOptions>(args).WithParsed(_ => { });
@@ -36,6 +36,8 @@ public class Program
                 return 2;
 
             var bootInfo = BuildBootInfo(parserResult.Value);
+
+            var logFileFormatter = new LogFileFormatter();
 
             var webHostBuilder = new WebHostBuilder();
             webHostBuilder
@@ -46,20 +48,25 @@ public class Program
                 })
                 .ConfigureLogging((ctx, loggingBuilder) =>
                 {
+                    var loggingConfig = ctx.Configuration.GetSection("Logging");
                     loggingBuilder
-                        .AddConfiguration(ctx.Configuration.GetSection("Logging"))
-                        .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>(_ => { })
+                        .AddConfiguration(loggingConfig)
+                        .AddConsoleFormatter<CustomConsoleFormatter, CustomConsoleFormatterOptions>()
                         .AddConsole(options =>
                         {
                             if (options.FormatterName == null) // NOTE: not null when formatter name is specified in config file
                                 options.FormatterName = nameof(CustomConsoleFormatter);
                         })
-                        .AddFile(ctx.Configuration.GetSection("Logging"), options => options.FormatLogEntry = LogFileFormatter.FormatLogEntry);
+                        .AddFile(loggingConfig, options =>
+                        {
+                            options.FormatLogEntry = logFileFormatter.FormatLogEntry;
+                        });
                 })
                 .ConfigureServices((ctx, services) =>
                 {
                     services
                         .Configure<AppSettingsModel>(ctx.Configuration)
+                        .Configure<FileFormatterOptions>(ctx.Configuration.GetSection("Logging").GetSection("File").GetSection("FormatterOptions"))
                         .AddSingleton<IBootInfo>(_ => bootInfo)
 
                         .AddSingleton<IAppSettings, AppSettings>()
@@ -101,6 +108,8 @@ public class Program
             // Build Dependency Injection
             var webHost = webHostBuilder.Build();
 
+            logFileFormatter.Initialize(webHost.Services.GetRequiredService<IOptionsMonitor<FileFormatterOptions>>());
+
             logger = webHost.Services.GetRequiredService<ILogger<Program>>();
 
             AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
@@ -124,6 +133,8 @@ public class Program
 
             // Wait for server to shutdown
             runTask.GetAwaiter().GetResult();
+
+            logger.LogInformation("Server closing.");
 
             return 0;
         }

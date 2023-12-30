@@ -51,6 +51,11 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
         {
             _logger.LogInformation("Fingerprints file path changed, reloading fingerprints.");
             Initialize();
+        }       
+        else if (e.PropertyName == nameof(IFingerprintsFilterSettings.MaxFingerprints))
+        {
+            _logger.LogInformation($"Max global allowed fingerprints updated to {_fingerprintsFilterSettings.MaxFingerprints}.");
+            CheckSettingsConsistency();
         }
     }
 
@@ -96,7 +101,7 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
 
                 if (fingerprint == null)
                 {
-                    _logger.LogWarning($"Incoming request \"{traceId}\" from authenticated user \"{userInfo.Name}\" received without fingerprint, request rejected.");
+                    _logger.LogWarning($"Request [{traceId}] from authenticated user \"{userInfo.Name}\" received without fingerprint, request rejected.");
                     return false;
                 }
 
@@ -109,7 +114,7 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
                 if (allowedUserFingerprints.Contains(fingerprint))
                 {
                     // Fingerprint allowed
-                    _logger.LogDebug($"Incoming request \"{traceId}\" from authenticated user \"{userInfo.Name}\" passed fingerprint validation.");
+                    _logger.LogDebug($"Request [{traceId}] from authenticated user \"{userInfo.Name}\" passed fingerprint validation.");
                     return true;
                 }
 
@@ -117,7 +122,7 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
                 if (allowedGlobalFingerprints.Contains(fingerprint))
                 {
                     // Fingerprint allowed
-                    _logger.LogDebug($"Incoming request \"{traceId}\" from authenticated user \"{userInfo.Name}\" passed global fingerprint validation.");
+                    _logger.LogDebug($"Request [{traceId}] from authenticated user \"{userInfo.Name}\" passed global fingerprint validation.");
                     return true;
                 }
 
@@ -135,7 +140,7 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
                 }
 
                 // No more fingerprint allowed
-                _logger.LogWarning($"New fingerprint \"{fingerprint}\" couldn't be added to user \"{userInfo.Name}\", maximum reached ({allowedUserFingerprints.Count}/{maxUserFingerprints}).");
+                _logger.LogWarning($"Request [{traceId}] rejected, fingerprint of user \"{userInfo.Name}\" couldn't be added, maximum reached ({allowedUserFingerprints.Count}/{maxUserFingerprints}).");
                 return false;
 
             }
@@ -146,7 +151,7 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
                 if (fingerprint == null)
                 {
                     // Fingerprint undefined
-                    _logger.LogWarning($"Incoming request \"{traceId}\" received without fingerprint, request rejected.");
+                    _logger.LogWarning($"Request [{traceId}] received without fingerprint, request rejected.");
                     return false;
                 }
 
@@ -154,7 +159,7 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
                 if (allowedGlobalFingerprints.Contains(fingerprint))
                 {
                     // Fingerprint allowed
-                    _logger.LogDebug($"Incoming request \"{traceId}\" passed global fingerprint validation.");
+                    _logger.LogDebug($"Request [{traceId}] passed global fingerprint validation.");
                     return true;
                 }
 
@@ -171,7 +176,7 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
                 }
 
                 // No more fingerprint allowed
-                _logger.LogWarning($"New global fingerprint \"{fingerprint}\" couldn't be added, maximum reached ({allowedGlobalFingerprints.Count}/{maxAllowedFingerprints}).");
+                _logger.LogWarning($"Request [{traceId}] rejected, global fingerprint \"{fingerprint}\" couldn't be added, maximum reached ({allowedGlobalFingerprints.Count}/{maxAllowedFingerprints}).");
                 return false;
             }
         }
