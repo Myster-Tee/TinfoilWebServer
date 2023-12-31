@@ -20,6 +20,7 @@ using TinfoilWebServer.Services.Middleware.Fingerprint;
 using TinfoilWebServer.Services.VirtualFS;
 using TinfoilWebServer.Settings;
 using TinfoilWebServer.Settings.ConfigModels;
+using TinfoilWebServer.Utils;
 
 namespace TinfoilWebServer;
 
@@ -80,8 +81,6 @@ public class Program
                         .AddSingleton<IBlacklistSettings>(provider =>
                             provider.GetRequiredService<IAppSettings>().Blacklist)
 
-                        .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
-
                         .AddSingleton<IBlacklistMiddleware, BlacklistMiddleware>()
                         .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                         .AddSingleton<IFingerprintMiddleware, FingerprintMiddleware>()
@@ -113,24 +112,20 @@ public class Program
             // Build Dependency Injection
             var webHost = webHostBuilder.Build();
 
-            var summaryInfoLogger = webHost.Services.GetRequiredService<ISummaryInfoLogger>();
-            summaryInfoLogger.LogWelcomeMessage();
-            summaryInfoLogger.LogBootErrors();
-            summaryInfoLogger.LogRelevantSettings();
-            summaryInfoLogger.LogCurrentMachineInfo();
+            logger = webHost.Services.GetRequiredService<ILogger<Program>>();
+            logger.LogWelcomeMessage();
+            logger.LogBootInfo(bootInfo);
+            logger.LogRelevantSettings(webHost.Services.GetRequiredService<IAppSettings>());
+            logger.LogCurrentMachineInfo();
 
             // Hack because FileFormatterOptions can't be injected due to bad design of "NReco.Logging.File"
             logFileFormatter.Initialize(webHost.Services.GetRequiredService<IOptionsMonitor<FileFormatterOptions>>());
-
-            logger = webHost.Services.GetRequiredService<ILogger<Program>>();
 
             AppDomain.CurrentDomain.UnhandledException += (_, eventArgs) =>
             {
                 var ex = eventArgs.ExceptionObject as Exception;
                 logger.LogError(ex, $"An unhandled exception occurred: {ex?.Message ?? eventArgs.ExceptionObject}");
             };
-
-
 
             //===========================//
             //===> Starts the server <===//

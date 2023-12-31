@@ -7,115 +7,107 @@ using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
-using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Booting;
 using TinfoilWebServer.Logging;
 using TinfoilWebServer.Settings;
 
-namespace TinfoilWebServer.Services;
+namespace TinfoilWebServer.Utils;
 
-public class SummaryInfoLogger : ISummaryInfoLogger
+/// <summary>
+/// Helper for logging various information
+/// </summary>
+public static class LoggerHelper
 {
-    private readonly ILogger<SummaryInfoLogger> _logger;
-    private readonly IAppSettings _appSettings;
-    private readonly IServer _server;
-    private readonly IBootInfo _bootInfo;
 
-    public SummaryInfoLogger(ILogger<SummaryInfoLogger> logger, IAppSettings appSettings, IServer server, IBootInfo bootInfo)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
-        _server = server ?? throw new ArgumentNullException(nameof(server));
-        _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
-    }
-
-    public void LogWelcomeMessage()
+    public static void LogWelcomeMessage(this ILogger logger)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version!;
-
-        _logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Build} (press CTRL+C to exit)");
+        logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Build} (press CTRL+C to exit)");
     }
 
-    public void LogBootErrors()
+    public static void LogBootInfo(this ILogger logger, IBootInfo bootInfo)
     {
-        if (_bootInfo.Errors.Count > 0)
-        {
-            var errorsStr = string.Join(Environment.NewLine, _bootInfo.Errors.Select(e => $"-> {e}"));
+        if (bootInfo.CmdOptions.RunAsWindowsService)
+            logger.LogInformation($"Server running as a Windows service.");
 
-            _logger.LogError(
+        var configFilePath = bootInfo.ConfigFileFullPath;
+        if (File.Exists(configFilePath))
+            logger.LogInformation($"Configuration file found at location \"{configFilePath}\".");
+        else
+            logger.LogWarning($"Configuration file not found at location \"{configFilePath}\".");
+
+        if (bootInfo.Errors.Count > 0)
+        {
+            var errorsStr = string.Join(Environment.NewLine, bootInfo.Errors.Select(e => $"-> {e}"));
+
+            logger.LogError(
                 $"""
                 Some initialization errors occurred:
                 {errorsStr}
                 """
                 );
         }
+
+        logger.LogInformation($"Current directory is \"{Environment.CurrentDirectory}\".");
     }
 
-    public void LogRelevantSettings()
+    public static void LogRelevantSettings(this ILogger logger, IAppSettings appSettings)
     {
-        var configFilePath = _bootInfo.ConfigFileFullPath;
-        if (File.Exists(configFilePath))
-            _logger.LogInformation($"Configuration file found at location \"{configFilePath}\".");
-        else
-            _logger.LogWarning($"Configuration file not found at location \"{configFilePath}\".");
 
         var sb = new StringBuilder();
         sb.AppendLine($"Current configuration:");
 
         sb.AppendLine();
 
-        sb.AppendLine($"- Served directories:{_appSettings.ServedDirectories.Select(d => d.FullName).ToMultilineString()}");
+        sb.AppendLine($"- Served directories:{appSettings.ServedDirectories.Select(d => d.FullName).ToMultilineString()}");
 
-        sb.AppendLine($"- Strip directory names: {_appSettings.StripDirectoryNames}");
+        sb.AppendLine($"- Strip directory names: {appSettings.StripDirectoryNames}");
 
-        sb.AppendLine($"- Serve empty directories: {_appSettings.ServeEmptyDirectories}");
+        sb.AppendLine($"- Serve empty directories: {appSettings.ServeEmptyDirectories}");
 
-        sb.AppendLine($"- Allowed extensions:{_appSettings.AllowedExt.ToMultilineString()}");
+        sb.AppendLine($"- Allowed extensions:{appSettings.AllowedExt.ToMultilineString()}");
 
         sb.AppendLine($"- Message of the day:");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}{_appSettings.MessageOfTheDay}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}{appSettings.MessageOfTheDay}");
 
-        var cache = _appSettings.Cache;
+        var cache = appSettings.Cache;
         sb.AppendLine($"- Cache:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Auto detect file changes: {cache.AutoDetectChanges}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Forced refresh delay: {cache.PeriodicRefreshDelay}");
 
-        var authentication = _appSettings.Authentication;
+        var authentication = appSettings.Authentication;
         sb.AppendLine($"- Authentication:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {authentication.Enabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Web Browser auth enabled: {authentication.WebBrowserAuthEnabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Nb allowed users: {authentication.Users.Count}");
 
-        var fingerprintsFilter = _appSettings.FingerprintsFilter;
+        var fingerprintsFilter = appSettings.FingerprintsFilter;
         sb.AppendLine($"- Fingerprints filter:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {fingerprintsFilter.Enabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Allowed fingerprints file: {fingerprintsFilter.FingerprintsFilePath}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Max global fingerprints allowed: {fingerprintsFilter.MaxFingerprints}");
 
-        var blacklist = _appSettings.Blacklist;
+        var blacklist = appSettings.Blacklist;
         sb.AppendLine($"- Blacklist:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {blacklist.Enabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}File path: {blacklist.FilePath}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Maximum consecutive failed authentication(s): {blacklist.MaxConsecutiveFailedAuth}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Is behind proxy: {blacklist.IsBehindProxy}");
 
-        _logger.LogInformation(sb.ToString());
+        logger.LogInformation(sb.ToString());
 
-        if (_bootInfo.CmdOptions.RunAsWindowsService)
-            _logger.LogInformation($"Server run as a Windows service.");
     }
 
-    public void LogCurrentMachineInfo()
+    public static void LogCurrentMachineInfo(this ILogger logger)
     {
-        _logger.LogInformation($"Current machine Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
+        logger.LogInformation($"Current machine Host/IP:{GetCurrentComputerAddressesOrHosts().ToMultilineString()}");
     }
 
-    public void LogListenedHosts()
+    public static void LogListenedHosts(this ILogger logger, IServerAddressesFeature serverAddressesFeature)
     {
-        var listenedAddresses = _server.Features.Get<IServerAddressesFeature>();
-        _logger.LogInformation($"Listened addresses:{listenedAddresses?.Addresses.ToMultilineString()}");
+        logger.LogInformation($"Listened addresses:{serverAddressesFeature?.Addresses.ToMultilineString()}");
     }
 
 

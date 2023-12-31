@@ -1,25 +1,31 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.Middleware.Authentication;
 using TinfoilWebServer.Services.Middleware.Blacklist;
 using TinfoilWebServer.Services.Middleware.Fingerprint;
+using TinfoilWebServer.Utils;
 
 namespace TinfoilWebServer;
 
 public class Startup
 {
-
     /// <summary>
     /// WTF ASP.NET! This method is implicitly called by <see cref="WebHostBuilderExtensions.UseStartup{TStartup}(IWebHostBuilder)"/>.
     /// This method is automatically called once <see cref="IWebHost"/> is ran and server is listening.
     /// </summary>
     /// <param name="app"></param>
-    public void Configure(IApplicationBuilder app)
+    /// <param name="logger"></param>
+    /// <param name="server"></param>
+    public void Configure(IApplicationBuilder app, ILogger<Startup> logger, IServer server)
     {
-        var summaryInfoLogger = app.ApplicationServices.GetRequiredService<ISummaryInfoLogger>();
-        summaryInfoLogger.LogListenedHosts(); // This method shouldn't be invoked before host is ran
+        // Method below shouldn't be invoked before host is ran, otherwise list of listened hosts is null
+        logger.LogListenedHosts(server.Features.GetRequiredFeature<IServerAddressesFeature>());
 
         app
             .UseMiddleware<IBlacklistMiddleware>()
