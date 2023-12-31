@@ -61,7 +61,6 @@ public class SummaryInfoLogger : ISummaryInfoLogger
         else
             _logger.LogWarning($"Configuration file not found at location \"{configFilePath}\".");
 
-
         var sb = new StringBuilder();
         sb.AppendLine($"Current configuration:");
 
@@ -103,6 +102,9 @@ public class SummaryInfoLogger : ISummaryInfoLogger
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Is behind proxy: {blacklist.IsBehindProxy}");
 
         _logger.LogInformation(sb.ToString());
+
+        if (_bootInfo.CmdOptions.RunAsWindowsService)
+            _logger.LogInformation($"Server run as a Windows service.");
     }
 
     public void LogCurrentMachineInfo()

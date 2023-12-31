@@ -10,13 +10,17 @@ namespace TinfoilWebServer;
 
 public class Startup
 {
+
     /// <summary>
-    /// WTF ASP.NET! This method is implicitly called by <see cref="WebHostBuilderExtensions.UseStartup{TStartup}(IWebHostBuilder)"/>
+    /// WTF ASP.NET! This method is implicitly called by <see cref="WebHostBuilderExtensions.UseStartup{TStartup}(IWebHostBuilder)"/>.
+    /// This method is automatically called once <see cref="IWebHost"/> is ran and server is listening.
     /// </summary>
     /// <param name="app"></param>
-    /// <param name="requestManager"></param>
-    public void Configure(IApplicationBuilder app, IRequestManager requestManager)
+    public void Configure(IApplicationBuilder app)
     {
+        var summaryInfoLogger = app.ApplicationServices.GetRequiredService<ISummaryInfoLogger>();
+        summaryInfoLogger.LogListenedHosts(); // This method shouldn't be invoked before host is ran
+
         app
             .UseMiddleware<IBlacklistMiddleware>()
             .UseMiddleware<IBasicAuthMiddleware>()
@@ -30,7 +34,8 @@ public class Startup
         app.ApplicationServices.GetRequiredService<IVFSAutoRefreshManager>().Initialize();
         app.ApplicationServices.GetRequiredService<IVFSPeriodicRefreshManager>().Initialize();
 
+        var requestManager = app.ApplicationServices.GetRequiredService<IRequestManager>();
+
         app.Run(requestManager.OnRequest);
     }
-
 }

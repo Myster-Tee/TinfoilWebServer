@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using CommandLine;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.WindowsServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -66,14 +67,18 @@ public class Program
                 {
                     services
                         .Configure<AppSettingsModel>(ctx.Configuration)
-                        .Configure<FileFormatterOptions>(ctx.Configuration.GetSection("Logging").GetSection("File").GetSection("FormatterOptions"))
+                        .Configure<FileFormatterOptions>(ctx.Configuration.GetSection("Logging").GetSection("File")
+                            .GetSection("FormatterOptions"))
                         .AddSingleton<IBootInfo>(_ => bootInfo)
 
                         .AddSingleton<IAppSettings, AppSettings>()
                         .AddSingleton<ICacheSettings>(provider => provider.GetRequiredService<IAppSettings>().Cache)
-                        .AddSingleton<IAuthenticationSettings>(provider => provider.GetRequiredService<IAppSettings>().Authentication)
-                        .AddSingleton<IFingerprintsFilterSettings>(provider => provider.GetRequiredService<IAppSettings>().FingerprintsFilter)
-                        .AddSingleton<IBlacklistSettings>(provider => provider.GetRequiredService<IAppSettings>().Blacklist)
+                        .AddSingleton<IAuthenticationSettings>(provider =>
+                            provider.GetRequiredService<IAppSettings>().Authentication)
+                        .AddSingleton<IFingerprintsFilterSettings>(provider =>
+                            provider.GetRequiredService<IAppSettings>().FingerprintsFilter)
+                        .AddSingleton<IBlacklistSettings>(provider =>
+                            provider.GetRequiredService<IAppSettings>().Blacklist)
 
                         .AddSingleton<ISummaryInfoLogger, SummaryInfoLogger>()
 
@@ -108,6 +113,13 @@ public class Program
             // Build Dependency Injection
             var webHost = webHostBuilder.Build();
 
+            var summaryInfoLogger = webHost.Services.GetRequiredService<ISummaryInfoLogger>();
+            summaryInfoLogger.LogWelcomeMessage();
+            summaryInfoLogger.LogBootErrors();
+            summaryInfoLogger.LogRelevantSettings();
+            summaryInfoLogger.LogCurrentMachineInfo();
+
+            // Hack because FileFormatterOptions can't be injected due to bad design of "NReco.Logging.File"
             logFileFormatter.Initialize(webHost.Services.GetRequiredService<IOptionsMonitor<FileFormatterOptions>>());
 
             logger = webHost.Services.GetRequiredService<ILogger<Program>>();
@@ -118,22 +130,16 @@ public class Program
                 logger.LogError(ex, $"An unhandled exception occurred: {ex?.Message ?? eventArgs.ExceptionObject}");
             };
 
-            var summaryInfoLogger = webHost.Services.GetRequiredService<ISummaryInfoLogger>();
-            summaryInfoLogger.LogWelcomeMessage();
-            summaryInfoLogger.LogBootErrors();
-            summaryInfoLogger.LogRelevantSettings();
-            summaryInfoLogger.LogCurrentMachineInfo();
+
 
             //===========================//
             //===> Starts the server <===//
-            var runTask = webHost.RunAsync();
+            if (bootInfo.CmdOptions.RunAsWindowsService)
+                webHost.RunAsService();
+            else
+                webHost.Run();
             //===> Starts the server <===//
             //===========================//
-
-            summaryInfoLogger.LogListenedHosts();
-
-            // Wait for server to shutdown
-            runTask.GetAwaiter().GetResult();
 
             logger.LogInformation("Server closing.");
 
@@ -163,16 +169,16 @@ public class Program
             CmdOptions = cmdOptions,
         };
 
-        var workingDirectory = cmdOptions.WorkingDirectory;
-        if (!string.IsNullOrWhiteSpace(workingDirectory))
+        var currentDirectory = cmdOptions.CurrentDirectory;
+        if (!string.IsNullOrWhiteSpace(currentDirectory))
         {
             try
             {
-                Environment.CurrentDirectory = workingDirectory;
+                Environment.CurrentDirectory = currentDirectory;
             }
             catch (Exception ex)
             {
-                bootInfo.Errors.Add($"Failed to change the working directory to \"{workingDirectory}\": {ex.Message}");
+                bootInfo.Errors.Add($"Failed to change the current directory to \"{currentDirectory}\": {ex.Message}");
             }
         }
 
@@ -192,4 +198,3 @@ public class Program
     }
 
 }
-

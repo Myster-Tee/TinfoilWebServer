@@ -10,7 +10,9 @@ public class CmdOptions
     [Option('c', "config", Required = false, HelpText = "Custom location of the configuration file.")]
     public string? ConfigFilePath { get; set; }
 
+    [Option('d', "currentDir", Required = false, HelpText = "Change the current directory.")]
+    public string? CurrentDirectory { get; set; }
 
-    [Option('w', "workingDir", Required = false, HelpText = "Change the working directory.")]
-    public string? WorkingDirectory { get; set; }
+    [Option('s', "winService", Required = false, HelpText = "Run the server as a Windows service.")]
+    public bool RunAsWindowsService { get; set; } = false;
 }

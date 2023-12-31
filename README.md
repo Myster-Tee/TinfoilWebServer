@@ -57,10 +57,11 @@ dotnet TinfoilWebServer.dll
 #### Command line options
 
 ```txt
--c, --config      Custom location of the configuration file.
--w, --workingDir  Change the working directory.
---help            Display this help screen.
---version         Display version information.
+-c, --config        Custom location of the configuration file.
+-d, --currentDir    Change the current directory.
+-s, --winService    Run the server as a Windows service.
+--help              Display this help screen.
+--version           Display version information.
 ```
 
 ## Setting up Tinfoil on your Switch
@@ -217,6 +218,17 @@ Example:
 - \{Type\}: the exception type name
 - \{StackTrace\}: the exception stack trace
 
+### Running as a Windows service
+
+Server can be run as a Windows service. To to this, service must first be registered using [sc.exe](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/sc-config), PowerShell [New-Service](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/new-service) cmdlet or any other method.  
+Don't forget to specify the **--winService** command line parameter when registering the service.
+
+*Note: by default, Windows services are run in **%WinDir%\System32**, you can change the current directory using **--currentDir** command line parameter.*
+
+```powershell
+# PowerShell service registration example
+New-Service TinfoilWebServer -BinaryPathName "<FullPathToExe> --winService --config ""<SomePathToConfigJson>"" --currentDir ""<SomePathToCurrentDir>"""
+```
 
 ## Security considerations and recommendations
 
