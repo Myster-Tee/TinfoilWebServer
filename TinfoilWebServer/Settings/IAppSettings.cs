@@ -95,9 +95,20 @@ public interface IAuthenticationSettings : INotifyPropertyChanged
     public bool WebBrowserAuthEnabled { get; }
 
     /// <summary>
+    /// Indicates the password type
+    /// </summary>
+    public PwdType PwdType { get; }
+
+    /// <summary>
     /// The list of allowed users
     /// </summary>
     public IReadOnlyList<IAllowedUser> Users { get; }
+}
+
+public enum PwdType
+{
+    Sha256,
+    Plaintext
 }
 
 public interface IUserInfo

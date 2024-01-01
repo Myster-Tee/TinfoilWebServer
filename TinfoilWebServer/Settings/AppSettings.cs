@@ -60,6 +60,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         var authentication = appSettingsModel.Authentication;
         _authentication.Enabled = authentication?.Enabled ?? false;
         _authentication.WebBrowserAuthEnabled = authentication?.WebBrowserAuthEnabled ?? false;
+        _authentication.PwdType = authentication?.PwdType ?? PwdType.Plaintext;
         var newUsers = (authentication?.Users ?? Array.Empty<AllowedUserModel>()).OfType<AllowedUserModel>().Select(allowedUserModel =>
             new AllowedUser
             {
@@ -210,6 +211,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private bool _enabled;
         private IReadOnlyList<IAllowedUser> _users = new List<IAllowedUser>();
         private bool _webBrowserAuthEnabled;
+        private PwdType _pwdType;
 
         public bool Enabled
         {
@@ -221,6 +223,12 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         {
             get => _webBrowserAuthEnabled;
             set => SetField(ref _webBrowserAuthEnabled, value);
+        }
+
+        public PwdType PwdType  
+        {
+            get => _pwdType;
+            set => SetField(ref _pwdType, value);
         }
 
         public IReadOnlyList<IAllowedUser> Users

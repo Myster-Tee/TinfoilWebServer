@@ -81,6 +81,7 @@ public static class LoggerHelper
         sb.AppendLine($"- Authentication:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Enabled: {authentication.Enabled}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Web Browser auth enabled: {authentication.WebBrowserAuthEnabled}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Password type: {authentication.PwdType}");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Nb allowed users: {authentication.Users.Count}");
 
         var fingerprintsFilter = appSettings.FingerprintsFilter;

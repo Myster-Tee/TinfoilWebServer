@@ -37,6 +37,12 @@ public class Program
             if (parserResult.Tag == ParserResultType.NotParsed)
                 return 2;
 
+            if (parserResult.Value.ComputeSha256Passwords)
+            {
+                PromptSha256Passwords();
+                return 0;
+            }
+
             var bootInfo = BuildBootInfo(parserResult.Value);
 
             var logFileFormatter = new LogFileFormatter();
@@ -85,15 +91,15 @@ public class Program
                         .AddSingleton<IBasicAuthMiddleware, BasicAuthMiddleware>()
                         .AddSingleton<IFingerprintMiddleware, FingerprintMiddleware>()
 
+                        .AddSingleton<IJsonMerger, JsonMerger>()
+                        .AddSingleton<IJsonSerializer, JsonSerializer>()
                         .AddSingleton<IFingerprintsFilteringManager, FingerprintsFilteringManager>()
                         .AddSingleton<IFingerprintsSerializer, FingerprintsSerializer>()
                         .AddSingleton<IBlacklistManager, BlacklistManager>()
                         .AddSingleton<IBlacklistSerializer, BlacklistSerializer>()
                         .AddSingleton<IRequestManager, RequestManager>()
-                        .AddSingleton<IJsonMerger, JsonMerger>()
                         .AddSingleton<IFileFilter, FileFilter>()
                         .AddSingleton<IVirtualItemFinder, VirtualItemFinder>()
-                        .AddSingleton<IJsonSerializer, JsonSerializer>()
                         .AddSingleton<ITinfoilIndexBuilder, TinfoilIndexBuilder>()
                         .AddSingleton<IVirtualFileSystemBuilder, VirtualFileSystemBuilder>()
                         .AddSingleton<IVirtualFileSystemRootProvider, VirtualFileSystemRootProvider>()
@@ -155,6 +161,25 @@ public class Program
                     );
             return 1;
         }
+    }
+
+    private static void PromptSha256Passwords()
+    {
+        Console.WriteLine(@"=> Compute SHA256 passwords hash <=");
+        string? input;
+        do
+        {
+            Console.WriteLine(@"Enter a password (CTRL+C to exit):");
+
+            input = Console.ReadLine();
+            if (input != null)
+            {
+                var hash = HashHelper.ComputeSha256(input);
+
+                Console.WriteLine(@"Hash is:");
+                Console.WriteLine(hash);
+            }
+        } while (input != null);
     }
 
     private static BootInfo BuildBootInfo(CmdOptions cmdOptions)
