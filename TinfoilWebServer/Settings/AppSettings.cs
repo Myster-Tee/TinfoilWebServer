@@ -40,7 +40,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     /// <param name="appSettingsModel"></param>
     private void InitializeFromModel(AppSettingsModel appSettingsModel)
     {
-        var servedDirectoryPaths = appSettingsModel.ServedDirectories;
+        var servedDirectoryPaths = appSettingsModel.ServedDirectories ?? new[] { "./packages" };
         var newServedDirectories = InitializeServedDirectories(servedDirectoryPaths);
         if (!ServedDirectoriesEqual(ServedDirectories, newServedDirectories))
             ServedDirectories = newServedDirectories;
@@ -103,7 +103,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         return !oldServedDirectories.Where((t, i) => t.FullName != newServedDirectories[i].FullName).Any();
     }
 
-    private IReadOnlyList<DirectoryInfo> InitializeServedDirectories(IReadOnlyCollection<string?>? servedDirectoryPaths)
+    private List<DirectoryInfo> InitializeServedDirectories(IReadOnlyCollection<string?>? servedDirectoryPaths)
     {
         var servedDirectories = new List<DirectoryInfo>();
 
@@ -126,8 +126,8 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
                 var servedDirectory = new DirectoryInfo(servedDirectoryPath);
                 if (!servedDirectory.Exists)
                 {
-                    _logger.LogError($"Served directory \"{servedDirectoryPath}\" doesn't exist.");
-                    continue;
+                    servedDirectory.Create();
+                    _logger.LogInformation($"Served directory \"{servedDirectoryPath}\" created.");
                 }
 
                 servedDirectories.Add(servedDirectory);
@@ -225,7 +225,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
             set => SetField(ref _webBrowserAuthEnabled, value);
         }
 
-        public PwdType PwdType  
+        public PwdType PwdType
         {
             get => _pwdType;
             set => SetField(ref _pwdType, value);
