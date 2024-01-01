@@ -25,15 +25,20 @@ ${OutDirRoot}="Publish"
 $TinfoilWebServerVersion= Select-Xml -Path "TinfoilWebServer/TinfoilWebServer.csproj" -XPath "//Project/PropertyGroup/Version" | Select-Object -ExpandProperty Node | Select-Object -ExpandProperty InnerText
 Write-Host "Tinfoil version read: $TinfoilWebServerVersion"
 
-
+# Cleaning and initialize output folder
 if (Test-Path ${OutDirRoot}) {
      Write-Host "Deleting output folder ""${OutDirRoot}""."
-    Remove-Item ${OutDirRoot} -Recurse
+    Remove-Item ${OutDirRoot} -Recurse -ErrorAction Stop
 }
+New-Item -ItemType Directory -Path "${OutDirRoot}"
 
 dotnet clean "TinfoilWebServer/TinfoilWebServer.csproj"
 
-#Framework Dependent Portable
+# Copy template config.json
+
+Copy-Item -Path "TinfoilWebServer/TinfoilWebServer.config.json" -Destination "${OutDirRoot}/TinfoilWebServer.config.json" -ErrorAction Stop
+
+">>> Framework Dependent Portable"
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-portable"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -44,7 +49,7 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "${PublishDir}.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#=== Framework Dependent win-x64
+">>> Framework Dependent win-x64"
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-win-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -58,7 +63,7 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "$PublishDir.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#Framework Independent win-x64
+">>> Framework Independent win-x64"
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Independent-win-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -72,7 +77,7 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "${PublishDir}.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#Framework Dependent linux-x64
+">>> Framework Dependent linux-x64"
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-linux-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -86,7 +91,7 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "$PublishDir.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#Framework Independent linux-x64
+">>> Framework Independent linux-x64"
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Independent-linux-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -100,7 +105,7 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "$PublishDir.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#Framework Dependent osx-x64
+">>> Framework Dependent osx-x64"
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Dependent-osx-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
@@ -114,7 +119,7 @@ dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `
 Compress-Archive -Path $PublishDir -DestinationPath "${PublishDir}.zip"
 Remove-Item ${PublishDir} -Recurse
 
-#Framework Independent osx-x64
+">>> Framework Independent osx-x64"
 $PublishDir="${OutDirRoot}/TinfoilWebServer_v${TinfoilWebServerVersion}_Framework-Independent-osx-x64"
 
 dotnet publish TinfoilWebServer/TinfoilWebServer.csproj `

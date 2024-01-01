@@ -130,6 +130,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         {
             _logger.LogWarning($"Request [{context.TraceIdentifier}] rejected for user \"{incomingUserName}\": password incorrect.");
             await RespondUnauthorized(context);
+            return;
         }
 
         _logger.LogDebug($"Request [{context.TraceIdentifier}] passed authentication for user user \"{allowedUser.Name}\".");

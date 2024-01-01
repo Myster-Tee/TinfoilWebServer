@@ -2,9 +2,12 @@
 
 ## Description
 
-Install your Nintendo Switch packages (NSP, NSZ, XCI, etc.) with [Tinfoil](https://tinfoil.io/Download) from your own server.
+*Build you custom Nintendo Switch shop.*  
 
-All served files must have "[titleid]" in the file name to be recognized by Tinfoil to show up in "New Games", "New DLC", and "New Updates". Official Tinfoil documentation [here](https://blawar.github.io/tinfoil/network/).
+TinfoilWebServer is a simple and efficient cross platform web server application aiming at serving your personal Nintendo Switch packages (NSP, NSZ, XCI, etc.) to [Tinfoil](https://tinfoil.io/Download).
+
+All served files must have "[titleid]" in the file name to be recognized by Tinfoil to show up in "New Games", "New DLC", and "New Updates".  
+Official Tinfoil documentation [here](https://blawar.github.io/tinfoil/network/).
 
 ## Download
 
@@ -27,8 +30,11 @@ No requirements but heavyweight.
 ## Running the server
 
 1. Unzip the desired distribution to a location of your choice
-1. Edit the configuration file _TinfoilWebServer.config.json_ according to your needs
+1. Create a *TinfoilWebServer.config.json* according to your needs
 1. Start the server according to the chosen distribution
+
+By default, the *TinfoilWebServer.config.json* file will be searched in the program's current directory.  
+A template of *TinfoilWebServer.config.json* can be downloaded in the assets of the releases page [here](https://github.com/Myster-Tee/TinfoilWebServer/releases).
 
 ### Windows
 
@@ -83,7 +89,7 @@ dotnet TinfoilWebServer.dll
   "ServedDirectories": string[],        // ex: ["C:\\SomeDir\\WindowsDirWithPackages", "/dev/sda1/LinuxDirWithPackages", ".", "/Users/yourname/Documents/macOSDirWithPackages"] !!! Don't forget to escape backslashes with another one !!! No need to escape spaces
   "StripDirectoryNames": boolean,       // «true» to remove directories names in URLs of served files, «false» otherwise
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
-  "AllowedExt": string[],               // List of file extensions to serve, ex: [ "nsp", "nsz", "xci" ]
+  "AllowedExt": string[],               // List of file extensions to serve (default is ["xci", "nsz", "nsp"])
   "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
   "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "Cache": {
@@ -93,7 +99,7 @@ dotnet TinfoilWebServer.dll
   "Authentication": {
     "Enabled": boolean,                 // «true» to enable authentication, «false» otherwise
     "WebBrowserAuthEnabled": boolean,   // «true» to enable the native Web Browser login prompt when not authenticated (has no effect when "Authentication.Enabled" is «false»)
-    "PwdType": string,                  // Defines the format of user passwords. Can be either "Sha256" or "Plaintext". Default is "Plaintext".
+    "PwdType": string,                  // Defines the format of user passwords. Can be either "Sha256" or "Plaintext". Default is "Sha256".
     "Users": [                          // List of allowed users (use a comma as separator for declaring multiple users)
       {
         "Name": string,                 // The user name
@@ -105,7 +111,7 @@ dotnet TinfoilWebServer.dll
     ]
   },
   "FingerprintsFilter": {
-    "Enabled" : boolean,                // «true» to enable fingerprints validation filter, «false» otherwise
+    "Enabled" : boolean,                // «true» to enable fingerprints validation filter, «false» otherwise (default is true)
     "FingerprintsFilePath": string      // The path to the file where to save allowed fingerprints
     "MaxFingerprints" : number          // The maximum number of global fingerprints allowed
   },
@@ -160,10 +166,8 @@ dotnet TinfoilWebServer.dll
 }
 ```
 
-### Default settings
+When *"Kestrel"* configuration is omitted, server default listens to _http://localhost:5000/_ and _https://localhost:5001_.
 
-- When _"Kestrel"_ configuration is omitted, server listens to _http://localhost:5000/_ and _https://localhost:5001_.
-- When _"AllowedExt"_ is omitted, the following extensions _["xci", "nsz", "nsp"]_ are used.
 
 ### Custom Index
 
@@ -244,3 +248,16 @@ If you plan to open your server to the Internet network (WAN) instead of local n
 1. Enable IP blacklistng feature
 1. Enable fingerprints filter feature
 1. Set *Authentication.PwdType* to "Sha256" to avoid storing plaintext user passwords in your config file
+
+
+# Similar Projects
+If you want to create your personal NSP Shop then check out these other similar projects:
+- [a1ex4/Ownfoil](https://github.com/a1ex4/ownfoil)
+- [eXhumer/pyTinGen](https://github.com/eXhumer/pyTinGen)
+- [JackInTheShop/FT-SCEP](https://github.com/JackInTheShop/FT-SCEP)
+- [gianemi2/tinson-node](https://github.com/gianemi2/tinson-node)
+- [BigBrainAFK/tinfoil_gdrive_generator](https://github.com/BigBrainAFK/tinfoil_gdrive_generator)
+- [ibnux/php-tinfoil-server](https://github.com/ibnux/php-tinfoil-server)
+- [ramdock/nut-server](https://github.com/ramdock/nut-server)
+- [DevYukine/rustfoil](https://github.com/DevYukine/rustfoil)
+- [Orygin/gofoil](https://github.com/Orygin/gofoil)

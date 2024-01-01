@@ -60,7 +60,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         var authentication = appSettingsModel.Authentication;
         _authentication.Enabled = authentication?.Enabled ?? false;
         _authentication.WebBrowserAuthEnabled = authentication?.WebBrowserAuthEnabled ?? false;
-        _authentication.PwdType = authentication?.PwdType ?? PwdType.Plaintext;
+        _authentication.PwdType = authentication?.PwdType ?? PwdType.Sha256;
         var newUsers = (authentication?.Users ?? Array.Empty<AllowedUserModel>()).OfType<AllowedUserModel>().Select(allowedUserModel =>
             new AllowedUser
             {
@@ -74,7 +74,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
             _authentication.Users = newUsers;
 
         var fingerprintsFilter = appSettingsModel.FingerprintsFilter;
-        _fingerprintsFilter.Enabled = fingerprintsFilter?.Enabled ?? false;
+        _fingerprintsFilter.Enabled = fingerprintsFilter?.Enabled ?? true;
         _fingerprintsFilter.FingerprintsFilePath = fingerprintsFilter?.FingerprintsFilePath ?? "AllowedFingerprints.json";
         _fingerprintsFilter.MaxFingerprints = fingerprintsFilter?.MaxFingerprints ?? 0;
 
