@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Security.Cryptography;
 using System.Text;
-using TinfoilWebServer.Utils;
 
-namespace TinfoilWebServer.Services;
+namespace TinfoilWebServer.Utils;
 
-public class HashHelper : IHashHelper
+public static class HashHelper
 {
-    public string ComputeSha256(string text)
+    [Pure]
+    public static string ComputeSha256(string text)
     {
         if (text == null) 
             throw new ArgumentNullException(nameof(text));

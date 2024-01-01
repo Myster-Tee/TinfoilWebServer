@@ -15,4 +15,8 @@ public class CmdOptions
 
     [Option('s', "winService", Required = false, HelpText = "Run the server as a Windows service.")]
     public bool RunAsWindowsService { get; set; } = false;
+
+    [Option("sha256", Required = false, HelpText = "Compute SHA256 passwords interactively.")]
+    public bool ComputeSha256Passwords { get; set; } = false;
+
 }

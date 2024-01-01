@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using TinfoilWebServer.Booting;
 using TinfoilWebServer.Settings;
+using TinfoilWebServer.Utils;
 
 namespace TinfoilWebServer.Services.Middleware.Authentication;
 
@@ -19,16 +20,14 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
     private readonly IAuthenticationSettings _authenticationSettings;
     private readonly ILogger<BasicAuthMiddleware> _logger;
     private readonly IBootInfo _bootInfo;
-    private readonly IHashHelper _hashHelper;
     private readonly Dictionary<string, IAllowedUser> _allowedUsersPerName = new();
 
-    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger, IBootInfo bootInfo, IHashHelper hashHelper)
+    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger, IBootInfo bootInfo)
     {
 
         _authenticationSettings = authenticationSettings ?? throw new ArgumentNullException(nameof(authenticationSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
-        _hashHelper = hashHelper;
 
         _authenticationSettings.PropertyChanged += OnAuthenticationSettingsChanged;
 
@@ -94,7 +93,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         if (headerValue == null)
         {
             _logger.LogWarning($"Request [{context.TraceIdentifier}] is missing authentication header.");
-            await RespondUnauthorized(context);
+            await RespondUnauthorized(context, true);
             return;
         }
 
@@ -118,7 +117,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
                 pwdAllowed = string.Equals(incomingPassword, allowedUser.Password);
                 break;
             case PwdType.Sha256:
-                var incomingPwdHash = _hashHelper.ComputeSha256(incomingPassword);
+                var incomingPwdHash = HashHelper.ComputeSha256(incomingPassword);
                 pwdAllowed = string.Equals(incomingPwdHash, allowedUser.Password, StringComparison.OrdinalIgnoreCase);
                 break;
             default:
@@ -188,11 +187,11 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         return true;
     }
 
-    private async Task RespondUnauthorized(HttpContext context)
+    private async Task RespondUnauthorized(HttpContext context, bool basicHeaderMissing = false)
     {
         context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
-        if (_authenticationSettings.WebBrowserAuthEnabled)
+        if (_authenticationSettings.WebBrowserAuthEnabled && basicHeaderMissing)
             context.Response.Headers.WWWAuthenticate = new StringValues("Basic");
 
         await context.Response.CompleteAsync();
