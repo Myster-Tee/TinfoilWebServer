@@ -60,6 +60,7 @@ dotnet TinfoilWebServer.dll
 -c, --config        Custom location of the configuration file.
 -d, --currentDir    Change the current directory.
 -s, --winService    Run the server as a Windows service.
+--sha256            Compute SHA256 passwords interactively.
 --help              Display this help screen.
 --version           Display version information.
 ```
@@ -92,6 +93,7 @@ dotnet TinfoilWebServer.dll
   "Authentication": {
     "Enabled": boolean,                 // «true» to enable authentication, «false» otherwise
     "WebBrowserAuthEnabled": boolean,   // «true» to enable the native Web Browser login prompt when not authenticated (has no effect when "Authentication.Enabled" is «false»)
+    "PwdType": string,                  // Defines the format of user passwords. Can be either "Sha256" or "Plaintext". Default is "Plaintext".
     "Users": [                          // List of allowed users (use a comma as separator for declaring multiple users)
       {
         "Name": string,                 // The user name
@@ -241,3 +243,4 @@ If you plan to open your server to the Internet network (WAN) instead of local n
 1. Setup _StripDirectoryNames_ setting to _true_ to hide your personal folder tree organization
 1. Enable IP blacklistng feature
 1. Enable fingerprints filter feature
+1. Set *Authentication.PwdType* to "Sha256" to avoid storing plaintext user passwords in your config file
