@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -18,8 +19,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
     private readonly IAuthenticationSettings _authenticationSettings;
     private readonly ILogger<BasicAuthMiddleware> _logger;
     private readonly IBootInfo _bootInfo;
-    private static readonly Encoding _encoding = Encoding.GetEncoding("iso-8859-1");
-    private readonly Dictionary<string, IAllowedUser> _allowedBase64Accounts = new();
+    private readonly Dictionary<string, IAllowedUser> _allowedUsersPerName = new();
 
     public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger, IBootInfo bootInfo)
     {
@@ -53,22 +53,29 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             else
                 _logger.LogInformation($"Web Browser authentication disabled.");
         }
+        else if (e.PropertyName == nameof(IAuthenticationSettings.PwdType))
+        {
+            _logger.LogInformation($"Password type changed to {_authenticationSettings.PwdType}.");
+        }
     }
 
     private void LoadAllowedUsers(bool isReload)
     {
-        _allowedBase64Accounts.Clear();
+        _allowedUsersPerName.Clear();
 
         foreach (var allowedUser in _authenticationSettings.Users)
         {
-            var bytes = _encoding.GetBytes($"{allowedUser.Name}:{allowedUser.Password}");
+            if (allowedUser.Name.Contains(':'))
+            {
+                _logger.LogWarning($"Invalid configuration file \"{_bootInfo.ConfigFileFullPath}\": user name \"{allowedUser.Name}\" can't contain colon (not allowed in Basic Authentication).");
+                continue;
+            }
 
-            var base64String = Convert.ToBase64String(bytes);
-            if (!_allowedBase64Accounts.TryAdd(base64String, allowedUser))
-                _logger.LogWarning($"Duplicated user \"{allowedUser.Name}\" found in configuration file \"{_bootInfo.ConfigFileFullPath}\".");
+            if (!_allowedUsersPerName.TryAdd(allowedUser.Name, allowedUser))
+                _logger.LogWarning($"Invalid configuration file \"{_bootInfo.ConfigFileFullPath}\": user \"{allowedUser.Name}\" duplicated.");
         }
 
-        _logger.LogInformation($"List of allowed users successfully {(isReload ? "reloaded" : "loaded")}, {_allowedBase64Accounts.Count} user(s) found (authentication is {(_authenticationSettings.Enabled ? "enabled" : "disabled")}).");
+        _logger.LogInformation($"List of allowed users successfully {(isReload ? "reloaded" : "loaded")}, {_allowedUsersPerName.Count} user(s) found (authentication is {(_authenticationSettings.Enabled ? "enabled" : "disabled")}).");
     }
 
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -84,41 +91,97 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         var headerValue = headersAuthorization.FirstOrDefault();
         if (headerValue == null)
         {
-            _logger.LogDebug($"Request [{context.TraceIdentifier}] is missing authentication header.");
+            _logger.LogWarning($"Request [{context.TraceIdentifier}] is missing authentication header.");
             await RespondUnauthorized(context);
             return;
         }
 
-        var strings = headerValue.Split(new[] { ' ' }, 2);
-
-        if (strings.Length != 2)
+        if (!TryParseBasicAuthHeaderValue(headerValue, context.TraceIdentifier, out var incomingUserName, out var incomingPassword))
         {
-            _logger.LogDebug($"Request [{context.TraceIdentifier}] authorization header invalid, space separator missing.");
             await RespondUnauthorized(context);
             return;
         }
 
-        if (!string.Equals("Basic", strings[0], StringComparison.OrdinalIgnoreCase))
+
+        if (!_allowedUsersPerName.TryGetValue(incomingUserName, out var allowedUser))
         {
-            _logger.LogDebug($"Request [{context.TraceIdentifier}] authentication header is not basic, found \"{strings[0]}\".");
+            _logger.LogWarning($"Request [{context.TraceIdentifier}] rejected, user \"{incomingUserName}\" not found.");
             await RespondUnauthorized(context);
             return;
         }
 
-        var base64IncomingAccount = strings[1];
-        if (!_allowedBase64Accounts.TryGetValue(base64IncomingAccount, out var allowedUser))
+        switch (_authenticationSettings.PwdType)
         {
-            _logger.LogDebug($"Request [{context.TraceIdentifier}] login or password incorrect.");
-            await RespondUnauthorized(context);
-            return;
+            case PwdType.Plaintext:
+                {
+                    if (!string.Equals(incomingPassword, allowedUser.Password))
+                    {
+                        _logger.LogWarning($"Request [{context.TraceIdentifier}] rejected for user \"{incomingUserName}\": password incorrect.");
+                        await RespondUnauthorized(context);
+                    }
+                    break;
+                }
+            case PwdType.Sha256:
+                throw new NotImplementedException();
+            default:
+                _logger.LogError($"Request [{context.TraceIdentifier}] rejected for user \"{incomingUserName}\": password type \"{_authenticationSettings.PwdType}\" not supported!");
+                await RespondUnauthorized(context);
+                return;
         }
 
-
-        _logger.LogDebug($"Request [{context.TraceIdentifier}] from user \"{allowedUser.Name}\".");
+        _logger.LogDebug($"Request [{context.TraceIdentifier}] passed authentication for user user \"{allowedUser.Name}\".");
 
         context.User = new AuthenticatedUser(allowedUser);
 
         await next.Invoke(context);
+    }
+
+
+    private bool TryParseBasicAuthHeaderValue(string headerValue, string traceId, [NotNullWhen(true)] out string? userName, [NotNullWhen(true)] out string? password)
+    {
+        var strings = headerValue.Split(new[] { ' ' }, 2);
+
+        if (strings.Length != 2)
+        {
+            _logger.LogWarning($"Request [{traceId}] authorization header invalid, space separator missing.");
+            userName = null;
+            password = null;
+            return false;
+        }
+
+        if (!string.Equals("Basic", strings[0], StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogWarning($"Request [{traceId}] authentication header is not basic, found \"{strings[0]}\".");
+            userName = null;
+            password = null;
+            return false;
+        }
+
+        var base64IncomingAccount = strings[1];
+
+        var bytes = new Span<byte>(new byte[base64IncomingAccount.Length]); // NOTE: Base64 string length is always longer than the number of decoded bytes
+        if (!Convert.TryFromBase64String(base64IncomingAccount, bytes, out var nbBytesWritten))
+        {
+            _logger.LogWarning($"Request [{traceId}] authentication header is not basic, found \"{strings[0]}\".");
+            userName = null;
+            password = null;
+            return false;
+        }
+
+        var decodedString = Encoding.UTF8.GetString(bytes.Slice(0, nbBytesWritten));
+        var parts = decodedString.Split(':', 2);
+        if (parts.Length != 2)
+        {
+            _logger.LogWarning($"Request [{traceId}] authentication header invalid, colon separator missing in decoded base64 string \"{decodedString}\".");
+            userName = null;
+            password = null;
+            return false;
+        }
+
+        userName = parts[0];
+        password = parts[1];
+
+        return true;
     }
 
     private async Task RespondUnauthorized(HttpContext context)

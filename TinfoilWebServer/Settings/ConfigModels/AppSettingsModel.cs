@@ -42,7 +42,10 @@ public class AuthenticationSettingsModel
 
     public bool WebBrowserAuthEnabled { get; set; } = false;
 
+    public PwdType? PwdType { get; set; }
+
     public AllowedUserModel?[]? Users { get; set; }
+
 }
 
 public class AllowedUserModel
