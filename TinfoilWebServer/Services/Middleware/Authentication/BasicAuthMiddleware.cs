@@ -19,14 +19,16 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
     private readonly IAuthenticationSettings _authenticationSettings;
     private readonly ILogger<BasicAuthMiddleware> _logger;
     private readonly IBootInfo _bootInfo;
+    private readonly IHashHelper _hashHelper;
     private readonly Dictionary<string, IAllowedUser> _allowedUsersPerName = new();
 
-    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger, IBootInfo bootInfo)
+    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger, IBootInfo bootInfo, IHashHelper hashHelper)
     {
 
         _authenticationSettings = authenticationSettings ?? throw new ArgumentNullException(nameof(authenticationSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
+        _hashHelper = hashHelper;
 
         _authenticationSettings.PropertyChanged += OnAuthenticationSettingsChanged;
 
@@ -102,7 +104,6 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             return;
         }
 
-
         if (!_allowedUsersPerName.TryGetValue(incomingUserName, out var allowedUser))
         {
             _logger.LogWarning($"Request [{context.TraceIdentifier}] rejected, user \"{incomingUserName}\" not found.");
@@ -110,23 +111,26 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             return;
         }
 
+        bool pwdAllowed;
         switch (_authenticationSettings.PwdType)
         {
             case PwdType.Plaintext:
-                {
-                    if (!string.Equals(incomingPassword, allowedUser.Password))
-                    {
-                        _logger.LogWarning($"Request [{context.TraceIdentifier}] rejected for user \"{incomingUserName}\": password incorrect.");
-                        await RespondUnauthorized(context);
-                    }
-                    break;
-                }
+                pwdAllowed = string.Equals(incomingPassword, allowedUser.Password);
+                break;
             case PwdType.Sha256:
-                throw new NotImplementedException();
+                var incomingPwdHash = _hashHelper.ComputeSha256(incomingPassword);
+                pwdAllowed = string.Equals(incomingPwdHash, allowedUser.Password, StringComparison.OrdinalIgnoreCase);
+                break;
             default:
                 _logger.LogError($"Request [{context.TraceIdentifier}] rejected for user \"{incomingUserName}\": password type \"{_authenticationSettings.PwdType}\" not supported!");
                 await RespondUnauthorized(context);
                 return;
+        }
+
+        if (!pwdAllowed)
+        {
+            _logger.LogWarning($"Request [{context.TraceIdentifier}] rejected for user \"{incomingUserName}\": password incorrect.");
+            await RespondUnauthorized(context);
         }
 
         _logger.LogDebug($"Request [{context.TraceIdentifier}] passed authentication for user user \"{allowedUser.Name}\".");
