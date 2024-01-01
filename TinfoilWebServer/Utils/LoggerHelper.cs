@@ -75,7 +75,7 @@ public static class LoggerHelper
         var cache = appSettings.Cache;
         sb.AppendLine($"- Cache:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}Auto detect file changes: {cache.AutoDetectChanges}");
-        sb.AppendLine($"{LogUtil.INDENT_SPACES}Forced refresh delay: {cache.PeriodicRefreshDelay}");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}Periodic refresh delay: {cache.PeriodicRefreshDelay?.ToString() ?? "disabled"}");
 
         var authentication = appSettings.Authentication;
         sb.AppendLine($"- Authentication:");

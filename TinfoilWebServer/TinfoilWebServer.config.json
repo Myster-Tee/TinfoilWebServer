@@ -12,6 +12,7 @@
   "Authentication": {
     "Enabled": true,
     "WebBrowserAuthEnabled": false,
+    "PwdType": "Sha256",
     "Users": [
       {
         "Name": "JohnDoe",

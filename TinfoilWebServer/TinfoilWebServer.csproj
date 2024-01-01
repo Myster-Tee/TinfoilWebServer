@@ -14,9 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="TinfoilWebServer.config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Include="TinfoilWebServer.config.json" />
   </ItemGroup>
 
   <ItemGroup>
