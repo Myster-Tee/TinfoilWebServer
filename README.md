@@ -2,7 +2,7 @@
 
 ## Description
 
-*Build you custom Nintendo Switch shop.*  
+*Build your custom Nintendo Switch shop.*  
 
 TinfoilWebServer is a simple and efficient cross platform web server application aiming at serving your personal Nintendo Switch packages (NSP, NSZ, XCI, etc.) to [Tinfoil](https://tinfoil.io/Download).
 
