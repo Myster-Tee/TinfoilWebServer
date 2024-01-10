@@ -2,7 +2,7 @@
   "ServedDirectories": [ "D:\\Switch\\Packages", "/dev/sda1/Switch/Packages" ],
   "StripDirectoryNames": true,
   "ServeEmptyDirectories": false,
-  "AllowedExt": [ "nsp", "nsz", "xci" ],
+  "AllowedExt": [ "nsp", "nsz", "xci", "xcz" ],
   "MessageOfTheDay": "Hello World!",
   "CustomIndexPath": null,
   "Cache": {

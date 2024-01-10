@@ -89,7 +89,7 @@ dotnet TinfoilWebServer.dll
   "ServedDirectories": string[],        // ex: ["C:\\SomeDir\\WindowsDirWithPackages", "/dev/sda1/LinuxDirWithPackages", ".", "/Users/yourname/Documents/macOSDirWithPackages"] !!! Don't forget to escape backslashes with another one !!! No need to escape spaces
   "StripDirectoryNames": boolean,       // «true» to remove directories names in URLs of served files, «false» otherwise
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
-  "AllowedExt": string[],               // List of file extensions to serve (default is ["xci", "nsz", "nsp"])
+  "AllowedExt": string[],               // List of file extensions to serve (default is ["xci", "nsz", "nsp", "xcz"])
   "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
   "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "Cache": {
