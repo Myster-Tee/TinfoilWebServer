@@ -31,7 +31,11 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         appSettingsModel = appSettingsModel ?? throw new ArgumentNullException(nameof(appSettingsModel));
         InitializeFromModel(appSettingsModel.CurrentValue);
 
-        appSettingsModel.OnChange(InitializeFromModel);
+        appSettingsModel.OnChange(model =>
+        {
+            _logger.LogDebug("Settings change detected.");
+            InitializeFromModel(model);
+        });
     }
 
     /// <summary>
