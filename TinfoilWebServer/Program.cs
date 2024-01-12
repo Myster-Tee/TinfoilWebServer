@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.WindowsServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TinfoilWebServer.Booting;
@@ -133,6 +134,12 @@ public class Program
                 logger.LogError(ex, $"An unhandled exception occurred: {ex?.Message ?? eventArgs.ExceptionObject}");
             };
 
+            webHost.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopped.Register(() =>
+            {
+                // On Linux, logs are not written to file if called after webhost.Run(), but works here
+                logger.LogInformation("Server stopped.");
+            });
+
             //===========================//
             //===> Starts the server <===//
             if (bootInfo.CmdOptions.RunAsWindowsService)
@@ -141,8 +148,6 @@ public class Program
                 webHost.Run();
             //===> Starts the server <===//
             //===========================//
-
-            logger.LogInformation("Server closing.");
 
             return 0;
         }
