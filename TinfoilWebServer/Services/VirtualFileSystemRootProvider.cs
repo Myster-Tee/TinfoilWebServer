@@ -42,6 +42,10 @@ public class VirtualFileSystemRootProvider : IVirtualFileSystemRootProvider
         {
             _ = SafeRefresh();
         }
+        else if (e.PropertyName == nameof(IAppSettings.AllowedExt))
+        {
+            _ = SafeRefresh();
+        }
     }
 
     public async Task SafeRefresh()

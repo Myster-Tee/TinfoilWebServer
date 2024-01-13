@@ -51,7 +51,7 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
         {
             _logger.LogInformation("Fingerprints file path changed, reloading fingerprints.");
             Initialize();
-        }       
+        }
         else if (e.PropertyName == nameof(IFingerprintsFilterSettings.MaxFingerprints))
         {
             _logger.LogInformation($"Max global allowed fingerprints updated to {_fingerprintsFilterSettings.MaxFingerprints}.");
@@ -73,18 +73,29 @@ public class FingerprintsFilteringManager : IFingerprintsFilteringManager
 
     private void CheckSettingsConsistency()
     {
-        if (_fingerprintsFilterSettings.Enabled && _authenticationSettings is { Enabled: true, WebBrowserAuthEnabled: true })
+        if (!_fingerprintsFilterSettings.Enabled)
+            return;
+
+        // Here fingerprint filtering is enabled
+
+        if (_authenticationSettings.Enabled)
         {
-            _logger.LogWarning($"Inconsistent configuration: Web Browser authentication is enabled ({nameof(IAuthenticationSettings.WebBrowserAuthEnabled)}) " +
-                               $"as well as fingerprints filtering ({nameof(IFingerprintsFilterSettings.MaxFingerprints)}), " +
-                               $"but Web Browsers never send fingerprints, only Tinfoil do.");
+            if (_authenticationSettings.WebBrowserAuthEnabled)
+                _logger.LogWarning(
+                    $"Inconsistent configuration: Web Browser authentication is enabled ({nameof(IAuthenticationSettings.WebBrowserAuthEnabled)}) " +
+                    $"as well as fingerprints filtering ({nameof(IFingerprintsFilterSettings.MaxFingerprints)}), " +
+                    $"but Web Browsers never send fingerprints, only Tinfoil do.");
+
+            var allowedUsers = _authenticationSettings.Users;
+            if (allowedUsers.Count > 0 && allowedUsers.All(user => user.MaxFingerprints <= 0))
+                _logger.LogWarning("Inconsistent configuration: authentication is enabled as well as fingerprints filtering but the number of allowed fingerprints is 0 for all allowed users.");
+        }
+        else
+        {
+            if (_fingerprintsFilterSettings.MaxFingerprints <= 0)
+                _logger.LogWarning("Inconsistent configuration: fingerprints filtering is enabled but the number of allowed fingerprints is 0.");
         }
 
-        if (_fingerprintsFilterSettings is { Enabled: true, MaxFingerprints: <= 0 } &&
-            _authenticationSettings.Users.All(user => user.MaxFingerprints <= 0))
-        {
-            _logger.LogWarning("Inconsistent configuration: fingerprints filtering is enabled but the number of allowed fingerprints is 0.");
-        }
     }
 
     public bool AcceptFingerprint(string? fingerprint, IUserInfo? userInfo, string traceId)

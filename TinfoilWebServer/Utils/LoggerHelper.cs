@@ -24,7 +24,7 @@ public static class LoggerHelper
     public static void LogWelcomeMessage(this ILogger logger)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version!;
-        logger.LogInformation($"Welcome to Tinfoil Web Server v{version.Major}.{version.Minor}.{version.Build} (press CTRL+C to exit)");
+        logger.LogInformation($"Welcome to TinfoilWebServer v{version.Major}.{version.Minor}.{version.Build} (press CTRL+C to exit)");
     }
 
     public static void LogBootInfo(this ILogger logger, IBootInfo bootInfo)

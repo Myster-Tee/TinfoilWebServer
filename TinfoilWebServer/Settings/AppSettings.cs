@@ -31,7 +31,11 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         appSettingsModel = appSettingsModel ?? throw new ArgumentNullException(nameof(appSettingsModel));
         InitializeFromModel(appSettingsModel.CurrentValue);
 
-        appSettingsModel.OnChange(InitializeFromModel);
+        appSettingsModel.OnChange(model =>
+        {
+            _logger.LogDebug("Settings change detected.");
+            InitializeFromModel(model);
+        });
     }
 
     /// <summary>
@@ -49,7 +53,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         ServeEmptyDirectories = appSettingsModel.ServeEmptyDirectories ?? true;
 
         var allowedExt = appSettingsModel.AllowedExt;
-        AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp" } : allowedExt;
+        AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp", "xcz", "zip" } : allowedExt;
 
         MessageOfTheDay = string.IsNullOrWhiteSpace(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
 
