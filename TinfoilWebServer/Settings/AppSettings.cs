@@ -53,7 +53,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         ServeEmptyDirectories = appSettingsModel.ServeEmptyDirectories ?? true;
 
         var allowedExt = appSettingsModel.AllowedExt;
-        AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp", "xcz" } : allowedExt;
+        AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp", "xcz", "zip" } : allowedExt;
 
         MessageOfTheDay = string.IsNullOrWhiteSpace(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
 

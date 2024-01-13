@@ -77,8 +77,8 @@ dotnet TinfoilWebServer.dll
 1. Go to **File Browser**
 1. Press **[-]** button to add a new server
 1. Set **Protocol** to HTTP or HTTPS according to the server configuration
-1. Set **Host** to any host pointing to your server (or the server IP address)
-   _The server IP address is logged at server startup_
+1. Set **Host** to any host pointing to your server (or the server IP address)  
+   _The server IP address is logged at server startup._
 1. If authentication is enabled, set **Username** and **Password** to one of the allowed users
 1. Set **Title** to a name of your choice
 
@@ -89,7 +89,7 @@ dotnet TinfoilWebServer.dll
   "ServedDirectories": string[],        // ex: ["C:\\SomeDir\\WindowsDirWithPackages", "/dev/sda1/LinuxDirWithPackages", ".", "/Users/yourname/Documents/macOSDirWithPackages"] !!! Don't forget to escape backslashes with another one !!! No need to escape spaces
   "StripDirectoryNames": boolean,       // «true» to remove directories names in URLs of served files, «false» otherwise
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
-  "AllowedExt": string[],               // List of file extensions to serve (default is ["xci", "nsz", "nsp", "xcz"])
+  "AllowedExt": string[],               // List of file extensions to serve (default is ["xci", "nsz", "nsp", "xcz", "zip"])
   "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
   "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "Cache": {
@@ -168,7 +168,6 @@ dotnet TinfoilWebServer.dll
 
 When *"Kestrel"* configuration is omitted, server default listens to _http://localhost:5000/_ and _https://localhost:5001_.
 
-
 ### Custom Index
 
 Specifying a custom index in the configuration file allows to set (or combine) any extra property described in [Tinfoil Custom Index documentation](https://blawar.github.io/tinfoil/custom_index/).  
@@ -227,7 +226,7 @@ Example:
 ### Running as a Windows service
 
 Server can be run as a Windows service. To to this, service must first be registered using [sc.exe](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/sc-config), PowerShell [New-Service](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/new-service) cmdlet or any other method.  
-Don't forget to specify the **--winService** command line parameter when registering the service.
+Don't forget to specify the `--winService` command line parameter when registering the service.
 
 *Note: by default, Windows services are run in **%WinDir%\System32**, you can change the current directory using **--currentDir** command line parameter.*
 
@@ -235,6 +234,11 @@ Don't forget to specify the **--winService** command line parameter when registe
 # PowerShell service registration example
 New-Service TinfoilWebServer -BinaryPathName "<FullPathToExe> --winService --config ""<SomePathToConfigJson>"" --currentDir ""<SomePathToCurrentDir>"""
 ```
+
+## Sharing game saves
+
+TinfoilWebServer can serve game saves by allowing "zip" file extension (by default).  
+To share your own saves, copy Tinfoil saves from `SDCard/switch/tinfoil/saves/**/*.zip` to any of the served directories. 
 
 ## Security considerations and recommendations
 
@@ -250,7 +254,7 @@ If you plan to open your server to the Internet network (WAN) instead of local n
 1. Set *Authentication.PwdType* to "Sha256" to avoid storing plaintext user passwords in your config file
 
 
-# Similar Projects
+## Similar Projects
 If you want to create your personal NSP Shop then check out these other similar projects:
 - [a1ex4/Ownfoil](https://github.com/a1ex4/ownfoil)
 - [eXhumer/pyTinGen](https://github.com/eXhumer/pyTinGen)
