@@ -119,41 +119,48 @@ public class CustomIndexManager : ICustomIndexManager
 
     private void RefreshCustomIndexesCache()
     {
-        var newCustomIndexFiles = _authenticationSettings.Users
+        var newCustomIndexes = _authenticationSettings.Users
             .Select(user => user.CustomIndexPath)
             .Append(_appSettings.CustomIndexPath) // Adds also the global custom index
             .Where(cip => !string.IsNullOrWhiteSpace(cip))
-            .Select(cip => new FileInfo(cip!))
+            .Select(cip => new
+            {
+                Path = cip!,
+                File = new FileInfo(cip!)
+            })
             .ToList();
 
         lock (_cachedDataPerPath)
         {
-            foreach (var newCustomIndexFile in newCustomIndexFiles)
+            // Add new custom index which are not already in the cache
+            foreach (var customIndex in newCustomIndexes)
             {
-                if (_cachedDataPerPath.ContainsKey(newCustomIndexFile.FullName))
-                    continue; // Already loaded in the set
+                var customIndexPath = customIndex.Path;
+                var customIndexFile = customIndex.File;
+
+                if (_cachedDataPerPath.ContainsKey(customIndexPath))
+                    continue; // Already loaded in the cache
 
                 IWatchedFile? watchedFile = null;
                 try
                 {
-                    watchedFile = _fileChangeHelper.WatchFile(newCustomIndexFile);
+                    watchedFile = _fileChangeHelper.WatchFile(customIndexFile);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Failed to watch changes of custom index file \"{newCustomIndexFile}\": {ex.Message}");
+                    _logger.LogError(ex, $"Failed to watch changes of custom index file \"{customIndexFile}\": {ex.Message}");
                 }
 
-                var cachedData = new CachedData(newCustomIndexFile, watchedFile, _logger);
+                var cachedData = new CachedData(customIndexFile, watchedFile, _logger);
                 cachedData.RefreshSafe();
 
-                _cachedDataPerPath.Add(newCustomIndexFile.FullName, cachedData);
+                _cachedDataPerPath.Add(customIndexPath, cachedData);
             }
 
             // Removes extra custom index from cache
-
             foreach (var cachedCustomIndexPath in _cachedDataPerPath.Keys.ToArray())
             {
-                if (newCustomIndexFiles.Select(f => f.FullName).Contains(cachedCustomIndexPath)) 
+                if (newCustomIndexes.Select(customIndex => customIndex.Path).Contains(cachedCustomIndexPath))
                     continue;
 
                 // Custom index path is not anymore referenced and can be removed from cache
