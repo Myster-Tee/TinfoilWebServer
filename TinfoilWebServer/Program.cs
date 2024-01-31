@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NReco.Logging.File;
 using TinfoilWebServer.Booting;
 using TinfoilWebServer.Logging.Console;
 using TinfoilWebServer.Logging.File;
