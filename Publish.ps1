@@ -23,7 +23,7 @@
 ${OutDirRoot}="Publish"
 
 $TinfoilWebServerVersion= Select-Xml -Path "TinfoilWebServer/TinfoilWebServer.csproj" -XPath "//Project/PropertyGroup/Version" | Select-Object -ExpandProperty Node | Select-Object -ExpandProperty InnerText
-Write-Host "Tinfoil version read: $TinfoilWebServerVersion"
+Write-Host "TinfoilWebServer version read: $TinfoilWebServerVersion"
 
 # Cleaning and initialize output folder
 if (Test-Path ${OutDirRoot}) {

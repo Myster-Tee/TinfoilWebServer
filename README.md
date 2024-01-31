@@ -178,7 +178,7 @@ Specifying a custom index in the configuration file allows to set (or combine) a
 For example, using the JSON below, it is possible to enrich the served files with custom files **out of served directories**.
 ```
 {
-  "files": ["https://some/other/url1", "https://some/other/url2"] // Will be combined with served files
+  "files": ["https://some/other/url1", "https://some/gdrive/folder"] // Will be combined with served files
 }
 ```
 
