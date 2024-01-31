@@ -27,10 +27,12 @@ Write-Host "TinfoilWebServer version read: $TinfoilWebServerVersion"
 
 # Cleaning and initialize output folder
 if (Test-Path ${OutDirRoot}) {
-     Write-Host "Deleting output folder ""${OutDirRoot}""."
-    Remove-Item ${OutDirRoot} -Recurse -ErrorAction Stop
+    Write-Host "Cleaning output folder ""${OutDirRoot}""."
+    Get-ChildItem -Path ${OutDirRoot} -Include * -Exclude "TinfoilWebServer.config.json" -Recurse -ErrorAction Stop | Remove-Item -Recurse -ErrorAction Stop
+} else {
+    Write-Host "Creating output folder ""${OutDirRoot}""."
+    New-Item -ItemType Directory -Path "${OutDirRoot}"
 }
-New-Item -ItemType Directory -Path "${OutDirRoot}"
 
 dotnet clean "TinfoilWebServer/TinfoilWebServer.csproj"
 
