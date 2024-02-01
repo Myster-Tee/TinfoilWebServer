@@ -77,6 +77,7 @@ public class CustomIndexManager : ICustomIndexManager
             }
             catch (Exception ex)
             {
+                CustomIndex = null;
                 _logger.LogError(ex, $"Failed to load custom index from file \"{customIndexFile}\": {ex.Message}");
             }
         }

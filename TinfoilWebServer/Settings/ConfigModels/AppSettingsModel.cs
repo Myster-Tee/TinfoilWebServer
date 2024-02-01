@@ -7,6 +7,10 @@ namespace TinfoilWebServer.Settings.ConfigModels;
 /// </summary>
 public class AppSettingsModel
 {
+    /// <summary>
+    /// https://github.com/dotnet/runtime/issues/97857
+    /// https://github.com/dotnet/runtime/issues/36510
+    /// </summary>
     public string[]? ServedDirectories { get; set; }
 
     public bool? StripDirectoryNames { get; set; }
