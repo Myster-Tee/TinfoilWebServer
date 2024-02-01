@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Services.FSChangeDetection;
@@ -59,7 +60,12 @@ public class CustomIndexManager : ICustomIndexManager
 
                 using var fileStream = File.Open(customIndexFile.FullName, FileMode.Open);
 
-                if (JsonNode.Parse(fileStream) is not JsonObject jsonObject)
+                var jsonDocumentOptions = new JsonDocumentOptions
+                {
+                    CommentHandling = JsonCommentHandling.Skip
+                };
+
+                if (JsonNode.Parse(fileStream, null, jsonDocumentOptions) is not JsonObject jsonObject)
                 {
                     _logger.LogError($"Custom index file \"{customIndexFile}\" is not a valid JSON object.");
                 }
