@@ -65,11 +65,12 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         _authentication.Enabled = authentication?.Enabled ?? false;
         _authentication.WebBrowserAuthEnabled = authentication?.WebBrowserAuthEnabled ?? false;
         _authentication.PwdType = authentication?.PwdType ?? PwdType.Sha256;
-        var newUsers = (authentication?.Users ?? Array.Empty<AllowedUserModel>()).OfType<AllowedUserModel>().Select(allowedUserModel =>
+        var newUsers = (authentication?.Users ?? []).OfType<AllowedUserModel>().Select(allowedUserModel =>
             new AllowedUser
             {
                 Name = allowedUserModel.Name ?? "",
                 MaxFingerprints = allowedUserModel.MaxFingerprints ?? 1,
+                ExpirationDate = allowedUserModel.ExpirationDate,
                 Password = allowedUserModel.Pwd ?? "",
                 CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath) ? null : allowedUserModel.CustomIndexPath,
                 MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay) ? null : allowedUserModel.MessageOfTheDay
@@ -247,6 +248,8 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         public string Name { get; init; } = "";
 
         public int MaxFingerprints { get; init; }
+
+        public DateTime? ExpirationDate { get; init; }
 
         public string Password { get; init; } = "";
 

@@ -108,6 +108,7 @@ This low speed is only due to hardware limitation of Nintendo Switch, and is not
       {
         "Name": string,                 // The user name
         "Pwd": string,                  // The password
+        "ExpirationDate" : string,      // Expiration date in ISO 8601 format, ex: "2022-12-31T23:59:59Z". Set to «null» to disable expiration date.
         "MaxFingerprints": number,      // The maximum number of fingerprints allowed for this user (default is 1)
         "MessageOfTheDay": string,      // Custom message for the user
         "CustomIndexPath": string       // The path to a custom JSON file for this user to be merged with the served index

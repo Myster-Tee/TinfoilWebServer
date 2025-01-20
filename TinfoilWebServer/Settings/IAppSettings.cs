@@ -74,10 +74,19 @@ public interface ICacheSettings : INotifyPropertyChanged
 
 public interface IFingerprintsFilterSettings : INotifyPropertyChanged
 {
+    /// <summary>
+    /// Gets a value indicating whether the fingerprints filter is enabled
+    /// </summary>
     bool Enabled { get; }
 
+    /// <summary>
+    /// The path to the file containing the fingerprints
+    /// </summary>
     string FingerprintsFilePath { get; }
 
+    /// <summary>
+    /// The maximum number of fingerprints allowed
+    /// </summary>
     int MaxFingerprints { get; }
 }
 
@@ -137,6 +146,11 @@ public interface IUserInfo
 
 public interface IAllowedUser : IUserInfo
 {
+
+    /// <summary>
+    /// Get the account expiration date
+    /// </summary>
+    public DateTime? ExpirationDate { get; }
 
     /// <summary>
     /// The password of the allowed user

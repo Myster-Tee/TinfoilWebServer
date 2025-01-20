@@ -63,6 +63,8 @@ public class AllowedUserModel
     public string? CustomIndexPath { get; set; }
 
     public string? MessageOfTheDay { get; set; }
+
+    public DateTime? ExpirationDate { get; set; }
 }
 
 public class FingerprintsFilterSettingsModel
