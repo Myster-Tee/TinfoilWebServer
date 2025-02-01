@@ -69,8 +69,11 @@ public static class LoggerHelper
 
         sb.AppendLine($"- Allowed extensions:{appSettings.AllowedExt.ToMultilineString()}");
 
-        sb.AppendLine($"- Message of the day:");
+        sb.AppendLine($"- Default message of the day:");
         sb.AppendLine($"{LogUtil.INDENT_SPACES}{appSettings.MessageOfTheDay}");
+
+        sb.AppendLine($"- Default expiration message:");
+        sb.AppendLine($"{LogUtil.INDENT_SPACES}{appSettings.ExpirationMessage}");
 
         var cache = appSettings.Cache;
         sb.AppendLine($"- Cache:");

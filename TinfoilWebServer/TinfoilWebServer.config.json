@@ -4,6 +4,7 @@
   "ServeEmptyDirectories": false,
   "AllowedExt": [ "nsp", "nsz", "xci", "xcz" ],
   "MessageOfTheDay": "Hello World!",
+  "ExpirationMessage": "Oops! Your account expired.",
   "CustomIndexPath": null,
   "Cache": {
     "AutoDetectChanges": true,
@@ -19,6 +20,7 @@
         "Pwd": "123456",
         "MaxFingerprints": 1,
         "MessageOfTheDay": "Hello JohnDoe!",
+        "ExpirationMessage": "Oops! JohnDoe, your account expired.",
         "CustomIndexPath": null
       }
     ]

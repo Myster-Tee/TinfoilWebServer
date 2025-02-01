@@ -17,4 +17,11 @@ public interface ITinfoilIndexBuilder
     [Pure]
     JsonObject Build(VirtualDirectory virtualDirectory, IUserInfo? user);
 
+    /// <summary>
+    /// Builds a Tinfoil index which contains only a simple message
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    [Pure]
+    JsonObject BuildSimpleMessage(string? message);
 }

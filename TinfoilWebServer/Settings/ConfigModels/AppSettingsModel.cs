@@ -21,6 +21,8 @@ public class AppSettingsModel
 
     public string? MessageOfTheDay { get; set; }
 
+    public string? ExpirationMessage { get; set; }
+
     public string? CustomIndexPath { get; set; }
 
     public CacheSettingsModel? Cache { get; set; }
@@ -64,7 +66,9 @@ public class AllowedUserModel
 
     public string? MessageOfTheDay { get; set; }
 
-    public DateTime? ExpirationDate { get; set; }
+    public string? ExpirationDate { get; set; }
+
+    public string? ExpirationMessage { get; set; }
 }
 
 public class FingerprintsFilterSettingsModel

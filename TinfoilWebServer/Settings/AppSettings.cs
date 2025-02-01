@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TinfoilWebServer.Booting;
@@ -23,6 +24,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
     private IReadOnlyList<string> _allowedExt = null!;
     private string? _messageOfTheDay;
     private string? _customIndexPath;
+    private string? _expirationMessage;
 
     public AppSettings(IOptionsMonitor<AppSettingsModel> appSettingsModel, ILogger<AppSettings> logger, IBootInfo bootInfo)
     {
@@ -56,6 +58,7 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         AllowedExt = allowedExt == null || allowedExt.Length == 0 ? new[] { "xci", "nsz", "nsp", "xcz", "zip" } : allowedExt;
 
         MessageOfTheDay = string.IsNullOrWhiteSpace(appSettingsModel.MessageOfTheDay) ? null : appSettingsModel.MessageOfTheDay;
+        ExpirationMessage = string.IsNullOrWhiteSpace(appSettingsModel.ExpirationMessage) ? null : appSettingsModel.ExpirationMessage;
 
         var cache = appSettingsModel.Cache;
         _cache.AutoDetectChanges = cache?.AutoDetectChanges ?? true;
@@ -65,16 +68,35 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         _authentication.Enabled = authentication?.Enabled ?? false;
         _authentication.WebBrowserAuthEnabled = authentication?.WebBrowserAuthEnabled ?? false;
         _authentication.PwdType = authentication?.PwdType ?? PwdType.Sha256;
+
+
+
         var newUsers = (authentication?.Users ?? []).OfType<AllowedUserModel>().Select(allowedUserModel =>
-            new AllowedUser
+        {
+            DateTime? expirationDate = null;
+            if (!string.IsNullOrWhiteSpace(allowedUserModel.ExpirationDate))
+            {
+                if (!DateTime.TryParse(allowedUserModel.ExpirationDate, out var parsedExpirationDate))
+                    _logger.LogError($"Invalid expiration date \"{allowedUserModel.ExpirationDate}\" for user \"{allowedUserModel.Name}\".");
+                else
+                    expirationDate = parsedExpirationDate;
+            }
+
+            return new AllowedUser
             {
                 Name = allowedUserModel.Name ?? "",
                 MaxFingerprints = allowedUserModel.MaxFingerprints ?? 1,
-                ExpirationDate = allowedUserModel.ExpirationDate,
+                ExpirationDate = expirationDate,
+                ExpirationMessage = allowedUserModel.ExpirationMessage,
                 Password = allowedUserModel.Pwd ?? "",
-                CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath) ? null : allowedUserModel.CustomIndexPath,
-                MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay) ? null : allowedUserModel.MessageOfTheDay
-            }).ToList();
+                CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath)
+                    ? null
+                    : allowedUserModel.CustomIndexPath,
+                MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay)
+                    ? null
+                    : allowedUserModel.MessageOfTheDay
+            };
+        }).ToList();
         if (!UsersEqual(_authentication.Users, newUsers))
             _authentication.Users = newUsers;
 
@@ -179,6 +201,12 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
         private set => SetField(ref _messageOfTheDay, value);
     }
 
+    public string? ExpirationMessage
+    {
+        get => _expirationMessage;
+        private set => SetField(ref _expirationMessage, value);
+    }
+
     public string? CustomIndexPath
     {
         get => _customIndexPath;
@@ -245,17 +273,23 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
     private class AllowedUser : IAllowedUser
     {
+
         public string Name { get; init; } = "";
 
         public int MaxFingerprints { get; init; }
 
         public DateTime? ExpirationDate { get; init; }
 
+        public string? ExpirationMessage { get; init; }
+
         public string Password { get; init; } = "";
 
         public string? CustomIndexPath { get; init; }
 
         public string? MessageOfTheDay { get; init; }
+
+
+        private static PropertyInfo[]? _propertyInfos = null;
 
         public static bool Equals(IAllowedUser? u1, IAllowedUser? u2)
         {
@@ -265,13 +299,19 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
             if (u1 == null || u2 == null)
                 return false;
 
-            return u1.Name == u2.Name
-                   && u1.MaxFingerprints == u2.MaxFingerprints
-                   && u1.Password == u2.Password
-                   && u1.CustomIndexPath == u2.CustomIndexPath
-                   && u1.MessageOfTheDay == u2.MessageOfTheDay;
+            _propertyInfos ??= GetPropertiesToCompare();
+
+            return _propertyInfos.All(pi => pi.GetValue(u1) == pi.GetValue(u2));
         }
 
+        private static PropertyInfo[] GetPropertiesToCompare()
+        {
+            var type = typeof(IAllowedUser);
+            return new[] { type }
+                .Concat(type.GetInterfaces())
+                .SelectMany(i => i.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.GetProperty))
+                .ToArray();
+        }
     }
 
     private class FingerprintsFilterSettings : NotifyPropertyChangedBase, IFingerprintsFilterSettings

@@ -28,9 +28,14 @@ public interface IAppSettings : INotifyPropertyChanged
     IReadOnlyList<string> AllowedExt { get; }
 
     /// <summary>
-    /// The message of the day
+    /// The default message of the day
     /// </summary>
     string? MessageOfTheDay { get; }
+
+    /// <summary>
+    /// The default message to display when an account is expired
+    /// </summary>
+    public string? ExpirationMessage { get; }
 
     /// <summary>
     /// The path to a custom JSON index file
@@ -151,6 +156,11 @@ public interface IAllowedUser : IUserInfo
     /// Get the account expiration date
     /// </summary>
     public DateTime? ExpirationDate { get; }
+
+    /// <summary>
+    /// The message to display when the account is expired
+    /// </summary>
+    public string? ExpirationMessage { get; }
 
     /// <summary>
     /// The password of the allowed user

@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using TinfoilWebServer.Booting;
+using TinfoilWebServer.Services.JSON;
+using TinfoilWebServer.Services.Middleware.Blacklist;
 using TinfoilWebServer.Settings;
 using TinfoilWebServer.Utils;
 
@@ -20,14 +22,19 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
     private readonly IAuthenticationSettings _authenticationSettings;
     private readonly ILogger<BasicAuthMiddleware> _logger;
     private readonly IBootInfo _bootInfo;
+    private readonly ITinfoilIndexBuilder _tinfoilIndexBuilder;
+    private readonly IJsonSerializer _jsonSerializer;
+    private readonly IAppSettings _appSettings;
     private readonly Dictionary<string, IAllowedUser> _allowedUsersPerName = new();
 
-    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger, IBootInfo bootInfo)
+    public BasicAuthMiddleware(IAuthenticationSettings authenticationSettings, ILogger<BasicAuthMiddleware> logger, IBootInfo bootInfo, ITinfoilIndexBuilder tinfoilIndexBuilder, IJsonSerializer jsonSerializer, IAppSettings appSettings)
     {
-
         _authenticationSettings = authenticationSettings ?? throw new ArgumentNullException(nameof(authenticationSettings));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _bootInfo = bootInfo ?? throw new ArgumentNullException(nameof(bootInfo));
+        _tinfoilIndexBuilder = tinfoilIndexBuilder ?? throw new ArgumentNullException(nameof(tinfoilIndexBuilder));
+        _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
+        _appSettings = appSettings ?? throw new ArgumentNullException(nameof(appSettings));
 
         _authenticationSettings.PropertyChanged += OnAuthenticationSettingsChanged;
 
@@ -79,6 +86,12 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         _logger.LogInformation($"List of allowed users successfully {(isReload ? "reloaded" : "loaded")}, {_allowedUsersPerName.Count} user(s) found (authentication is {(_authenticationSettings.Enabled ? "enabled" : "disabled")}).");
     }
 
+    /// <summary>
+    /// Incoming request processing
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="next"></param>
+    /// <returns></returns>
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         if (!_authenticationSettings.Enabled)
@@ -93,7 +106,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         if (headerValue == null)
         {
             _logger.LogWarning($"Request [{context.TraceIdentifier}] is missing authentication header.");
-            await RespondUnauthorized(context, true);
+            await RespondUnauthorized(context, basicHeaderMissing: true);
             return;
         }
 
@@ -133,7 +146,18 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             return;
         }
 
-        _logger.LogDebug($"Request [{context.TraceIdentifier}] passed authentication for user user \"{allowedUser.Name}\".");
+        if (allowedUser.ExpirationDate != null && DateTime.Now > allowedUser.ExpirationDate)
+        {
+            _logger.LogWarning($"Request [{context.TraceIdentifier}] rejected for user \"{incomingUserName}\": account expired.");
+            await RespondUnauthorized(
+                    context, 
+                    message: allowedUser.ExpirationMessage ?? _appSettings.ExpirationMessage,
+                    disableBlacklisting: true // NOTE: we don't want to blacklist the user if the account is expired
+                );
+            return;
+        }
+
+        _logger.LogDebug($"Request [{context.TraceIdentifier}] passed authentication for user \"{allowedUser.Name}\".");
 
         context.User = new AuthenticatedUser(allowedUser);
 
@@ -143,7 +167,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
 
     private bool TryParseBasicAuthHeaderValue(string headerValue, string traceId, [NotNullWhen(true)] out string? userName, [NotNullWhen(true)] out string? password)
     {
-        var strings = headerValue.Split(new[] { ' ' }, 2);
+        var strings = headerValue.Split([' '], 2);
 
         if (strings.Length != 2)
         {
@@ -172,7 +196,7 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
             return false;
         }
 
-        var decodedString = Encoding.UTF8.GetString(bytes.Slice(0, nbBytesWritten));
+        var decodedString = Encoding.UTF8.GetString(bytes[..nbBytesWritten]);
         var parts = decodedString.Split(':', 2);
         if (parts.Length != 2)
         {
@@ -188,13 +212,36 @@ public class BasicAuthMiddleware : IBasicAuthMiddleware
         return true;
     }
 
-    private async Task RespondUnauthorized(HttpContext context, bool basicHeaderMissing = false)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="basicHeaderMissing">
+    /// When true, returns a header indicating that Basic authentication is required.
+    /// In this case a login popup will be displayed in the WebBrowser.
+    /// </param>
+    /// <param name="message"></param>
+    /// <param name="disableBlacklisting"></param>
+    /// <returns></returns>
+    private async Task RespondUnauthorized(HttpContext context, bool basicHeaderMissing = false, string? message = null, bool disableBlacklisting = false)
     {
+        if (disableBlacklisting)
+            context.DisableBlacklisting();
+
         context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
 
         if (_authenticationSettings.WebBrowserAuthEnabled && basicHeaderMissing)
             context.Response.Headers.WWWAuthenticate = new StringValues("Basic");
 
-        await context.Response.CompleteAsync();
+        if (message != null)
+        {
+            var tinfoilIndex = _tinfoilIndexBuilder.BuildSimpleMessage(message);
+            var json = _jsonSerializer.Serialize(tinfoilIndex);
+            await context.Response.WriteAsync(json, Encoding.UTF8);
+        }
+        else
+        {
+            await context.Response.CompleteAsync();
+        }
     }
 }

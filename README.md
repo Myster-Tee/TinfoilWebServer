@@ -95,6 +95,7 @@ This low speed is only due to hardware limitation of Nintendo Switch, and is not
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
   "AllowedExt": string[],               // List of file extensions to serve (default is ["xci", "nsz", "nsp", "xcz", "zip"])
   "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
+  "ExpirationMessage": string,          // The displayed message when a user account has expired
   "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "Cache": {
     "AutoDetectChanges": boolean,       // «true» to auto-refresh the list of served files when a file system change is detected in the served directories, «false» otherwise
