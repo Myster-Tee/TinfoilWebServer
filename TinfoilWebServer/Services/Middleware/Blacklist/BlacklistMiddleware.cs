@@ -34,6 +34,12 @@ public class BlacklistMiddleware : IBlacklistMiddleware
         }
     }
 
+    /// <summary>
+    /// Incoming request processing
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="next"></param>
+    /// <returns></returns>
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
         var remoteIpAddress = GetRemoteIpAddress(context);
@@ -54,6 +60,12 @@ public class BlacklistMiddleware : IBlacklistMiddleware
         _logger.LogDebug($"Request [{context.TraceIdentifier}] from IP Address \"{remoteIpAddress}\".");
 
         await next.Invoke(context);
+
+        if (context.IsBlacklistingDisabled())
+        {
+            // Here, blacklisting has been disabled by another middleware, in this case it is better not to report the IP address as authorized
+            return;
+        }
 
         if (context.Response.StatusCode is >= StatusCodes.Status401Unauthorized and <= StatusCodes.Status403Forbidden)
         {

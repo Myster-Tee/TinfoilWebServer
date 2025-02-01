@@ -28,9 +28,14 @@ public interface IAppSettings : INotifyPropertyChanged
     IReadOnlyList<string> AllowedExt { get; }
 
     /// <summary>
-    /// The message of the day
+    /// The default message of the day
     /// </summary>
     string? MessageOfTheDay { get; }
+
+    /// <summary>
+    /// The default message to display when an account is expired
+    /// </summary>
+    public string? ExpirationMessage { get; }
 
     /// <summary>
     /// The path to a custom JSON index file
@@ -74,10 +79,19 @@ public interface ICacheSettings : INotifyPropertyChanged
 
 public interface IFingerprintsFilterSettings : INotifyPropertyChanged
 {
+    /// <summary>
+    /// Gets a value indicating whether the fingerprints filter is enabled
+    /// </summary>
     bool Enabled { get; }
 
+    /// <summary>
+    /// The path to the file containing the fingerprints
+    /// </summary>
     string FingerprintsFilePath { get; }
 
+    /// <summary>
+    /// The maximum number of fingerprints allowed
+    /// </summary>
     int MaxFingerprints { get; }
 }
 
@@ -137,6 +151,16 @@ public interface IUserInfo
 
 public interface IAllowedUser : IUserInfo
 {
+
+    /// <summary>
+    /// Get the account expiration date
+    /// </summary>
+    public DateTime? ExpirationDate { get; }
+
+    /// <summary>
+    /// The message to display when the account is expired
+    /// </summary>
+    public string? ExpirationMessage { get; }
 
     /// <summary>
     /// The password of the allowed user

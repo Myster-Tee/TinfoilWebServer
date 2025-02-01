@@ -43,7 +43,7 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
         {
             jsonFiles.Add(new JsonObject
             {
-                { "url", JsonValue.Create( vf.BuildRelativeUrl(virtualDirectory)) },
+                { "url", JsonValue.Create(vf.BuildRelativeUrl(virtualDirectory)) },
                 { "size", JsonValue.Create(vf.Size) }
             });
         }
@@ -60,8 +60,16 @@ public class TinfoilIndexBuilder : ITinfoilIndexBuilder
 
         var mergedIndex = _jsonMerger.Merge(baseIndex, defaultCustomIndex, userCustomIndex);
 
-
         return mergedIndex;
     }
 
+    public JsonObject BuildSimpleMessage(string? message)
+    {
+        var baseIndex = new JsonObject
+        {
+            { "success", message }
+        };
+
+        return baseIndex;
+    }
 }

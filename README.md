@@ -95,6 +95,7 @@ This low speed is only due to hardware limitation of Nintendo Switch, and is not
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
   "AllowedExt": string[],               // List of file extensions to serve (default is ["xci", "nsz", "nsp", "xcz", "zip"])
   "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
+  "ExpirationMessage": string,          // The displayed message when a user account has expired
   "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "Cache": {
     "AutoDetectChanges": boolean,       // «true» to auto-refresh the list of served files when a file system change is detected in the served directories, «false» otherwise
@@ -108,6 +109,7 @@ This low speed is only due to hardware limitation of Nintendo Switch, and is not
       {
         "Name": string,                 // The user name
         "Pwd": string,                  // The password
+        "ExpirationDate" : string,      // Expiration date in ISO 8601 format, ex: "2022-12-31T23:59:59Z". Set to «null» to disable expiration date.
         "MaxFingerprints": number,      // The maximum number of fingerprints allowed for this user (default is 1)
         "MessageOfTheDay": string,      // Custom message for the user
         "CustomIndexPath": string       // The path to a custom JSON file for this user to be merged with the served index
