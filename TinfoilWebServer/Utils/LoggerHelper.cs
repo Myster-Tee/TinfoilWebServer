@@ -111,7 +111,10 @@ public static class LoggerHelper
 
     public static void LogListenedHosts(this ILogger logger, IServerAddressesFeature serverAddressesFeature)
     {
-        logger.LogInformation($"Listened addresses:{serverAddressesFeature?.Addresses.ToMultilineString()}");
+        if(serverAddressesFeature.Addresses.Count <= 0)
+            logger.LogWarning($"Listened addresses: none.");
+        else
+            logger.LogInformation($"Listened addresses:{serverAddressesFeature.Addresses.ToMultilineString()}");
     }
 
 

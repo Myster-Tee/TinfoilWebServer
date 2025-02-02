@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,11 +20,10 @@ public class Startup
     /// </summary>
     /// <param name="app"></param>
     /// <param name="logger"></param>
-    /// <param name="server"></param>
-    public void Configure(IApplicationBuilder app, ILogger<Startup> logger, IServer server)
+    public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
     {
         // Method below shouldn't be invoked before host is ran, otherwise list of listened hosts is null
-        logger.LogListenedHosts(server.Features.GetRequiredFeature<IServerAddressesFeature>());
+        logger.LogListenedHosts(app.ServerFeatures.GetRequiredFeature<IServerAddressesFeature>());
 
         app
             .UseMiddleware<IBlacklistMiddleware>()
