@@ -1,24 +1,22 @@
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+# Take official .NET 8 SDK image to build the project
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-img
+WORKDIR /build-dir
+
+# Copy all files to the build-img image
+COPY . ./
+
+# Restore Nugets and publish the project
+RUN dotnet restore
+RUN dotnet publish -c Release -o out
+
+# Take official .NET 8 Runtime target image and copy the published files from the build image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime-img
 WORKDIR /app
-EXPOSE 8080
+COPY --from=build-img /build-dir/out .
 
-FROM mcr.microsoft.com/dotnet/sdk:8.0-jammy AS sdk
+# The TinfoilWebServer working directory to map
+VOLUME /working_dir
 
-FROM sdk AS build
-
-WORKDIR /src
-COPY . .
-RUN dotnet restore TinfoilWebServer/TinfoilWebServer.csproj
-WORKDIR /src/TinfoilWebServer
-RUN dotnet build TinfoilWebServer.csproj -c Release -o /app
-
-FROM build AS publish
-
-RUN dotnet publish TinfoilWebServer.csproj -p ContainerUser=root -c Release -o /app
-
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app .
-USER root
-RUN mkdir -p /app/config
-ENTRYPOINT ["dotnet", "TinfoilWebServer.dll", "-d", "/app/config"]
+# Setup the startup command
+WORKDIR /working_dir
+ENTRYPOINT ["dotnet", "/app/TinfoilWebServer.dll" ]

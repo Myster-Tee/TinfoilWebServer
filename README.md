@@ -94,8 +94,8 @@ This low speed is only due to hardware limitation of Nintendo Switch, and is not
   "StripDirectoryNames": boolean,       // «true» to remove directories names in URLs of served files, «false» otherwise
   "ServeEmptyDirectories": boolean,     // «true» to serve empty directories, «false» otherwise (has no effect when "StripDirectoryNames" is «true»)
   "AllowedExt": string[],               // List of file extensions to serve (default is ["xci", "nsz", "nsp", "xcz", "zip"])
-  "MessageOfTheDay": string,            // The welcome message displayed when Tinfoil successfully contacts the server
-  "ExpirationMessage": string,          // The displayed message when a user account has expired
+  "MessageOfTheDay": string,            // The default welcome message displayed when Tinfoil successfully contacts the server
+  "ExpirationMessage": string,          // The default displayed message when a user account has expired
   "CustomIndexPath": string,            // The path to a custom JSON file to be merged with the served index
   "Cache": {
     "AutoDetectChanges": boolean,       // «true» to auto-refresh the list of served files when a file system change is detected in the served directories, «false» otherwise
@@ -109,9 +109,10 @@ This low speed is only due to hardware limitation of Nintendo Switch, and is not
       {
         "Name": string,                 // The user name
         "Pwd": string,                  // The password
-        "ExpirationDate" : string,      // Expiration date in ISO 8601 format, ex: "2022-12-31T23:59:59Z". Set to «null» to disable expiration date.
         "MaxFingerprints": number,      // The maximum number of fingerprints allowed for this user (default is 1)
         "MessageOfTheDay": string,      // Custom message for the user
+        "ExpirationDate" : string,      // Expiration date in ISO 8601 format, ex: "2022-12-31T23:59:59Z". Set to «null» to disable expiration date.
+        "ExpirationMessage" : string,   // Custom message for the user when account has expired
         "CustomIndexPath": string       // The path to a custom JSON file for this user to be merged with the served index
       }
     ]
@@ -258,6 +259,37 @@ If you plan to open your server to the Internet network (WAN) instead of local n
 1. Enable IP blacklistng feature
 1. Enable fingerprints filter feature
 1. Set *Authentication.PwdType* to "Sha256" to avoid storing plaintext user passwords in your config file
+
+
+## Docker
+
+Prerequisites: install [Docker](https://docs.docker.com/get-docker/).
+
+### Build image
+
+A default [Dockerfile](./Dockerfile) is provided to build the image.
+
+From the root of the repository, run the following command to build the image:
+```sh
+docker build -t tinfoilwebserver:latest .
+```
+
+In this image, TinfoilWebServer is installed in `/app` and the working directory is defined to `/working_dir`.  
+TinfoilWebServer will search for the configuration file in `/working_dir/TinfoilWebServer.config.json`.  
+
+
+### Run image
+
+To run this image properly, you'll have to:
+
+1. Map a volume to `/working_dir` and place your `TinfoilWebServer.config.json` inside.
+1. Map the chosen HTTP port defined in your `TinfoilWebServer.config.json` (see Kestrel section).
+1. Optionally map extra volumes according to the served directories declared in your `TinfoilWebServer.config.json`.
+
+Command example:
+```sh
+docker run -d --name=TinfoilWebServer -p 80:5000 -v C:\TinfoilWebServer:/working_dir tinfoilwebserver:latest
+```
 
 
 ## Similar Projects

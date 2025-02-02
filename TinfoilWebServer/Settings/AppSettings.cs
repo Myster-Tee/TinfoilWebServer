@@ -85,16 +85,16 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
             return new AllowedUser
             {
                 Name = allowedUserModel.Name ?? "",
+                Password = allowedUserModel.Pwd ?? "",
                 MaxFingerprints = allowedUserModel.MaxFingerprints ?? 1,
+                MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay)
+                    ? null
+                    : allowedUserModel.MessageOfTheDay,
                 ExpirationDate = expirationDate,
                 ExpirationMessage = allowedUserModel.ExpirationMessage,
-                Password = allowedUserModel.Pwd ?? "",
                 CustomIndexPath = string.IsNullOrWhiteSpace(allowedUserModel.CustomIndexPath)
                     ? null
                     : allowedUserModel.CustomIndexPath,
-                MessageOfTheDay = string.IsNullOrWhiteSpace(allowedUserModel.MessageOfTheDay)
-                    ? null
-                    : allowedUserModel.MessageOfTheDay
             };
         }).ToList();
         if (!UsersEqual(_authentication.Users, newUsers))
@@ -276,17 +276,17 @@ public class AppSettings : NotifyPropertyChangedBase, IAppSettings
 
         public string Name { get; init; } = "";
 
+        public string Password { get; init; } = "";
+
         public int MaxFingerprints { get; init; }
+
+        public string? MessageOfTheDay { get; init; }
 
         public DateTime? ExpirationDate { get; init; }
 
         public string? ExpirationMessage { get; init; }
 
-        public string Password { get; init; } = "";
-
         public string? CustomIndexPath { get; init; }
-
-        public string? MessageOfTheDay { get; init; }
 
 
         private static PropertyInfo[]? _propertyInfos = null;

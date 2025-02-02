@@ -20,6 +20,7 @@
         "Pwd": "123456",
         "MaxFingerprints": 1,
         "MessageOfTheDay": "Hello JohnDoe!",
+        "ExpirationDate": "2024-12-31T23:59:59Z",
         "ExpirationMessage": "Oops! JohnDoe, your account expired.",
         "CustomIndexPath": null
       }
