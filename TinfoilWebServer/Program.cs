@@ -3,7 +3,10 @@ using System.IO;
 using System.Reflection;
 using CommandLine;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.WindowsServices;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -135,7 +138,15 @@ public class Program
                 logger.LogError(ex, $"An unhandled exception occurred: {ex?.Message ?? eventArgs.ExceptionObject}");
             };
 
-            webHost.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStopped.Register(() =>
+
+            var applicationLifetime = webHost.Services.GetRequiredService<IHostApplicationLifetime>();
+            applicationLifetime.ApplicationStarted.Register(() =>
+            {
+                var server = webHost.Services.GetRequiredService<IServer>();
+                logger.LogListenedHosts(server.Features.GetRequiredFeature<IServerAddressesFeature>());
+                logger.LogInformation("Server started.");
+            });
+            applicationLifetime.ApplicationStopped.Register(() =>
             {
                 // On Linux, logs are not written to file if called after webhost.Run(), but works here
                 logger.LogInformation("Server stopped.");

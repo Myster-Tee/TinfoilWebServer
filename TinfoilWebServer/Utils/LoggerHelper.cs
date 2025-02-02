@@ -29,8 +29,7 @@ public static class LoggerHelper
 
     public static void LogBootInfo(this ILogger logger, IBootInfo bootInfo)
     {
-        if (bootInfo.CmdOptions.RunAsWindowsService)
-            logger.LogInformation($"Server running as a Windows service.");
+        logger.LogInformation($"Server running as a Windows service: {bootInfo.CmdOptions.RunAsWindowsService}.");
 
         var configFilePath = bootInfo.ConfigFileFullPath;
         if (File.Exists(configFilePath))
@@ -111,7 +110,7 @@ public static class LoggerHelper
 
     public static void LogListenedHosts(this ILogger logger, IServerAddressesFeature serverAddressesFeature)
     {
-        if(serverAddressesFeature.Addresses.Count <= 0)
+        if (serverAddressesFeature.Addresses.Count <= 0)
             logger.LogWarning($"Listened addresses: none.");
         else
             logger.LogInformation($"Listened addresses:{serverAddressesFeature.Addresses.ToMultilineString()}");

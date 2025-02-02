@@ -1,14 +1,11 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TinfoilWebServer.Services;
 using TinfoilWebServer.Services.Middleware.Authentication;
 using TinfoilWebServer.Services.Middleware.Blacklist;
 using TinfoilWebServer.Services.Middleware.Fingerprint;
-using TinfoilWebServer.Utils;
 
 namespace TinfoilWebServer;
 
@@ -22,9 +19,6 @@ public class Startup
     /// <param name="logger"></param>
     public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
     {
-        // Method below shouldn't be invoked before host is ran, otherwise list of listened hosts is null
-        logger.LogListenedHosts(app.ServerFeatures.GetRequiredFeature<IServerAddressesFeature>());
-
         app
             .UseMiddleware<IBlacklistMiddleware>()
             .UseMiddleware<IBasicAuthMiddleware>()

@@ -269,7 +269,7 @@ Prerequisites: install [Docker](https://docs.docker.com/get-docker/).
 
 A default [Dockerfile](./Dockerfile) is provided to build the image.
 
-From the root of the repository, run the following command to build the image:
+To build the image, from the root of the repository, run the following command:
 ```sh
 docker build -t tinfoilwebserver:latest .
 ```
@@ -280,11 +280,14 @@ TinfoilWebServer will search for the configuration file in `/working_dir/Tinfoil
 
 ### Run image
 
-To run this image properly, you'll have to:
+To successfully run this image, you'll have to:
 
-1. Map a volume to `/working_dir` and place your `TinfoilWebServer.config.json` inside.
-1. Map the chosen HTTP port defined in your `TinfoilWebServer.config.json` (see Kestrel section).
-1. Optionally map extra volumes according to the served directories declared in your `TinfoilWebServer.config.json`.
+1. Map a volume from the host filesystem to `/working_dir` (example: `-v C:\TinfoilWebServer:/working_dir`).
+1. Place your `TinfoilWebServer.config.json` in the mapped directory (example: `C:\TinfoilWebServer\TinfoilWebServer.config.json`).
+1. Edit `TinfoilWebServer.config.json` and define `Kestrel.Endpoints.Http.Url` section to a listened HTTP host\* and port (example: `http://*:5000/`).
+1. Map the chosen HTTP port to an exposed port of the container (example: `-p 80:5000`).
+
+> \* Don't use *localhost* host, otherwise server will only be accessible from the container itself.
 
 Command example:
 ```sh
